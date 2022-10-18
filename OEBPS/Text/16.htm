@@ -1,0 +1,929 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>16</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1153370"></a><a id="pgfId-1163602"></a>16 <a id="id_4cwx06g7tma4"></a>Training neural networks</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1164746"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1164747"></a>Classifying images of handwritten digits as vector data</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1164748"></a>Designing a type of neural network called a multilayer perceptron</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1164749"></a>Evaluating a neural network as a vector transformation</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1164750"></a>Fitting a neural network to data with a cost function and gradient descent</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1164751"></a>Calculating partial derivatives for neural networks in backpropagation</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1163609"></a>In the<a id="marker-1179222"></a> final chapter of this book, we combine almost everything you’ve learned so far to introduce one of the most famous machine learning tools used today: artificial neural networks. <i class="fm-italics">Artificial neural networks</i>, or neural networks<a id="marker-1163610"></a> for short, are mathematical functions whose structure is loosely based on the structure of the human brain. These are called artificial to distinguish from the “organic” neural networks that exist in the brain. This might sound like a lofty and complex goal, but it’s all based on a simple metaphor for how the brain works.</p>
+
+  <p class="body"><a id="pgfId-1163611"></a>Before explaining the metaphor, I’ll preface this discussion by reminding you that I’m not a neurologist. The rough idea is that the brain is a big clump of interconnected<a id="marker-1163612"></a> cells called <i class="fm-italics">neurons</i> and, when you think certain thoughts, what’s actually happening is electrical activity at specific neurons. You can see this electrical activity in the right kind of brain scan where various parts of the brain light up (figure 16.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182313"></a>Figure 16.1 Different kinds of brain activity cause different neurons to electrically activate, showing bright areas in a brain scan.</p>
+
+  <p class="body"><a id="pgfId-1163618"></a> As opposed to the billions of neurons in the human brain, the neural networks we build in Python have only a few dozen neurons, and the degree to which a specific neuron is turned on is represented by a single number<a id="marker-1163619"></a> called its <i class="fm-italics">activation</i>. When a neuron activates in the brain or in our artificial neural network, it can cause adjacent, connected neurons to turn on as well. This allows one idea to lead to another, which we can loosely see as creative thinking.</p>
+
+  <p class="body"><a id="pgfId-1163620"></a>Mathematically, the activation of a neuron in our neural network is a function of the numerical activation values of neurons it is connected to. If a neuron connects to four others with the activation values <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub> , and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">4</sub> , then its activation will be some mathematical function applied to those four values, say <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">4</sub> ).</p>
+
+  <p class="body"><a id="pgfId-1163621"></a>Figure 16.2 shows a schematic diagram with all of the neurons drawn as circles. I’ve shaded the neurons differently to indicate that they have different levels of activation, kind of like the brighter or darker areas of a brain scan.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182357"></a>Figure 16.2 Picturing neuron activation as a mathematical function, where <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub> , and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">4</sub> are the activation values applied to the function f.</p>
+
+  <p class="body"><a id="pgfId-1163627"></a>If each of <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub> , and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">4</sub> depend on the activation of other neurons, the value of <i class="fm-in-times-italic">a</i> could depend on even more numbers. With more neurons and more connections, you can build an arbitrarily complicated mathematical function, and the goal is to model arbitrarily complicated ideas.</p>
+
+  <p class="body"><a id="pgfId-1163628"></a>The explanation I’ve just given you is a somewhat philosophical introduction to neural networks, and it’s definitely not enough for you to start coding. In this chapter, I show you, in detail, how to run with these ideas and build your own neural network. As in the last chapter, the problem we’ll solve with neural<a id="marker-1163629"></a> networks is <i class="fm-italics">classification</i>. There are many steps in building a neural network and training it to perform well on classification, so before we dive in, I’ll lay out the plan.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1163631"></a><a id="id_q0me9vkz7sdh"></a>16.1 Classifying data with neural networks</h2>
+
+  <p class="body"><a id="pgfId-1163632"></a>In this<a id="marker-1179227"></a> section,<a id="marker-1179232"></a> I focus on a classic application of neural networks: classifying images. Specifically, we’ll use low resolution images of handwritten digits (numbers from 0 to 9), and we want our neural network to identify which digit is shown in a given image. Figure 16.3 shows some example images for these digits.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1163637"></a>Figure 16.3 Low resolution images of some handwritten digits</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182445"></a>Figure 16.4 How our Python neural network function classifies images of digits.</p>
+
+  <p class="body"><a id="pgfId-1163638"></a>If you identified the digits in figure 16.3 as 6, 0, 5, and 1, then congratulations! Your organic neural network (that is, your brain) is well trained. Our goal here is to build an artificial neural network that looks at such an image and classifies it as one of ten possible digits, perhaps as well as a human could.</p>
+
+  <p class="body"><a id="pgfId-1163639"></a>In chapter 15, the classification problem amounted to looking at a 2D vector and classifying it in one of two classes. In this problem, we look at 8x8 pixel grayscale images, where each of the 64 pixels is described by one number that tells us its brightness. Just as we treated images as vectors in chapter 6, we’ll treat the 64-pixel brightness values as a 64-dimensional vector. We want to put each 64-dimensional vector in one of ten classes, indicating which digit it represents. Thus, our classification function will have more inputs and more outputs than the one in chapter 15.</p>
+
+  <p class="body"><a id="pgfId-1163640"></a>Concretely, the neural network classification function we’ll build in Python will look like a function with 64 inputs and 10 outputs. In other words, it’s a (non-linear!) vector transformation from <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">64</sup> to <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">10</sup> . The input numbers are the pixel darkness values, scaled from 0 to 1, and the ten output values represent how likely the image is to be any of the ten digits. The index of the largest output number is the answer. In the following case (shown by figure 16.4), an image of a 5 is passed in, and the neural network returns its largest value in the fifth slot, so it correctly identifies the digit in the image.</p>
+
+  <p class="body"><a id="pgfId-1163646"></a>The neural network function in the middle of figure 16.4 is nothing more than a mathematical function. Its structure will be more complex than the ones we’ve seen so far, and in fact, the formula defining it is too long to write on paper. Evaluating a neural network is more like carrying out an algorithm. I’ll show you how to do this and implement it in Python.</p>
+
+  <p class="body"><a id="pgfId-1163647"></a>Just as we tested many different logistic functions in the previous chapter, we could try many different neural networks and see which one has the best predictive accuracy. Once again, the systematic way to do this is a gradient descent. While a linear function is determined by the two constants <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> in the formula <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>, a neural network of a given shape can have thousands of constants determining how it behaves. That’s a lot of partial derivatives to take! Fortunately, due to the form of the functions connecting neurons in our neural network, there’s a shortcut algorithm for taking<a id="marker-1163648"></a> the gradient, which is called <i class="fm-italics">backpropagation</i>.</p>
+
+  <p class="body"><a id="pgfId-1163649"></a>It’s possible to derive the backpropagation algorithm from scratch and implement it using only the math we’ve covered so far, but unfortunately, that’s too big of a project to fit in this book. Instead, I’ll show you how to use a famous Python library<a id="marker-1163650"></a> called scikit-learn (“sci” pronounced as in “science”) to do the gradient descent for us, so it automatically trains the neural network to predict as well as possible for our data set. Finally, I’ll leave you with a teaser of the math behind backpropagation. I hope this will be just the starting point for your prolific career in <a id="marker-1179237"></a>machine<a id="marker-1179921"></a> learning.</p>
+
+  <h2 class="fm-head" id="heading_id_4"><a id="pgfId-1163652"></a><a id="id_p3s61itj8zt3"></a>16.2 Classifying images of handwritten digits</h2>
+
+  <p class="body"><a id="pgfId-1163653"></a>Before <a id="marker-1179242"></a>we<a id="marker-1179247"></a> start implementing our neural network, we need to prepare the data. The digit images I use are among the extensive, free test data that comes with the scikit-learn data. Once we download those, we need to convert them into 64-dimensional vectors with values scaled between zero and one. The data set also comes with the correct answers for each digit image, represented as Python integers from zero to nine.</p>
+
+  <p class="body"><a id="pgfId-1163654"></a>Then we build two Python functions to practice the classification. The first is a fake digit identification function called <code class="fm-code-in-text">random_classifier</code>, which takes 64 numbers representing an image and (randomly) outputs 10 numbers representing the certainty that the image represents each digit from 0 to 9. The second is a function called <code class="fm-code-in-text">test_digit_classify</code>, which takes a classifier and automatically plugs in every image in the data set, returning a count of how many correct answers come out. Because our <code class="fm-code-in-text">random_classifier</code> produces random results, it should only guess the right answer 10% of the time. This sets the stage for improvement when we replace it with a real neural network.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1163656"></a><a id="id_m82p2umscic2"></a>16.2.1 Building the 64-dimensional image vectors</h3>
+
+  <p class="body"><a id="pgfId-1163657"></a>If you’re <a id="marker-1179252"></a>working with the Anacondas Python distribution as described in appendix A, you should already have the scikit-learn library available as <code class="fm-code-in-text">sklearn</code>. If not, you can install it with pip. To open <code class="fm-code-in-text">sklearn</code> and import the digits data set, you need the following code:</p>
+  <pre class="programlisting">from sklearn import datasets
+digits = datasets.load_digits()</pre>
+
+  <p class="body"><a id="pgfId-1163659"></a>Each entry of digits is a 2D NumPy array (a matrix), giving the pixel values of one image. For instance, <code class="fm-code-in-text">digits.images[0]</code> gives the pixel values of the first image in the data set, which is an 8-by-8 matrix of values:</p>
+  <pre class="programlisting">&gt;&gt;&gt; digits.images[0]
+array([[ 0.,  0.,  5., 13.,  9.,  1.,  0.,  0.],
+       [ 0.,  0., 13., 15., 10., 15.,  5.,  0.],
+       [ 0.,  3., 15.,  2.,  0., 11.,  8.,  0.],
+       [ 0.,  4., 12.,  0.,  0.,  8.,  8.,  0.],
+       [ 0.,  5.,  8.,  0.,  0.,  9.,  8.,  0.],
+       [ 0.,  4., 11.,  0.,  1., 12.,  7.,  0.],
+       [ 0.,  2., 14.,  5., 10., 12.,  0.,  0.],
+       [ 0.,  0.,  6., 13., 10.,  0.,  0.,  0.]])</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182501"></a>Figure 16.5 The first image in sklearn’s digit data set, which looks like a zero</p>
+
+  <p class="body"><a id="pgfId-1163661"></a>You can see that the range of grayscale values is limited. The matrix consists only of whole numbers from 0 to 15.</p>
+
+  <p class="body"><a id="pgfId-1163662"></a>Matplotlib has a useful built-in function called <code class="fm-code-in-text">imshow</code>, which shows the entries of a matrix as an image. With the correct grayscale specification, the zeroes in the matrix appear as white and the bigger non-zero values appear as darker shades of gray. For instance, figure 16.5 shows the first image in the data set, which looks like a zero, resulting from <code class="fm-code-in-text">imshow</code> :</p>
+  <pre class="programlisting">import matplotlib.pyplot as plt
+plt.imshow(digits.images[0], cmap=plt.cm.gray_r)
+ </pre>
+
+  <p class="body"><a id="pgfId-1166223"></a>To emphasize once more how we’re going to think of this image as a 64-dimensional vector, figure 16.6 shows a version of the image with each of the 64-pixel brightness values overlaid on the corresponding pixels.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182545"></a>Figure 16.6 An image from the digit data set with brightness values overlaid on each pixel.</p>
+
+  <p class="body"><a id="pgfId-1166236"></a>To turn this 8-by-8 matrix of numbers into a single 64-entry vector, we can use a built-in NumPy function called <code class="fm-code-in-text">np .matrix.flatten</code>. This function builds a vector starting with the first row of the matrix, followed by the second row, and so on, giving us a vector representation of an image similar to the one we used in chapter 6. Flattening the first image matrix indeed gives us a vector with 64 entries:</p>
+  <pre class="programlisting">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; np.matrix.flatten(digits.images[0])
+array([ 0.,  0.,  5., 13.,  9.,  1.,  0.,  0.,  0.,  0., 13., 15., 10.,
+       15.,  5.,  0.,  0.,  3., 15.,  2.,  0., 11.,  8.,  0.,  0.,  4.,
+       12.,  0.,  0.,  8.,  8.,  0.,  0.,  5.,  8.,  0.,  0.,  9.,  8.,
+        0.,  0.,  4., 11.,  0.,  1., 12.,  7.,  0.,  0.,  2., 14.,  5.,
+       10., 12.,  0.,  0.,  0.,  0.,  6., 13., 10.,  0.,  0.,  0.])</pre>
+
+  <p class="body"><a id="pgfId-1163680"></a>To keep our analysis numerically tidy, we’ll once again scale our data so that the values are between 0 and 1. Because all the pixel values for every entry in this data set are between 0 and 15, we can scalar multiply these vectors by 1 / 15 to get scaled versions. NumPy overloads the <code class="fm-code-in-text">*</code> and <code class="fm-code-in-text">/</code> operators to automatically work as scalar multiplication (and division) of vectors, so we can simply type</p>
+  <pre class="programlisting">np.matrix.flatten(digits.images[0]) / 15</pre>
+
+  <p class="body"><a id="pgfId-1163682"></a>and we’ll get a scaled result. Now we can build a sample digit classifier to<a id="marker-1179262"></a> plug these values into.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1163684"></a><a id="id_4t9x39v6jais"></a>16.2.2 Building a random digit classifier</h3>
+
+  <p class="body"><a id="pgfId-1163685"></a>The<a id="marker-1179272"></a> input <a id="marker-1179277"></a>to the digit classifier is a 64-dimensional vector, like the ones we just constructed, and the output is a 10-dimensional vector with each entry value between 0 and 1. For our first example, the output vector entries can be randomly generated, but we interpret them as the classifier’s certainty that the image represents each of the ten digits.</p>
+
+  <p class="body"><a id="pgfId-1163686"></a>Because we’re okay with random outputs for now, this is easy to implement; NumPy has a function, <code class="fm-code-in-text">np.random.rand</code>, that produces an array of random numbers between 0 and 1 of a specified size. For instance, <code class="fm-code-in-text">np.random.rand(10)</code> gives us a NumPy array of 10 random numbers between 0 and 1. Our <code class="fm-code-in-text">random_classifier</code> function takes an input vector, ignores it, and returns a random vector:</p>
+  <pre class="programlisting">def random_classifier(input_vector):
+    return np.random.rand(10)</pre>
+
+  <p class="body"><a id="pgfId-1163688"></a>To classify the first image in the data set, we can run the following:</p>
+  <pre class="programlisting">&gt;&gt;&gt; xv  = np.matrix.flatten(digits.images[0]) / 15.
+&gt;&gt;&gt; result = random_classifier(<i class="fm-in-times-italic1">v</i>)
+&gt;&gt;&gt; result
+array([0.78426486, 0.42120868, 0.47890909, 0.53200335, 0.91508751,
+       0.1227552 , 0.73501115, 0.71711834, 0.38744159, 0.73556909])</pre>
+
+  <p class="body"><a id="pgfId-1163690"></a>The largest entry of this output is about <code class="fm-code-in-text">0.915</code>, occurring at index 4. Returning this vector, our classifier tells us that there’s some chance that the image represents any of the digits and that it is most likely a 4. To get the index of a maximum value programmatically, we can use the following Python code:</p>
+  <pre class="programlisting">&gt;&gt;&gt; list(result).index(max(result))
+4</pre>
+
+  <p class="body"><a id="pgfId-1163692"></a>Here, <code class="fm-code-in-text">max(result)</code> finds the largest entry of the array, and <code class="fm-code-in-text">list(result)</code> treats the array as an ordinary Python list. Then we can use the built-in <code class="fm-code-in-text">list</code> index function to find the index of the maximum value. The return value of 4 is incorrect; we saw previously that the picture is a 0, and we can check the official result as well.</p>
+
+  <p class="body"><a id="pgfId-1163694"></a>The correct digit for each image is stored at the corresponding index in the <code class="fm-code-in-text">digits.target</code> array. For the image <code class="fm-code-in-text">digits.images[0]</code>, the correct value is <code class="fm-code-in-text">digits.target[0]</code>, which is zero as we expected:</p>
+  <pre class="programlisting">&gt;&gt;&gt; digits.target[0]
+0</pre>
+
+  <p class="body"><a id="pgfId-1163696"></a>Our random classifier predicted the image to be a 4 when in fact it was a 0. Because it is guessing at random, it should be wrong 90% of the time, and we can confirm this by testing it on a lot of<a id="marker-1179282"></a> test <a id="marker-1179287"></a>examples.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1163698"></a><a id="id_lg5m44bxgqp1"></a>16.2.3 Measuring performance of the digit classifier</h3>
+
+  <p class="body"><a id="pgfId-1163699"></a>Now <a id="marker-1179292"></a>we’ll <a id="marker-1179297"></a>write the function <code class="fm-code-in-text">test_digit_classify</code>, which takes a classifier function and measures its performance on a large set of digit images. Any classifier function will have the same shape; it takes a 64-dimensional input vector and returns a 10-dimensional output vector. The <code class="fm-code-in-text">test_digit_classify</code> function goes through all of the test images and known correct answers and sees if the classifier produces the right answer:</p>
+  <pre class="programlisting">def test_digit_classify(classifier,test_count=1000):
+    correct = 0                                          <span class="fm-combinumeral">❶</span>
+    for img, target in zip(digits.images[:test_count], 
+digits.target[:test_count]):                             <span class="fm-combinumeral">❷</span>
+        v  = np.matrix.flatten(img) / 15.                <span class="fm-combinumeral">❸</span>
+        output = classifier(<i class="fm-in-times-italic1">v</i>)                           <span class="fm-combinumeral">❹</span>
+        answer = list(output).index(max(output))         <span class="fm-combinumeral">❺</span>
+        if answer == target:
+            correct += 1                                 <span class="fm-combinumeral">❻</span>
+    return (correct/test_count)                          <span class="fm-combinumeral">❼</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180239"></a><span class="fm-combinumeral">❶</span> Starts the counter of correct classifications at 0</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180263"></a><span class="fm-combinumeral">❷</span> Loops over pairs of images in the test set with corresponding targets, giving the correct answer for the digit</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180280"></a><span class="fm-combinumeral">❸</span> Flattens the image matrix into a 64D vector and scales it appropriately</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180306"></a><span class="fm-combinumeral">❹</span> Passes the image vector through the classifier to get a 10D result</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180323"></a><span class="fm-combinumeral">❺</span> Finds the index of the largest entry in this result, which is the classifier’s best guess</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180340"></a><span class="fm-combinumeral">❻</span> If this matches our answer, increments the counter</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180357"></a><span class="fm-combinumeral">❼</span> Returns the number of correct classifications as a fraction of the total number of test data points</p>
+
+  <p class="body"><a id="pgfId-1166586"></a>We expect our random classifier to get about 10% of the answers right. Because it acts randomly, it might do better on some trials than others, but because we’re testing on so many images, the result should be somewhere close to 10% every time. Let’s give it a try:</p>
+  <pre class="programlisting">&gt;&gt;&gt; test_digit_classify(random_classifier)
+0.107</pre>
+
+  <p class="body"><a id="pgfId-1166669"></a>In this test, our random classifier did slightly better than expected at 10.7%. This isn’t too interesting on its own, but now we’ve got our data organized and a baseline example to beat so we can start building our <a id="marker-1179302"></a>neural <a id="marker-1179307"></a>network.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1166675"></a><a id="id_ilr9as47z0qo"></a>16.2.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1166821"></a><b class="fm-exercise-head">Exercise 16.1</b>: <a id="marker-1179312"></a>Suppose <a id="marker-1179317"></a><i class="fm-in-times-italic1">a</i> digit classifier function outputs the following NumPy array. What digit has it concluded is in the image?</p>
+        <pre class="programlisting">array([5.00512567e-06, 3.94168539e-05, 5.57124430e-09, 9.31981207e-09,
+       9.98060276e-01, 9.10328786e-07, 1.56262695e-03, 1.82976466e-04,
+       1.48519455e-04, 2.54354113e-07])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1166697"></a><b class="fm-exercise-head">Solution</b>: The largest number in this array is <code class="fm-code-in-text1">9.98060276e-01</code> , or approximately 0.998, which appears fifth, or in index 4. Therefore, this output says the image is classified as a 4.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1166723"></a><b class="fm-exercise-head">Exercise 16.2-Mini Project</b>: Find the average of all the images of 9’s in the data set in the same way we took averages of the images in chapter 6. Plot the resulting image. What does it look like?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1166724"></a><b class="fm-exercise-head">Solution</b>: This code takes an integer <i class="fm-in-times-italic1">i</i> and averages the images in the data set that represent the digit <i class="fm-in-times-italic1">i</i>. Because the digit images are represented as NumPy arrays, which support addition and scalar multiplication, we can average them using the ordinary Python <code class="fm-code-in-text1">sum</code> function and division operator:</p>
+        <pre class="programlisting">def average_img(i):
+    imgs = [img for img,target in zip(digits.images[1000:], digits.target[1000:]) if target==i]
+    return sum(imgs) / len(imgs)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1166726"></a>With this code, <code class="fm-code-in-text1">average_img(9)</code> computes an 8-by-8 matrix representing the average of all the images of 9’s, and it looks like this:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F06_Orland_UN01.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1166837"></a><b class="fm-exercise-head">Exercise 16.3-Mini Project</b>: Build a better classifier than the random one by finding the average image of each kind of digit in the test data set and comparing a target image with all of the averages. Specifically, return a vector of the dot products of the target image with each average digit image.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1166781"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">avg_digits = [np.matrix.flatten(average_img(i)) for i in range(10)]
+def compare_to_avg(<i class="fm-in-times-italic1">v</i>):
+    return [np.dot(v,avg_digits[i]) for i in range(10)]</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1166783"></a>Testing this classifier, we get 85% of the <a id="marker-1179322"></a>digits <a id="marker-1179327"></a>correct in the <a id="marker-1179332"></a>test <a id="marker-1179337"></a>data set. Not bad!</p>
+        <pre class="programlisting">&gt;&gt;&gt; test_digit_classify(compare_to_avg)
+0.853</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_9"><a id="pgfId-1163736"></a><a id="id_8z7tbq69o7qo"></a>16.3 Designing a neural network</h2>
+
+  <p class="body"><a id="pgfId-1163737"></a>In this section, <a id="marker-1179342"></a>I show you how to think of a neural network as a mathematical function and how you can expect it to behave, depending on its structure. That sets us up for the next section, where we implement our first neural network as a Python function in order to classify digit images.</p>
+
+  <p class="body"><a id="pgfId-1163738"></a>For our image classification problem, our neural network has 64 input values and 10 output values, and requires hundreds of operations to evaluate. For that reason, in this section, I stick with a simpler neural network with three inputs and two outputs. This makes it possible to picture the whole network and walk through every step of its evaluation. Once we cover this, it will be easy to write the evaluation steps that work on a neural network of any size in general Python code.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1163740"></a><a id="id_hnfxy0b22omh"></a>16.3.1 Organizing neurons and connections</h3>
+
+  <p class="body"><a id="pgfId-1163741"></a>As I described <a id="marker-1179347"></a>in the beginning of this chapter, the model for a neural network is a collection of neurons, where a given neuron activates, depending on how much its connected neurons activate. Mathematically, turning on a neuron is a function of the activations of the connected neurons. Depending on how many neurons are used, which neurons are connected, and the functions that connect them, the behavior of a neural network can be different. In this chapter, we’ll restrict our attention to one of the simplest<a id="marker-1163742"></a> useful kinds of neural networks−a <i class="fm-italics">multilayer perceptron</i>.</p>
+
+  <p class="body"><a id="pgfId-1163745"></a>A multilayer perceptron, abbreviated MLP, consists of several<a id="marker-1163743"></a><a id="marker-1163744"></a> columns of neurons called <i class="fm-italics">layers</i>, arranged from left to right. Each neuron’s activation is a function of the activations in the previous layer, which is the layer immediately to the left. The leftmost layer depends on no other neurons, and its activation is based on training data. Figure 16.7 provides a schematic of a four-layer MLP.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1163750"></a>Figure 16.7 A schematic of a multilayer perceptron (MLP), consisting of several layers of neurons</p>
+
+  <p class="body"><a id="pgfId-1163751"></a>In figure 16.7, each circle is a neuron, and lines between the circles show connected neurons. Turning on a neuron depends only on the activations of neurons from the previous layer, and it influences the activations of every neuron in the next layer. I arbitrarily chose the number of neurons in each layer, and in this particular schematic, the layers consist of three, four, three, and two neurons, respectively.</p>
+
+  <p class="body"><a id="pgfId-1163752"></a>Because there are 12 total neurons, there are 12 total activation values. Often there can be many more neurons (we’ll use 90 for digit classification), so we can’t give a letter variable name to every neuron. Instead, we represent all activations with the letter <i class="fm-in-times-italic">a</i> and index them<a id="marker-1163753"></a> with superscripts<a id="marker-1163754"></a> and subscripts. The superscript indicates the layer, and the subscript indicates which neuron we’re talking about within the layer. For instance, a</p>
+
+  <p class="calibre28"><img alt="" class="calibre1" src="../Images/w_gifs_750.gif"/> is a number representing the activation of the second neuron in the <a class="calibre10" id="marker-1179352"></a>second layer.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1163756"></a><a id="id_fdzo0nfjb3d4"></a>16.3.2 Data flow through a neural network</h3>
+
+  <p class="body"><a id="pgfId-1163757"></a>To <a id="marker-1179357"></a>evaluate a neural network as a mathematical function, there are three basic steps, which I describe in terms of the activation values. I’ll walk through them conceptually, and then I’ll show you the formulas. Remember, a neural network is just a function that takes an input vector and produces an output vector. The steps in between are just a recipe for getting to the output from the given input. Here’s the first step in the pipeline.</p>
+
+  <p class="fm-head2"><a id="pgfId-1163758"></a>Step 1: Set the input layer activations to the entries of the input vector</p>
+
+  <p class="body"><a id="pgfId-1163759"></a>The<a id="marker-1179362"></a> <i class="fm-italics">input</i> layer is another word for the first or leftmost layer. The network in figure 16.7 has three neurons in the input layer, so this neural network can take 3D vectors as inputs. If our input vector is (0.3, 0.9, 0.5), then we can perform this first step by setting <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> = 0.3, <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> = 0.9, and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> = 0.5. That fills in 3 of the 12 total neurons in the network (figure 16.8).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182648"></a>Figure 16.8 Setting the input layer activations to the entries of the input vector (left)</p>
+
+  <p class="body"><a id="pgfId-1163765"></a>Each activation value in layer one is a function of the activations in layer zero. Now we have enough information to calculate them, so that’s<a id="marker-1179367"></a> step 2.</p>
+
+  <p class="fm-head2"><a id="pgfId-1163766"></a>Step 2: Calculate each activation in the next layer as a function of all of the activations in the input layer</p>
+
+  <p class="body"><a id="pgfId-1167840"></a>This<a id="marker-1179372"></a> step is the meat of the calculation, and I’ll return to it once I’ve gone through all of the steps conceptually. The important thing to know for now is that each activation in the next layer is usually given by a <i class="fm-italics">distinct function</i> of the previous layer activations. Say we want to calculate <i class="fm-in-times-italic">a</i><sub class="fm-subscript">0</sub><sup class="fm-superscript">1</sup>.This acti-vation is some function of <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> ,which we can simply write as <i class="fm-in-times-italic">a</i> 1<sup class="fm-superscript">1</sup> = <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> )for now. Suppose, for instance, we calculate <i class="fm-in-times-italic">f</i>(0.3, 0.9, 0.5) and the answer is 0.6. Then the value of <i class="fm-in-times-italic">a</i> 1<sup class="fm-superscript">1</sup> becomes 0.6 in our calculation (figure 16.9).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182701"></a>Figure 16.9 Calculating an activation in layer one as some function of the activations in layer zero</p>
+
+  <p class="body"><a id="pgfId-1168082"></a> When we calculate the next activation in layer one, <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> ,it is also a function of the input activations <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> ,and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> ,but in general, it is a different function, say <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> = <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> ).The result still depends on the same inputs, but as a different function, it’s likely we’ll get a different result. Let’s say, <i class="fm-in-times-italic">g</i>(0.3, 0.9, 0.5) = 0.1, then that’s our value for <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> (figure 16.10).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182748"></a>Figure 16.10 Calculating another activation in layer one with another function of the input layer activations</p>
+
+  <p class="body"><a id="pgfId-1168245"></a>I used <i class="fm-italics">f</i> and <i class="fm-in-times-italic">g</i> because those are simple placeholder function names. There are two more distinct functions for <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> in terms of the input layer. I won’t keep naming these functions, because we’ll quickly run out of letters, but the important point is that each activation has a special function of the previous layer activations. Once we calculate all of the activations in layer one, we’ve 7 of the 12 total activations filled in. The numbers here are still made up, but the result might look something like that shown in figure 16.11.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182793"></a>Figure 16.11 Two layers of activations for our multilayer perceptron (MLP) calculated.</p>
+
+  <p class="body"><a id="pgfId-1163785"></a>From here on out, we repeat the process until we’ve calculated the activation of every neuron in the network, which is <a id="marker-1179377"></a>step 3.</p>
+
+  <p class="fm-head2"><a id="pgfId-1170937"></a>Step 3: Repeat this process, calculating the activations of each subsequent layer based on the activations in the preceding layer</p>
+
+  <p class="body"><a id="pgfId-1171010"></a>We <a id="marker-1179382"></a>start by calculating <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup> as a function of the layer one activations, <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> ,and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> .Then we move on to <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup> and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup> ,which are given by their own functions. Finally, we calculate <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">3</sup> and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">3</sup> as their own functions of the layer two activations. At this point, we have an activation for every neuron in the network (figure 16.12).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182838"></a>Figure 16.12 An example of an MLP with all activations calculated</p>
+
+  <p class="body"><a id="pgfId-1163795"></a>At this point, our calculation<a id="marker-1163793"></a> is done. We have activations<a id="marker-1163794"></a> calculated for the middle layers, called <i class="fm-italics">hidden layers</i>, and the final layer, called the <i class="fm-italics">output layer</i>. All we need to do now is to read off the activations of the output layer to get our result and that’s <a id="marker-1179387"></a>step 4.</p>
+
+  <p class="fm-head2"><a id="pgfId-1163796"></a>Step 4: Return a vector whose entries are the activations of the output layer</p>
+
+  <p class="body"><a id="pgfId-1163797"></a>In <a id="marker-1179392"></a>this case, the vector is (0.2, 0.9), so evaluating our neural network as a function of the input vector (0.3, 0.9, 0.5) produces the output vector (0.2, 0.9).</p>
+
+  <p class="body"><a id="pgfId-1163798"></a>That’s all there is to it! The only thing I didn’t cover is how to calculate individual activations, and these are what make the neural network distinct. Every neuron, except for those in the input layer, has its own function, and the parameters defining those functions are the numbers we’ll tweak to make the neural network do <a id="marker-1179402"></a>what we <a id="marker-1179397"></a>want.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1163800"></a><a id="id_9wmxwsl4kuj6"></a>16.3.3 Calculating activations</h3>
+
+  <p class="body"><a id="pgfId-1163801"></a>The <a id="marker-1179407"></a>good news<a id="marker-1179412"></a> is that we’ll use a familiar form of function to calculate the activations in one layer as a function of those in the previous layer: logistic functions. The tricky part is that our neural network has 9 neurons outside the input layer, so there are 9 distinct functions to keep track of. What’s more, there are several constants to determine the behavior of each logistic function. Most of the work will be keeping track of all of these constants.</p>
+
+  <p class="body"><a id="pgfId-1163802"></a>To focus on a specific example, we noted that in our sample MLP, we have the activation depend on the three input layer activations: <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> , and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> .The function giving <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> is a linear function of these inputs (including a constant) passed into a sigmoid function. There are four free parameters here, which I name <i class="fm-in-times-italic">a</i>, <i class="fm-italics">B</i>, <i class="fm-italics">C</i>, and <i class="fm-in-times-italic">D</i> for the moment (figure 16.13).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182890"></a>Figure 16.13 The general form of the function to calculate a11as a function of the input layer activations</p>
+
+  <p class="body"><a id="pgfId-1163808"></a>We need to tune the variables <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">B</i>, <i class="fm-in-times-italic">C</i>, and <i class="fm-in-times-italic">D</i> to make <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> respond appropriately to inputs. In chapter 15, we thought of logistic functions as taking in several numbers and making a yes-or-no decision about them, reporting the answer as a certainty of “yes” from zero to one. In that sense, you can think of the neurons in the middle of the network as breaking the overall classification problem into smaller yes-or-no classifications.</p>
+
+  <p class="body"><a id="pgfId-1163809"></a>For every connection in the network, there is a constant telling us how strongly the input neuron activation affects the output neuron activation. In this case, the constant <i class="fm-in-times-italic">a</i> tells us how strongly <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> affects <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> ,while <i class="fm-italics">B</i> and <i class="fm-italics">C</i> tell us how strongly <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> affect <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> ,respectively. These constants are called <i class="fm-italics">weights</i> for the<a id="marker-1163810"></a> neural network, and there is one weight for every line segment in the neural network general diagram used throughout this chapter.</p>
+
+  <p class="body"><a id="pgfId-1163811"></a>The constant <i class="fm-in-times-italic">D</i> doesn’t affect the connection, but instead, independently increases or decreases the value of <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> ,which is not dependent on an input activation. This is appropriately named the <i class="fm-italics">bias</i> for the neuron because it measures the inclination to make a decision without any input. The word <i class="fm-italics">bias</i> sometimes comes<a id="marker-1163812"></a> with a negative connotation, but it’s an important part of any decision-making process; it helps avoid outlier decisions unless there is strong evidence.</p>
+
+  <p class="body"><a id="pgfId-1171347"></a>As messy as it might look, we need to index these weights and biases rather than giving them names like <i class="fm-in-times-italic">a</i>, <i class="fm-italics">B</i>, <i class="fm-italics">C</i>, and <i class="fm-in-times-italic">D</i>. We’ll write the weights in the form <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">l</sup></i> , where <i class="fm-in-times-italic">l</i> is the layer on the right of the connection, <i class="fm-in-times-italic">i</i> is the index of the previous neuron in layer <i class="fm-in-times-italic">l</i> − 1, and <i class="fm-in-times-italic">j</i> is the index of the target neuron in layer <i class="fm-in-times-italic">l</i>. For instance, the weight <i class="fm-in-times-italic">a</i>, which impacts the first neuron of layer one based on the value of the first neuron of layer zero is denoted by <i class="fm-in-times-italic">w</i><sub class="fm-subscript">11</sub><sup class="fm-superscript">1</sup> .The weight connecting the second neuron of layer three to the first neuron of the previous layer is <i class="fm-in-times-italic">w</i><sub class="fm-subscript">21</sub><sup class="fm-superscript">3</sup> (figure 16.14).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182945"></a>Figure 16.14 Showing the connections corresponding to weights <i class="fm-in-times-italic">w</i><sub class="fm-subscript">11</sub><sup class="fm-superscript">1</sup> and <i class="fm-in-times-italic">w</i><sub class="fm-subscript">32</sub><sup class="fm-superscript">1</sup></p>
+
+  <p class="body"><a id="pgfId-1178127"></a>The biases correspond to neurons, not pairs of neurons, so there is one bias for each neuron: <i class="fm-in-times-italic">b</i><sub class="fm-subscript">j</sub><sup class="fm-superscript">l</sup> for the bias of the <i class="fm-in-times-italic">j</i> th neuron in the <i class="fm-in-times-italic">i<sup class="fm-superscript2">th</sup></i> layer. In terms of these naming conventions, we could write the formula for <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> as</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">w</i><sub class="fm-subscript">11</sub><sup class="fm-superscript">1</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">0</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">12</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">0</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">13</sub><sup class="fm-superscript">3</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">0</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-16-18.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1178134"></a>or the formula for <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup> as</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">w</i><sub class="fm-subscript">31</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">32</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">33</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">34</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-16-19.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1163831"></a>As you can see, computing activations to evaluate an MLP is not difficult, but the number of variables can make it a tedious and error-prone process. Fortunately, we can simplify the process and make it easier to implement using the notation of matrices we covered in<a id="marker-1179417"></a> chapter 5.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1163833"></a><a id="id_48nopf8odruu"></a>16.3.4 Calculating activations in matrix notation</h3>
+
+  <p class="body"><a id="pgfId-1163834"></a>As <a id="marker-1179422"></a>nasty as it could be, let’s do a concrete example and write the formula for the activations of a whole layer of the network, and then we’ll see how to simplify it in matrix notation and write a reusable formula. Let’s take layer two. The formulas for the three activations are as follows:</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">w</i><sub class="fm-subscript">11</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">12</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">13</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">14</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup>)</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">w</i><sub class="fm-subscript">21</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">22</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">23</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">24</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup>)</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">w</i><sub class="fm-subscript">31</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">32</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">33</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">34</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup>)</p>
+
+  <p class="body"><a id="pgfId-1178776"></a>It turns out to be useful to name the quantities inside the sigmoid function. Let’s denote the three quantities <i class="fm-in-times-italic">z</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup>, and <i class="fm-in-times-italic">z</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup>,so that by definition</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">z</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup>)</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">z</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup>)</p>
+
+  <p class="body"><a id="pgfId-1178789"></a>and</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup> = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic2">z</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup>)</p>
+
+  <p class="body"><a id="pgfId-1178757"></a>The formulas for these <i class="fm-in-times-italic">z</i> values are nicer because they are all linear combinations of the previous layer activations, plus a constant. That means we can write them in matrix vector notation. Starting with</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">z</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup> = <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">11</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">12</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">13</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">14</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup></p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">z</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup> = <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">21</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">22</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">23</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">24</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup></p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">z</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup> = <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">31</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">32</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">33</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">w</i><sub class="fm-subscript">34</sub><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub><sup class="fm-superscript">1</sup> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup></p>
+
+  <p class="body"><a id="pgfId-1178898"></a>we can write all three equations as a vector</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F14_Orland_EQ06.png"/></p>
+
+  <p class="body"><a id="pgfId-1178766"></a>and then pull out the biases as a vector sum:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F14_Orland_EQ07.png"/></p>
+
+  <p class="body"><a id="pgfId-1163895"></a>This is just a 3D vector addition. Even though the big vector in the middle looks like a larger matrix, it is just a column of three sums. This big vector, however, can be expanded into a matrix multiplication as follows:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F14_Orland_EQ08.png"/></p>
+
+  <p class="body"><a id="pgfId-1163901"></a>The activations in layer two are then obtained by applying <span class="fm-in-cambria">σ</span> to every entry of the resulting vector. This is nothing more than a notational simplification, but it is useful psychologically to pull out the numbers <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">l</sup></i> and <i class="fm-in-times-italic">b</i><sub class="fm-subscript">j</sub><sup class="fm-superscript">l</sup> into their own matrices. These are the numbers that define the neural network itself, as opposed to the activations <i class="fm-in-times-italic">a</i> jl that are the incremental steps in the evaluation.</p>
+
+  <p class="body"><a id="pgfId-1163902"></a>To see what I mean, you can compare evaluating a neural network to evaluating the function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>. The input variable is <i class="fm-in-times-italic">x</i>, and by contrast, <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> are the constants that define the function; the space of possible linear functions is defined by the choice of <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i>. The quantity <i class="fm-in-times-italic">ax</i>, even if we relabeled it something like <i class="fm-in-times-italic">q</i>, is merely an incremental step in the calculation of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>). The analogy is that, once you’ve decided the number of neurons per layer in your MLP, the matrices of weights and vectors of biases for each layer are really the data defining the neural network. With that in mind, we can implement the MLP<a id="marker-1179427"></a> in <a id="marker-1179432"></a>Python.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1163904"></a><a id="id_kewk3bqh30xo"></a>16.3.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1172260"></a><b class="fm-exercise-head">Exercise 16.4</b>: <a id="marker-1179437"></a>What neuron and layer is represented by the activation <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub><sup class="fm-superscript1">3</sup> ? What value does this activation have in the following image? (Neurons and layers are indexed as throughout the previous sections.)</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F14_Orland_UN02.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170460"></a><b class="fm-exercise-head">Solution</b>: The superscript indicates the layer, and the subscript indicates the neuron within the layer. The activation <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub><sup class="fm-superscript1">3</sup> ,therefore, corresponds to the second neuron in layer 3. In the image, it has an activation value of 0.9.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1170489"></a><b class="fm-exercise-head">Exercise 16.5</b>: If layer 5 of a neural network has 10 neurons and layer 6 has 12 neurons, how many total connections are there between neurons in layers 5 and 6?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170490"></a><b class="fm-exercise-head">Solution</b>: Each of the 10 neurons in layer 5 is connected to each of the 12 neurons in layer 6. That’s 120 total connections.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1170781"></a><b class="fm-exercise-head">Exercise 16.6</b>: Suppose we have an MLP with 12 layers. What are the indices <i class="fm-in-times-italic1">l</i>, <i class="fm-in-times-italic1">i</i>, and <i class="fm-in-times-italic1">j</i> of the weight <i class="fm-in-times-italic1">w<sub class="fm-subscript">ij</sub><sup class="fm-superscript">l</sup></i> ,connecting the third neuron of layer 4 to the seventh neuron of layer 5?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170782"></a><b class="fm-exercise-head">Solution</b>: Remember that <i class="fm-in-times-italic1">l</i> is the destination layer of the connection, so <i class="fm-in-times-italic1">l</i> = 5 in this case. The indices <i class="fm-in-times-italic1">i</i> and <i class="fm-in-times-italic1">j</i> refer to the neurons in layers <i class="fm-in-times-italic1">l</i> and <i class="fm-in-times-italic1">l</i> − 1, respectively, so <i class="fm-in-times-italic1">i</i> = 7 and <i class="fm-in-times-italic1">j</i> = 3. The weight is labeled <i class="fm-in-times-italic1">w</i><sub class="fm-subscript2">73</sub><sup class="fm-superscript1">5</sup> .</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1170785"></a><b class="fm-exercise-head">Exercise 16.7</b>: Where is the weight <i class="fm-in-times-italic1">w</i><sub class="fm-subscript2">31</sub><sup class="fm-superscript1">3</sup> in the network used throughout the section?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170786"></a><b class="fm-exercise-head">Solution</b>: There is no such weight. This would connect to a third neuron in layer three, the output layer, but there are only two neurons in this layer.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1170789"></a><b class="fm-exercise-head">Exercise 16.8</b>: In the neural network from this section, what’s a formula for <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub><sup class="fm-superscript1">3</sup> in terms of the activations of layer 2 and the weights and biases?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170790"></a><b class="fm-exercise-head">Solution</b>: The previous layer activations are <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub><sup class="fm-superscript1">2</sup> , <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub><sup class="fm-superscript1">2</sup> ,and <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub><sup class="fm-superscript1">3</sup> ,and the weights connecting them to <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub><sup class="fm-superscript1">3</sup> are <i class="fm-in-times-italic1">w</i><sub class="fm-subscript2">11</sub><sup class="fm-superscript1">3</sup> ,<i class="fm-in-times-italic1">w</i><sub class="fm-subscript2">12</sub><sup class="fm-superscript1">3</sup> ,and <i class="fm-in-times-italic1">w</i><sub class="fm-subscript2">1</sub><sup class="fm-superscript1">3</sup> 3.The bias for activation <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub><sup class="fm-superscript1">3</sup> is denoted <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">1</sub><sup class="fm-superscript1">3</sup> ,so the formula is as follows:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F14_Orland_UN02_EQ09.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1170798"></a><b class="fm-exercise-head">Exercise 16.9−Mini Project</b>: Write a Python function <code class="fm-code-in-text1">sketch_mlp(*layer _sizes)</code> that takes layer sizes of a neural network and outputs a diagram like the ones used throughout this section. Show all of the neurons with labels and draw their connections with straight lines. Calling <code class="fm-code-in-text1">sketch_mlp(3,4,3,2)</code> should produce the example from the diagram we have used to represent the neural net throughout.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170799"></a><b class="fm-exercise-head">Solution</b>: See the source code for this book for <a id="marker-1179442"></a>an <a id="marker-1179447"></a>implementation.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_15"><a id="pgfId-1170803"></a><a id="id_eoz22k3x7h0"></a>16.4 Building a neural network in Python</h2>
+
+  <p class="body"><a id="pgfId-1163940"></a>In<a id="marker-1179452"></a> this <a id="marker-1179457"></a>section, I show you how to take the procedure for evaluating an MLP that I explained in the last section and implement it in Python. Specifically, we’ll implement a Python class called <code class="fm-code-in-text">MLP</code> that stores weights<a id="marker-1163941"></a> and biases (randomly generated at first), and provides an <code class="fm-code-in-text">evaluate</code> method that takes a 64-dimensional input vector and returns the output 10-dimensional vector. This code is a somewhat rote translation of the MLP design I described in the last section into Python, but once we’re done with the implementation, we can test it at the task of classifying handwritten digits.</p>
+
+  <p class="body"><a id="pgfId-1163942"></a>As long as the weights and biases are randomly selected, it probably won’t do better than the random classifier we built to start with. But once we have the structure of a neural network to predict for us, we can tune the weights and biases to make it more predictive. We’ll turn to that problem in the next section.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1163944"></a><a id="id_8uf0g0i2y6qd"></a>16.4.1 Implementing an MLP class in Python</h3>
+
+  <p class="body"><a id="pgfId-1163945"></a>If<a id="marker-1179462"></a> we <a id="marker-1179467"></a>want <a id="marker-1179472"></a>our class to represent an MLP, we need to specify how many layers we want and how many neurons we want per layer. To initialize our MLP with the structure we want, our constructor can take a list of numbers, representing the number of neurons in each layer.</p>
+
+  <p class="body"><a id="pgfId-1163946"></a>The data we need to evaluate the MLP are the weights and biases for every layer after the input layer. As we just covered, we can store the weights as a matrix (a NumPy array) and the biases as a vector (also a NumPy array). To start, we can use random values for all of the weights and biases, and then when we train the network, we can gradually replace these values with more meaningful ones.</p>
+
+  <p class="body"><a id="pgfId-1163947"></a>Let’s quickly review the dimensions of the weight matrices and bias vectors that we want. If we pick a layer with <i class="fm-in-times-italic">m</i> neurons, and the previous layer has <i class="fm-in-times-italic">n</i> neurons, then our weights describe the linear part of the transformation from an <i class="fm-in-times-italic">n</i> -dimensional vector of activations to an <i class="fm-in-times-italic">m</i> -dimensional vector of activations. That’s described by an <i class="fm-in-times-italic">m</i> -by- <i class="fm-in-times-italic">n</i> matrix, in other words, one with<a id="marker-1163950"></a> <i class="fm-in-times-italic">m</i> rows and <i class="fm-in-times-italic">n</i> columns. To see this, we can return to the example from section 16.3, where the weights connecting a layer with four neurons to a layer with three neurons made up a 4-by<span class="fm-in-cambria">−</span>3 matrix as shown in figure 16.15.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1163955"></a>Figure 16.15 The weight matrix connecting a four neuron layer to a three neuron layer is a 3-by<span class="fm-in-cambria">−</span>4 matrix.</p>
+
+  <p class="body"><a id="pgfId-1163956"></a>The biases for a layer of <i class="fm-in-times-italic">m</i> neurons simply make up a vector with <i class="fm-in-times-italic">m</i> entries, one for each neuron. Now that we’ve reminded ourselves how to find the size of the weight matrix and bias vector for each layer, we’re ready to have our class constructor create them. Notice that we iterate over <code class="fm-code-in-text">layer_sizes[1:]</code>, which gives us the sizes of layers in the MLP, skipping the input layer which comes first:</p>
+  <pre class="programlisting">class MLP():
+    def __init__(self,layer_sizes):                 <span class="fm-combinumeral">❶</span>
+        self.layer_sizes = layer_sizes
+        self.weights = [
+            np.random.rand(n,m)                     <span class="fm-combinumeral">❷</span>
+            for m,n in zip(layer_sizes[:−1],
+                           layer_sizes[1:])         <span class="fm-combinumeral">❸</span>
+        ]
+        self.biases = [np.random.rand(n) 
+                       for n in layer_sizes[1:]]    <span class="fm-combinumeral">❹</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1163964"></a><span class="fm-combinumeral">❶</span> Initializes the MLP with a list of layer sizes, giving the number of neurons for each layer</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180869"></a><span class="fm-combinumeral">❷</span> The weight matrices are n-by-m matrices with random entries ...</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180890"></a><span class="fm-combinumeral">❸</span> ... where m and n are the number of neurons of adjacent layers in the neural network.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180907"></a><span class="fm-combinumeral">❹</span> The bias for each layer (skipping the first) is a vector with one entry per neuron in the layer.</p>
+
+  <p class="body"><a id="pgfId-1173508"></a>With this implemented, we can double-check that a two-layer MLP has exactly one weight matrix and one bias vector, and the dimensions match. Let’s say the first layer has two neurons and the second layer has three neurons. Then we can run this code:</p>
+  <pre class="programlisting">&gt;&gt;&gt; nn = MLP([2,3])
+&gt;&gt;&gt; nn.weights
+[array([[0.45390063, 0.02891635],
+        [0.15418494, 0.70165829],
+        [0.88135556, 0.50607624]])]
+&gt;&gt;&gt; nn.biases
+[array([0.08668222, 0.35470513, 0.98076987])]</pre>
+
+  <p class="body"><a id="pgfId-1163966"></a>This confirms that we’ve a single 3-by−2 weight matrix and a single 3D bias vector, both populated with random entries.</p>
+
+  <p class="body"><a id="pgfId-1163967"></a>The number of neurons in the input layer and output layer should match the dimensions of vectors we want to pass in and receive as output. Our problem of image classification calls for a 64D input vector and a 10D output vector. For this chapter, I stick with a 64-neuron input layer, a 10-neuron output layer, and a single 16-neuron layer in between. There is some combination of art and science to picking the right number of layers and layer sizes to get a neural network to perform well on a given task, and that’s the kind of thing machine learning experts get paid big bucks for. For the purpose of this chapter, I say this structure is sufficient to get us a good, predictive model.</p>
+
+  <p class="body"><a id="pgfId-1163968"></a>Our neural network can be initialized as <code class="fm-code-in-text">MLP([64,16,10])</code>, and it is much bigger than any of the ones we’ve drawn so far. Figure 16.16 shows what it looks like.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1163973"></a>Figure 16.16 An MLP with three layers of 64, 16, and 10 neurons, respectively</p>
+
+  <p class="body"><a id="pgfId-1163974"></a>Fortunately, once we implement our evaluation method, it’s no harder for us to evaluate a big neural network than a small one. That’s because Python does all of the<a id="marker-1179492"></a> work <a id="marker-1179487"></a>for <a id="marker-1179477"></a>us!</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1163976"></a><a id="id_gfurhigyrfsi"></a>16.4.2 Evaluating the MLP</h3>
+
+  <p class="body"><a id="pgfId-1163977"></a>An <a id="marker-1179497"></a>evaluation <a id="marker-1179502"></a>method<a id="marker-1179507"></a> for our <code class="fm-code-in-text">MLP</code> class should take a 64D vector as input and return a 10D vector as output. The procedure to get from the input to the output is based on calculating the activations layer-by-layer from the input layer all the way to the output layer. As you’ll see when we discuss backpropagation, it’s useful to keep track of all of the activations as we go, even for the hidden layers in the middle of the network. For that reason, I’ll build the <code class="fm-code-in-text">evaluate</code> function in two steps: first, I’ll build a method to calculate all of the activations, and then I’ll build another one to pull the last layer activation values and produce the results.</p>
+
+  <p class="body"><a id="pgfId-1163979"></a>I call the first method <code class="fm-code-in-text">feedforward</code>, which is a<a id="marker-1163978"></a> common name for the procedure of calculating activations layer-by-layer. The input layer activations are given, and to get to the next layer, we need to multiply the vector of these activations by the weight matrix, add the next layer biases, and pass the coordinates of the result through the sigmoid function. We repeat this process until we get to the output layer. Here’s what it looks like:</p>
+  <pre class="programlisting">class MLP():
+    ...
+    def feedforward(self,v):
+        activations = []                            <span class="fm-combinumeral">❶</span>
+        a = v
+        activations.append(a)                       <span class="fm-combinumeral">❷</span>
+        for w,b in zip(self.weights, self.biases):  <span class="fm-combinumeral">❸</span>
+            z = w @ a + b                           <span class="fm-combinumeral">❹</span>
+            a = [sigmoid(x) for x in z]             <span class="fm-combinumeral">❺</span>
+            activations.append(a)                   <span class="fm-combinumeral">❻</span>
+        return activations</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181104"></a><span class="fm-combinumeral">❶</span> Initializes with an empty list of activations</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181125"></a><span class="fm-combinumeral">❷</span> The first layer activations are exactly the entries of the input vector; we append those to the list of activations.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181149"></a><span class="fm-combinumeral">❸</span> Iterates over the layers with one weight matrix and bias vector per layer</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181166"></a><span class="fm-combinumeral">❹</span> The vector z is the matrix product of the weights with the previous layer activations plus the bias vector.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181183"></a><span class="fm-combinumeral">❺</span> Takes the sigmoid function of every entry of z to get the activation</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181200"></a><span class="fm-combinumeral">❻</span> Adds the new computed activation vector to the list of activations</p>
+
+  <p class="body"><a id="pgfId-1173812"></a>The last layer activations are the results we want, so an evaluate method for the neural network simply<a id="marker-1163988"></a> runs the <code class="fm-code-in-text">feedforward</code> method for the input vector and then extracts the last activation vector like this:</p>
+  <pre class="programlisting">class MLP():
+    ...
+    def evaluate(self,v):
+        return np.array(self.feedforward(<i class="fm-in-times-italic1">v</i>)[−1])</pre>
+
+  <p class="body"><a id="pgfId-1163990"></a>That’s it! You can see that the matrix multiplication saved us a lot of loops over neurons we’d otherwise be writing to<a id="marker-1179522"></a> calculate<a id="marker-1179517"></a> the<a id="marker-1179512"></a> activations.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1163992"></a><a id="id_jgd00m3ta71q"></a>16.4.3 Testing the classification performance of an MLP</h3>
+
+  <p class="body"><a id="pgfId-1163993"></a>With<a id="marker-1179527"></a> an <a id="marker-1179532"></a>appropriately <a id="marker-1179537"></a>sized MLP, it can now accept a vector for a digit image and output a result:</p>
+  <pre class="programlisting">&gt;&gt;&gt; nn = MLP([64,16,10])
+&gt;&gt;&gt; xv  = np.matrix.flatten(digits.images[0]) / 15.
+&gt;&gt;&gt; nn.evaluate(<i class="fm-in-times-italic1">v</i>)
+array([0.99990572, 0.9987683 , 0.99994929, 0.99978464, 0.99989691,
+       0.99983505, 0.99991699, 0.99931011, 0.99988506, 0.99939445])</pre>
+
+  <p class="body"><a id="pgfId-1163995"></a>That’s passing in a 64-dimensional vector representing an image and returning a 10-dimensional vector as an output, so our neural network is behaving as a correctly shaped vector transformation. Because the weights and biases are random, these numbers should not be a good prediction of what digit the image is likely to be. (Incidentally, the numbers are all close to 1 because all of our weights, biases, and input numbers are positive, and the sigmoid sends big positive numbers to values close to 1.) Even so, there is a <i class="fm-italics">biggest</i> entry in this output vector, which happens to be the number at index 2. This (incorrectly) predicts that image 0 in the data set represents the number 2.</p>
+
+  <p class="body"><a id="pgfId-1163996"></a>The randomness suggests that our MLP only guesses 10% of the answers correctly. We can confirm this with a <code class="fm-code-in-text">test_digit_classify</code> function. For the random MLP I initialized, it gave exactly 10%:</p>
+  <pre class="programlisting">&gt;&gt;&gt; test_digit_classify(nn.evaluate)
+0.1</pre>
+
+  <p class="body"><a id="pgfId-1163998"></a>This may not seem like much progress, but we can pat ourselves on the back for getting the classifier working, even if it’s not good at its task. Evaluating a neural network is much more involved than evaluating a simple function like <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>, but we’ll see the payoff soon as we <i class="fm-italics">train</i> the neural network to classify<a id="marker-1179552"></a> images <a id="marker-1179547"></a>more <a id="marker-1179542"></a>accurately.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1164000"></a><a id="id_43azd43by4om"></a>16.4.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1173836"></a><b class="fm-exercise-head">Exercise 16.10-Mini Project</b>: <a id="marker-1179557"></a>Rewrite <a id="marker-1179562"></a>the <code class="fm-code-in-text1">feedforward</code> method using explicit<a id="marker-1173835"></a> loops over the layers and weights rather than using NumPy matrix multiplication. Confirm that your result matches exactly with the<a id="marker-1179567"></a> previous <a id="marker-1179572"></a>implem<a id="marker-1179582"></a>entation<a id="marker-1179577"></a>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_20"><a id="pgfId-1164006"></a><a id="id_wv4qvf9383iy"></a>16.5 Training a neural network using gradient descent</h2>
+
+  <p class="body"><a id="pgfId-1164007"></a>Training <a id="marker-1179587"></a><i class="fm-in-times-italic">a</i> neural <a id="marker-1179592"></a>network might sound like an abstract concept, but it just means finding the best weights and biases that makes the neural network do the task at hand as well as possible. We can’t cover the whole algorithm here, but I show you how it works conceptually and how to use a third-party library to do it automatically. By the end of this section, we’ll have adjusted the weights and biases of our neural network to predict which digit is represented by an image to a high degree of accuracy. We can then run it through <code class="fm-code-in-text">test_digit_classify</code> again and measure how well it does.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1164009"></a><a id="id_6wg7ncgwq35v"></a>16.5.1 Framing training as a minimization problem</h3>
+
+  <p class="body"><a id="pgfId-1164010"></a>In <a id="marker-1179597"></a>the <a id="marker-1179602"></a>previous chapters for a linear function <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i> or a logistic function <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> + <i class="fm-in-times-italic">c</i>), we created a cost function that measured the failure of the linear or logistic function, depending on the constants in the formula, to match the data exactly. The constants for the linear function were the slope and <i class="fm-in-times-italic">y</i> -intercept <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i>, so the cost function had the form <i class="fm-italics">C</i>(<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>). The logistic function had the constants <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i>(to be determined), so its cost function had the form <i class="fm-italics">C</i>(<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>). Internally, both of these cost functions depended on <i class="fm-italics">all</i> of the training examples. To find the best parameters, we’ll use gradient descent to minimize the cost function.</p>
+
+  <p class="body"><a id="pgfId-1164011"></a>The big difference for an MLP is that its behavior can depend on hundreds or thousands of constants: all of its weights <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub></i><sup class="fm-superscript">1</sup>and biases <i class="fm-in-times-italic">b</i><sub class="fm-subscript">j</sub><sup class="fm-superscript">l</sup> for every layer <i class="fm-in-times-italic">l</i> and valid neuron indices <i class="fm-in-times-italic">i</i> and <i class="fm-in-times-italic">j</i>. Our neural network with 64, 16, and 10 neurons and its three layers have 64 <span class="fm-in-cambria">·</span> 16 = 1,024 weights between the first two layers and 16 <span class="fm-in-cambria">·</span> 10 = 160 weights between the second two. It has 16 biases in the hidden layer and 10 biases in the output layer. All in all, that’s 1,210 constants we need to tune. You can picture our cost function as a function of these 1,210 values, which we need to minimize. If we write it out, it would look something like this:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F16_Orland_EQ10.png"/></p>
+
+  <p class="body"><a id="pgfId-1164017"></a>In the equation, where I’ve written the ellipses, there are over a thousand more weights and 24 more biases I didn’t write out. It’s worth thinking briefly about how to create the cost function, and as a mini-project, you can try implementing it yourself.</p>
+
+  <p class="body"><a id="pgfId-1164018"></a>Our neural network outputs vectors, but we consider the answer to the classification problem to be the digit represented by the image. To resolve this, we can think of the correct answer as the 10-dimensional vector that a perfect classifier would have as output. For instance, if an image clearly represents the digit 5, we would like to see 100% certainty that the image is a 5 and 0% certainty that the image is any other digit. That means a 1 in the fifth index and 0’s elsewhere (figure 16.17).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1164023"></a>Figure 16.17 Ideal output from a neural network: 1.0 in the correct index and 0.0 elsewhere</p>
+
+  <p class="body"><a id="pgfId-1164024"></a>Just as our previous attempts at regression never fit the data exactly, neither will our neural network. To measure the error from our 10-dimensional output vector to the ideal output vector, we can use the square of their distance in 10 dimensions.</p>
+
+  <p class="body"><a id="pgfId-1174202"></a>Suppose the ideal output is written <i class="fm-in-times-italic">y</i> = (<i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub> , <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub> , <i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub> , ..., <i class="fm-in-times-italic">y</i><sub class="fm-subscript">10</sub> ). Note that I’m following the math convention for indexing from 1 rather than the Python convention of indexing from 0. That’s actually the same convention I used for neurons within a layer, so the output layer (layer two) activations are indexed (<i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">2</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">2</sup> , <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub><sup class="fm-superscript">2</sup> ,..., <i class="fm-in-times-italic">a</i><sub class="fm-subscript">10</sub><sup class="fm-superscript">1</sup>).The squared distance between these vectors is the sum:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ11.png"/></p>
+
+  <p class="body"><a id="pgfId-1173903"></a>As another potentially confusing point, the superscript 2 above the <i class="fm-in-times-italic">a</i> values indicates the output layer is layer two in our network, while the 2 outside the parentheses means squaring the quantity. To get a total cost relative to the data set, you can evaluate the neural network for all of the sample images and take the average squared distance. At the end of the section, you can try the mini-project for implementing this <a id="marker-1179612"></a>yourself in <a id="marker-1179607"></a>Python.</p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1164033"></a><a id="id_8zhohofpadka"></a>16.5.2 Calculating gradients with backpropagation</h3>
+
+  <p class="body"><a id="pgfId-1164034"></a>With <a id="marker-1179617"></a>the<a id="marker-1179622"></a> cost function <i class="fm-italics">C</i>(<i class="fm-in-times-italic">w</i><sub class="fm-subscript">11</sub><sup class="fm-superscript">1</sup> ,<i class="fm-in-times-italic">w</i><sub class="fm-subscript">12</sub><sup class="fm-superscript">1</sup> , ..., <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub><sup class="fm-superscript">1</sup> , <i class="fm-in-times-italic">b</i><sub class="fm-subscript">2</sub><sup class="fm-superscript">1</sup> , ...) coded in Python, we could write a 1,210-dimensional version of gradient descent. This would mean taking 1,210 partial derivatives in each step to get a gradient. That gradient would be the 1,210-dimensional vector of the partial derivatives at the point, having this form</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ12.png"/></p>
+
+  <p class="body"><a id="pgfId-1164040"></a>Estimating so many partial derivatives would be computationally expensive because each would require evaluating <i class="fm-italics">C</i> twice to test the effect of tweaking one of its input variables. In turn, evaluating <i class="fm-italics">C</i> requires looking at every image in the training set and passing it through the network. It might be possible to do this, but the computation time would be prohibitively long for most real-world problems like ours.</p>
+
+  <p class="body"><a id="pgfId-1179065"></a>Instead, the best way to calculate the partial derivatives is to find their exact formulas using methods similar to those we covered in chapter 10. I won’t completely cover how to do this, but I’ll give you a teaser in the last section. The key is that while there are 1,210 partial derivatives to take, they all have the form:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ13a.png"/></p>
+
+  <p class="body">or</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ13b.png"/></p>
+
+  <p class="body"><a id="pgfId-1164051"></a>for some choice of indices <i class="fm-in-times-italic">l</i>, <i class="fm-in-times-italic">i</i>, and <i class="fm-in-times-italic">j</i>. The algorithm of <i class="fm-italics">backpropagation</i> calculates all of these partial derivatives recursively, working backward from the output layer weights and biases, all the way to layer one.</p>
+
+  <p class="body"><a id="pgfId-1164052"></a>If you’re interested in learning more about backpropagation, stay tuned for the last section of the chapter. For now, I’ll turn to the scikit-learn library to calculate costs, carry out backpropagation, and complete the gradient <a id="marker-1179700"></a>descent <a id="marker-1179701"></a>automatically.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1164054"></a><a id="id_rpyf5yaytoca"></a>16.5.3 Automatic training with scikit-learn</h3>
+
+  <p class="body"><a id="pgfId-1164055"></a>We don’t <a id="marker-1179728"></a>need <a id="marker-1179732"></a>any new concepts to train an MLP with scikit-learn; we just need to tell it to set up the problem the same way we have and then find the answer. I won’t explain everything the scikit-learn library can do, but I will step you through the code to train the MLP for digit classification.</p>
+
+  <p class="body"><a id="pgfId-1164056"></a>The first step is to put all of our training data (in this case, the digit images as 64-dimensional vectors) into a single NumPy array. Using the first 1,000 images in the data set gives us a 1,000-by<span class="fm-in-cambria">−</span>64 matrix. We’ll also put the first 1,000 answers in an output list:</p>
+  <pre class="programlisting"><i class="fm-in-times-italic1">x</i> = np.array([np.matrix.flatten(img) for img in digits.images[:1000]]) / 15.0
+y = digits.target[:1000]</pre>
+
+  <p class="body"><a id="pgfId-1164059"></a>Next, we use the <code class="fm-code-in-text">MLP</code> class that comes with<a id="marker-1164058"></a> scikit-learn to initialize an MLP. The sizes of the input and output layers are determined by the data, so we only need to specify the size of our single hidden layer in the middle. Additionally, we include parameters telling the MLP how we want it to be trained. Here’s the code:</p>
+  <pre class="programlisting">from sklearn.neural_network import MLPClassifier
+
+mlp = MLPClassifier(hidden_layer_sizes=(16,),  <span class="fm-combinumeral">❶</span>
+                    activation='logistic',     <span class="fm-combinumeral">❷</span>
+                    max_iter=100,              <span class="fm-combinumeral">❸</span>
+                    verbose=10,                <span class="fm-combinumeral">❹</span>
+                    random_state=1,            <span class="fm-combinumeral">❺</span>
+                    learning_rate_init=.1)     <span class="fm-combinumeral">❻</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1164067"></a><span class="fm-combinumeral">❶</span> Specifies that we want a hidden layer with 16 neurons</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181562"></a><span class="fm-combinumeral">❷</span> Specifies that we want to use logistic (ordinary sigmoid) activation functions in the network</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181579"></a><span class="fm-combinumeral">❸</span> Sets the maximum number of gradient descent steps to take in case there are convergence issues</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181596"></a><span class="fm-combinumeral">❹</span> Selects that the training process provides verbose logs</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181613"></a><span class="fm-combinumeral">❺</span> Initializes the MLP with random weights and biases</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181637"></a><span class="fm-combinumeral">❻</span> Decides the learning rate or what multiple of the gradient to move in each iteration of the gradient descen</p>
+
+  <p class="body"><a id="pgfId-1174896"></a>Once this is done, we can train the neural network to the input data <i class="fm-in-times-italic">x</i> and corresponding output data <i class="fm-in-times-italic">y</i> in one line:</p>
+  <pre class="programlisting">mlp.fit(x,y)</pre>
+
+  <p class="body"><a id="pgfId-1164069"></a>When you run this line of code, you’ll see a bunch of text print in the terminal window as the neural network trains. This logging shows how many gradient descent steps it takes and the value of the cost function, which scikit-learn calls “loss” instead of “cost.”</p>
+  <pre class="programlisting">Iteration 1, loss = 2.21958598
+Iteration 2, loss = 1.56912978
+Iteration 3, loss = 0.98970277
+...
+Iteration 58, loss = 0.00336792
+Iteration 59, loss = 0.00330330
+Iteration 60, loss = 0.00321734
+Training loss did not improve more than tol=0.000100 for two consecutive epochs. Stopping.</pre>
+
+  <p class="body"><a id="pgfId-1164071"></a>At this point, after 60 iterations of gradient descent, a minimum has been found and the MLP is trained. You can test it on image vectors using the <code class="fm-code-in-text">_predict</code> method. This method takes an array of inputs, meaning an array of 64-dimensional vectors, and returns the output vectors for all of them. For instance, <code class="fm-code-in-text">mlp._predict(<i class="fm-in-times-italic2">x</i>)</code> gives the 10-dimensional output vectors for all 1,000 image vectors stored in <i class="fm-in-times-italic">x</i>. The result for the zero<sup class="fm-superscript">th</sup> training example is the zero<sup class="fm-superscript">th</sup> entry of the result:</p>
+  <pre class="programlisting">&gt;&gt;&gt; mlp._predict(<i class="fm-in-times-italic1">x</i>)[0]
+array([9.99766643e-01, 8.43331208e−11, 3.47867059e-06, 1.49956270e-07,
+       1.88677660e-06, 3.44652605e-05, 6.23829017e-06, 1.09043503e-04,
+       1.11195821e-07, 7.79837557e-05])</pre>
+
+  <p class="body"><a id="pgfId-1164074"></a>It takes some squinting at these numbers in scientific notation, but the first one is 0.9998, while the others are all less than 0.001. This correctly predicts that the zero<sup class="fm-superscript">th</sup> training example is a picture of the digit 0. So far so good!</p>
+
+  <p class="body"><a id="pgfId-1164075"></a>With a small wrapper, we can write a function that uses this MLP to do <i class="fm-italics">one</i> prediction, taking a 64-dimensional image vector and outputting a 10-dimensional result. Because scikit-learn’s MLP works on collections of input vectors and produces arrays of results, we just need to put our input vector in a list before passing it to <code class="fm-code-in-text">mlp._predict</code> :</p>
+  <pre class="programlisting">def sklearn_trained_classify(<i class="fm-in-times-italic1">v</i>):
+    return mlp._predict([v])[0]</pre>
+
+  <p class="body"><a id="pgfId-1164077"></a>At this point, the vector has the correct shape to have its performance tested by our <code class="fm-code-in-text">test_digit_classify</code> function. Let’s see what percentage of the test digit images it correctly identifies:</p>
+  <pre class="programlisting">&gt;&gt;&gt; test_digit_classify(sklearn_trained_classify)
+1.0</pre>
+
+  <p class="body"><a id="pgfId-1164079"></a>That’s an astonishing 100% accuracy! You might be skeptical of this result; after all, we’re testing on the same data set that the neural network used to train. In theory, when storing 1,210 numbers, the neural net could have just memorized every example in the training set. If you test the images the neural network hasn’t seen before, you’ll see this isn’t the case; it still does an impressive job classifying the images correctly as digits. I found that it had 96.2% accuracy on the next 500 images in the data set, and you can test this yourself<a id="marker-1179737"></a> in an<a id="marker-1179716"></a> exercise.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1164081"></a><a id="id_gnpa1ur2mri0"></a>16.5.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1174922"></a><b class="fm-exercise-head">Exercise 16.11</b>: <a id="marker-1179742"></a>Modify <a id="marker-1179747"></a>the <code class="fm-code-in-text1">test_digit_classify</code> function to work on a custom range of examples in the test set. How does it do on the next 500 examples after the 1,000 training examples?</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1174948"></a><b class="fm-exercise-head">Solution</b>: Here I’ve added a <code class="fm-code-in-text1">start</code> keyword argument to indicate which test example to start with. The <code class="fm-code-in-text1">test_count</code> keyword argument still indicates the number of examples to test:</p>
+        <pre class="programlisting">def test_digit_classify(classifier,start=0,test_count=1000):
+    correct = 0
+    end = start + test_count                           <span class="fm-combinumeral">❶</span>
+    for img, target in zip(digits.images[start:end], 
+digits.target[start:end]):                             <span class="fm-combinumeral">❷</span>
+        v  = np.matrix.flatten(img) / 15
+        output = classifier(<i class="fm-in-times-italic1">v</i>)
+        answer = list(output).index(max(output))
+        if answer == target:
+            correct += 1
+    return (correct/test_count)</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1181921"></a><span class="fm-combinumeral">❶</span> Calculates the end index for test data we want to consider</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1181942"></a><span class="fm-combinumeral">❷</span> Loops only over the test data between the start and end indices</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1174952"></a>My trained MLP identifies 96.2% of these fresh digit images correctly:</p>
+        <pre class="programlisting">&gt;&gt;&gt; test_digit_classify(sklearn_trained_classify,start=1000,test_count=500)
+0.962</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1175049"></a><b class="fm-exercise-head">Exercise 16.12</b>: Using the squared distance cost function, what is the cost of your randomly generated MLP for the first 1,000 training examples? What is the cost of the scikit-learn MLP?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1175050"></a><b class="fm-exercise-head">Solution</b>: First, we can write a function to give us the ideal output vector for a given digit. For instance, for the digit 5, we’d like an output vector <i class="fm-in-times-italic1">y</i>, which is all zeros except for a one in the fifth index.</p>
+        <pre class="programlisting">def y_vec(digit):
+    return np.array([1 if i == digit else 0 for i in range(0,10)])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1175052"></a>The cost of one test example is the sum of squared distance from what the classifier outputs to the ideal result. That’s the sum of squared differences in the coordinates added up:</p>
+        <pre class="programlisting">def cost_one(classifier,x,i):
+    return sum([(classifier(<i class="fm-in-times-italic1">x</i>)[j] − y_vec(i)[j])**2 for j in range(10)])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1175054"></a>The total cost for a classifier is the average cost over all of the 1,000 training examples:</p>
+        <pre class="programlisting">def total_cost(classifier):
+    return sum([cost_one(classifier,x[j],y[j]) for j in range(1000)])/1000.</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1175078"></a>As expected, a randomly initialized MLP with only 10% predictive accuracy has a much higher cost than a 100% accurate MLP produced by scikit-learn:</p>
+        <pre class="programlisting">&gt;&gt;&gt; total_cost(nn.evaluate)
+8.995371023185067
+&gt;&gt;&gt; total_cost(sklearn_trained_classify)
+5.670512721637246e-05</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1175102"></a><b class="fm-exercise-head">Exercise 16.13-Mini Project</b>: Extract the <code class="fm-code-in-text1">MLPClassifier</code> weights and biases using its properties <code class="fm-code-in-text1">coefs_</code> and <code class="fm-code-in-text1">intercepts_</code>, respectively. Plug these weights and<a id="marker-1175103"></a> biases into the <code class="fm-code-in-text1">MLP</code> class we built from scratch earlier in this chapter and show that your resulting MLP performs well on digit classification.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1175105"></a><b class="fm-exercise-head">Solution</b>: If you try this, you’ll notice one problem; where<a id="marker-1175104"></a> we expect the weight matrices to be 16-by<span class="fm-in-cambria">−</span>64 and 10-by−16, the <code class="fm-code-in-text1">coefs_</code> property of <code class="fm-code-in-text1">MLPClassifier</code> gives a 64-by−16 matrix and a 16-by−10 matrix. It looks like scikit-learn uses a convention that stores columns of the weight matrices versus our convention that stores rows. There’s a quick way to fix this.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1175106"></a>NumPy arrays have a <code class="fm-code-in-text1">T</code> property returning the <i class="fm-italics">transpose</i> of a matrix (a matrix obtained by pivoting the matrix so that the rows become the columns of the result). With this trick in mind, we can plug the weights and biases into our neural network and test it:</p>
+        <pre class="programlisting">&gt;&gt;&gt; nn = MLP([64,16,10])
+&gt;&gt;&gt; nn.weights = [w.T for w in mlp.coefs_]       <span class="fm-combinumeral">❶</span>
+&gt;&gt;&gt; nn.biases = mlp.intercepts_                  <span class="fm-combinumeral">❷</span>
+&gt;&gt;&gt; test_digit_classify(nn.evaluate,
+                        start=1000,
+                        test_count=500) 0.962    <span class="fm-combinumeral">❸</span></pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1182086"></a><span class="fm-combinumeral">❶</span> Sets our weight matrices to the ones from the scikit-learn MLP, after transposing them to agree with our convention</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1182107"></a><span class="fm-combinumeral">❷</span> Sets our network’s biases to the ones from the scikit-learn MLP</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1182124"></a><span class="fm-combinumeral">❸</span> Tests the performance of our neural network at the classification task with new weights and biases</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1175455"></a>This is 96.2% accurate on the 500 images after the training data set, just like the MLP produced by scikit-learn directly.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_25"><a id="pgfId-1164117"></a><a id="id_lw5n5520htct"></a>16.6 C<a id="marker-1179752"></a>alcul<a id="marker-1179757"></a>ating <a id="marker-1179762"></a>gradients <a id="marker-1179767"></a>with backpropagation</h2>
+
+  <p class="body"><a id="pgfId-1164118"></a>This <a id="marker-1179772"></a>section <a id="marker-1179777"></a>is completely optional. Frankly, because you know how to train an MLP using scikit-learn, you’re ready to solve real-world problems. You can test neural networks of different shapes and sizes on classification problems and experiment with their design to improve classification performance. Because this is the last section in the book, I wanted to give you some final, challenging (but doable!) math to chew on−calculating partial derivatives of the cost function by hand.</p>
+
+  <p class="body"><a id="pgfId-1164119"></a>The process of calculating partial derivatives of an MLP is called <i class="fm-italics">backpropagation</i> because it’s efficient to start with the weights and biases of the last layer and work backwards. Backpropagation can be broken into four steps: calculating the derivatives with respect to the last layer weights, last layer biases, hidden layer weights, and hidden layer biases. I’ll show you how to get the partial derivatives with respect to the weights in the last layer, and you can try running with this approach to do the rest.</p>
+
+  <h3 class="fm-head1" id="heading_id_26"><a id="pgfId-1164121"></a>16.6.1 <a id="id_8do5v61f1ngx"></a>Finding the cost in terms of the last layer weights</h3>
+
+  <p class="body"><a id="pgfId-1175493"></a>Let’s <a id="marker-1179782"></a>call <a id="marker-1179787"></a>the index of the last layer of the MLP <i class="fm-in-times-italic">L</i>. That means that the last weight matrix consists of the weights <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> ,where <i class="fm-in-times-italic">l</i> = <i class="fm-in-times-italic">L</i>, in other words, the weights <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> .The biases in this layer are <i class="fm-in-times-italic">b</i> jL and the activations are labeled <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> .</p>
+
+  <p class="body"><a id="pgfId-1164123"></a>The formula to get the <i class="fm-in-times-italic">j</i><sup class="fm-superscript">th</sup> neuron’s activation in the last layer <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> is a sum of the contribution from every neuron in layer <i class="fm-in-times-italic">L</i> − <i class="fm-in-times-italic">l</i>, indexed by <i class="fm-in-times-italic">i</i>. In a made-up notation, it becomes</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ14.png"/></p>
+
+  <p class="body"><a id="pgfId-1164129"></a>The sum is taken over all values of <i class="fm-in-times-italic">i</i> from one to the number of neurons in layer <i class="fm-in-times-italic">L</i> − <i class="fm-in-times-italic">l</i>. Let’s write the number of neurons in layer <i class="fm-in-times-italic">l</i> as <i class="fm-italics">ni</i>, with <i class="fm-in-times-italic">i</i> ranging from <i class="fm-in-times-italic">l</i> to <i class="fm-italics">n<sub class="fm-subscript">L</sub></i><sub class="fm-subscript">−1</sub> in our sum. In proper mathematical summation notation, this sum is written:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ15.png"/></p>
+
+  <p class="body"><a id="pgfId-1175714"></a>The English translation of this formula is “fixing values of <i class="fm-in-times-italic">L</i> and <i class="fm-in-times-italic">j</i> by adding up the values of the expression <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> <i class="fm-in-times-italic">a</i><sub class="fm-subscript">i</sub><sup class="fm-superscript"><i class="fm-in-times-italic2">L</i>−1</sup> for every <i class="fm-in-times-italic">i</i> from one to <i class="fm-italics">n<sub class="fm-subscript">L</sub></i>.” This is nothing more than the formula for matrix multiplication written as a sum. In this form, the activation is as follows:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ16.png"/></p>
+
+  <p class="body"><a id="pgfId-1175818"></a>Given an actual training example, we can have some ideal output vector <b class="fm-bold1">y</b> with a 1 in the correct slot and 0’s elsewhere. The cost is the squared distance between the activation vector <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> and the ideal output values <i class="fm-in-times-italic">y<sub class="fm-subscript1">j</sub></i>. That is,</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ17.png"/></p>
+
+  <p class="body"><a id="pgfId-1175822"></a>The impact of a weight <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> on <i class="fm-italics">C</i> is indirect. First, it is multiplied by an activation from the previous layer, added to the bias, passed through a sigmoid, and then passed through the quadratic cost function. Fortunately, we covered how to take derivatives of compositions of functions in chapter 10. This example is a bit more complicated, but you should be able to recognize it as the same chain <a id="marker-1179926"></a>rule we <a id="marker-1179797"></a>saw <a id="marker-1179792"></a>before.</p>
+
+  <h3 class="fm-head1" id="heading_id_27"><a id="pgfId-1164150"></a><a id="id_1umih1slryrl"></a>16.6.2 Calculating the partial derivatives for the last layer weights using the chain rule</h3>
+
+  <p class="body"><a id="pgfId-1164151"></a>Let’s <a id="marker-1179802"></a>break <a id="marker-1179807"></a>it down <a id="marker-1179812"></a>into <a id="marker-1179837"></a>three steps to get from <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> to <i class="fm-italics">C</i>. First, we can calculate the value to be passed into the sigmoid, which we called <i class="fm-in-times-italic">z<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> earlier in the chapter:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ18.png"/></p>
+
+  <p class="body"><a id="pgfId-1164157"></a>Then we can pass <i class="fm-in-times-italic">z<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> into the sigmoid function to get the activation <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> :</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ19.png"/></p>
+
+  <p class="body"><a id="pgfId-1164163"></a>And finally, we can compute the cost:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ20.png"/></p>
+
+  <p class="body"><a id="pgfId-1164169"></a>To find the partial derivative of <i class="fm-italics">C</i> with respect to <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> ,we multiply the derivatives of these three “composed” expressions together. The derivative of <i class="fm-in-times-italic">z<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> with respect to <i class="fm-italics">one</i> particular <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> is the specific activation <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> <sub class="fm-subscript">−1</sub> that it’s multiplied by. This is similar to the derivative of <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i> with respect to <i class="fm-in-times-italic">x,</i> which is the constant <i class="fm-in-times-italic">a</i>. The partial derivative is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ21.png"/></p>
+
+  <p class="body"><a id="pgfId-1164175"></a>The next step is applying the sigmoid function, so the derivative of <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> with respect to <i class="fm-in-times-italic">z<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> is the derivative of <span class="fm-in-cambria">σ</span>. It turns out, and you can confirm this as an exercise, that the derivative of <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>) is <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>)(1 − <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>)). This nice formula follows in part from the fact that <i class="fm-italics">ex</i> is its own derivative. That gives us</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ22.png"/></p>
+
+  <p class="body"><a id="pgfId-1164181"></a>This is an ordinary derivative, not a partial derivative, because <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> is a function of only one input: <i class="fm-in-times-italic">z<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i>. Finally, we need the derivative of <i class="fm-italics">C</i> with respect to <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> . Only one term of the sum depends on <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> ,so we just need the derivative of (<i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> − <i class="fm-in-times-italic">y<sub class="fm-subscript1">j</sub></i>)<sup class="fm-superscript">2</sup> with respect to <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> .In this context, <i class="fm-in-times-italic">y<sub class="fm-subscript1">j</sub></i> is a constant, so the derivative is 2<i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> . This comes from the power rule, telling us that if <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> , then <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 2<i class="fm-in-times-italic">x</i>. For our last derivative, we need</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ23.png"/></p>
+
+  <p class="body"><a id="pgfId-1164187"></a>The multivariable version of the chain rule says the following:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ24.png"/></p>
+
+  <p class="body"><a id="pgfId-1164193"></a>This looks a little bit different from the version we saw in chapter 10, which covered only composition of two functions of one variable. The principle is the same here though: with <i class="fm-italics">C</i> written in terms of <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> , <i class="fm-in-times-italic">a<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> written in terms of <i class="fm-in-times-italic">z<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i>,and <i class="fm-in-times-italic">z<sub class="fm-subscript1">j</sub><sup class="fm-superscript2">L</sup></i> written in terms of <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> ,we have <i class="fm-italics">C</i> written in terms of <i class="fm-in-times-italic">w<sub class="fm-subscript1">ij</sub><sup class="fm-superscript2">L</sup></i> .What the chain rule says is that to get the derivative of the whole chain, we multiply together the derivatives of each step. Plugging in the derivatives, the result is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ25.png"/></p>
+
+  <p class="body"><a id="pgfId-1164199"></a>This formula is one of the four we need to find the whole gradient of <i class="fm-italics">C</i>. Specifically, this gives us the partial derivative for any weight in the last layer. There are 16 <span class="fm-in-cambria">×</span> 10 of these, so we’ve covered 160 of the 1,210 total partial derivatives we need to have the complete gradient.</p>
+
+  <p class="body"><a id="pgfId-1164200"></a>The reason I’ll stop here is because derivatives of other weights require more complicated applications of the chain rule. An activation influences every subsequent activation in the neural network, so every weight influences every subsequent activation. This isn’t beyond your capabilities, but I feel I’d owe you a better explanation of the multivariable chain rule before digging in. If you’re interested in going deeper, there are excellent resources online that walk through all the steps of backpropagation in gory detail. Otherwise, you can stay tuned for the (fingers crossed) sequel to this<a id="marker-1179832"></a> book. <a id="marker-1179827"></a>Thanks <a id="marker-1179822"></a>for <a id="marker-1179817"></a>reading!</p>
+
+  <h3 class="fm-head1" id="heading_id_28"><a id="pgfId-1164202"></a><a id="id_73qkvkpmg6lh"></a>16.6.3 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1176578"></a><b class="fm-exercise-head">Exercise 16.14-Mini Project</b>: <a id="marker-1179842"></a>Use <a id="marker-1179847"></a>SymPy <a id="marker-1179852"></a>or your own code from chapter 10 to automatically find the derivative of the sigmoid function</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ26.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1176582"></a>Show that the answer you get is equal to <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i>)(1 − <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i>)).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1176611"></a><b class="fm-exercise-head">Solution</b>: In SymPy, we can quickly get a formula for the derivative:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from sympy import *
+&gt;&gt;&gt; X = symbols('x')
+&gt;&gt;&gt; diff(1 / (1+exp(-X)),X)
+exp(-x)/(1 + exp(-x))**2</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1176616"></a>In math notation, that’s</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ27.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1176617"></a>The computation to show this expression equals <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i>)(1 − <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i>)) and requires a bit of rote algebra, but it’s worth it to convince yourself that this formula is valid. Multiplying the top and bottom by <i class="fm-in-times-italic1">e<sup class="fm-superscript">x</sup></i> and noting that <i class="fm-in-times-italic1">e<sup class="fm-superscript">x</sup></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">e</i><sup class="fm-superscript1">−<i class="fm-in-times-italic2">x</i></sup> = 1, we get</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH16_F17_Orland_EQ28.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_29"><a id="pgfId-1164252"></a><a id="id_bz3vbd8uggxy"></a>S<a id="marker-1179880"></a>u<a id="marker-1179881"></a>m<a id="marker-1179891"></a>m<a id="marker-1179896"></a>a<a id="marker-1179901"></a>r<a id="marker-1179906"></a>y</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164253"></a>An artificial neural network is a mathematical function whose computation mirrors the flow of signals in the human brain. As a function, it takes a vector as input and returns another vector as output.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164254"></a>A neural network can be used to classify vector data: for instance, images converted to vectors of grayscale pixel values. The output of the neural network is a vector of numbers that express confidence that the input vector should be classified in any of the possible classes.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164255"></a>A multilayer perceptron (MLP) is a particular kind of artificial neural network consisting of several ordered layers of neurons, where the neurons in each layer are connected to and influenced by the neurons in the previous layer. During evaluation of the neural network, each neuron gets a number that is its activation. You can think of an activation as an intermediate yes-or-no answer on the way to solving the classification problem.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164256"></a>To evaluate a neural network, the activations of the first layer of neurons are set to the entries of the input vector. Each subsequent layer of activations is calculated as a function of the previous layer. The final layer of activations is treated as a vector and returned as the result vector of the calculation.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164257"></a>The activation of a neuron is based on a linear combination of the activations of all neurons in the previous layer. The coefficients in the linear combination are called <i class="fm-italics">weights</i>. Each neuron also has a <i class="fm-italics">bias</i>, a number which is added to the linear combination. This value is passed through a sigmoid function to get the activation function.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164258"></a>Training a neural network means tuning the values of all of the weights and biases so that it performs its task optimally. To do this, you can measure the error of the neural network’s predictions relative to actual answers from a training data set with a cost function. With a fixed training data set, the cost function depends only on the weights and biases.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164259"></a>Gradient descent allows us to find the values of weights and biases that minimize the cost function and yield the best neural network.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164260"></a>Neural networks can be trained efficiently because there are simple, exact formulas for the partial derivatives of the cost function with respect to the weights and biases. These are found using an algorithm called <i class="fm-italics">backpropagation</i>, which in turn makes use of the chain rule from calculus.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1164261"></a>Python’s scikit-learn library has a built in <code class="fm-code-in-text">MLPClassifer</code> class that can automatically be trained on classified vector<a id="marker-1179913"></a> data.</p>
+    </li>
+  </ul>
+</body>
+</html>

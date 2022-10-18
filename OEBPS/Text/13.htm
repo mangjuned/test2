@@ -1,0 +1,872 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>13</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1153370"></a><a id="pgfId-1153412"></a>13 <a id="id_4cwx06g7tma4"></a>Analyzing sound waves with a Fourier series</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1154784"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1154785"></a>Defining and playing sound waves with Python and PyGame</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1154786"></a>Turning sinusoidal functions into playable musical notes</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1154787"></a>Combining two sounds by adding their sound waves as functions</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1154788"></a>Decomposing a sound wave function into its Fourier series to see its musical notes</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1153418"></a>For a lot of part 2, we’ve<a id="marker-1166999"></a> focused on using calculus to simulate moving objects. In this chapter, I’ll show you a completely different application: working with audio data. Digital audio data is a computer representation of <i class="fm-italics">sound waves</i>, which are repeating changes of pressure in the air that our ears perceive as sound. We’ll think of sound waves as functions that we can add and scale as vectors, and then we can use integrals to understand what kinds of sounds they represent. As a result, our exploration of sound waves combines a lot of what you’ve learned about both linear algebra and calculus in earlier chapters.</p>
+
+  <p class="body"><a id="pgfId-1153419"></a>I won’t go too deep into the physics of sound waves, but it’s useful to understand how they work at a basic level. What we perceive as sound isn’t air pressure itself, but rather rapid changes in air pressure that cause our eardrums to vibrate. For instance, if you play a violin, you drag the bow across one of the strings and cause the string to vibrate. The vibrating string causes the air around it to rapidly change pressure, and the changes in pressure propagate through the air as sound waves until they reach your ear. At that point, your eardrum vibrates at the same rate, and you perceive a sound (figure 13.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1169990"></a>Figure 13.1 Schematic diagram of the sound of a violin reaching an eardrum</p>
+
+  <p class="body"><a id="pgfId-1153425"></a>You can think of a digital audio file as a function describing a vibration over time. Audio software interprets the function and instructs your speakers to vibrate accordingly, producing sound waves of a similar shape in the air around the speakers. For our purposes, it doesn’t matter exactly what the function represents, but you can interpret it loosely as describing air pressure over time (figure 13.2).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170034"></a>Figure 13.2 Thinking of sound waves as functions, loosely interpreted as representing pressure over time</p>
+
+  <p class="body"><a id="pgfId-1153431"></a>Interesting sounds like musical notes have sound waves with repeating patterns, like the one shown in figure 13.2. The rate at which the function<a id="marker-1153432"></a> repeats itself is called the <i class="fm-italics">frequency</i> and tells how high or low the musical note sounds. The quality, or <i class="fm-italics">timbre</i>, of the sound<a id="marker-1153433"></a> is controlled by the shape of the repeating pattern, for instance, whether it sounds more like a violin, a trumpet, or a human voice.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1153435"></a><a id="id_3ztwvkjgiz3t"></a>13.1 Combining sound waves and decomposing them</h2>
+
+  <p class="body"><a id="pgfId-1153436"></a>Throughout this <a id="marker-1167004"></a>chapter, <a id="marker-1167009"></a>we do <a id="marker-1167014"></a>mathematical operations on functions and use Python to play them as actual sounds. The two main things we’ll do are combining existing sound waves to make new ones and then decomposing complex sound waves into simpler ones. For instance, we can combine several musical notes into a chord and then we can decompose a chord to see its musical notes.</p>
+
+  <p class="body"><a id="pgfId-1153437"></a>Before we do that, however, we need to cover the basic building blocks: sound waves and musical notes. I start by showing you how to use Python to turn a sequence of numbers, representing a sound wave, into a real sound coming out of your speakers. To make a sound corresponding to a function, we extract some <i class="fm-in-times-italic">y</i> values from the graph of the function and pass these to the audio library as an array. This is a process<a id="marker-1153438"></a> called <i class="fm-italics">sampling</i>(figure 13.3).</p>
+
+  <p class="body"><a id="pgfId-1153447"></a>The main sound wave functions we’ll use are <i class="fm-italics">periodic</i> <i class="fm-italics">functions</i>, whose graphs are built from the same repeating<a id="marker-1153448"></a> shape. Specifically, we’ll use <i class="fm-italics">sinusoidal</i> <i class="fm-italics">functions</i>, a family of periodic functions including sine and cosine that produce natural-sounding musical notes. After sampling them to turn them into sequences of numbers, we’ll build Python functions to play musical notes.</p>
+
+  <p class="body"><a id="pgfId-1153449"></a>Once we can produce individual notes, we’ll write Python code to help us combine different notes to create chords and other complex sounds. We’ll do this by adding the functions defining each of the sound waves together. We’ll see that combining a few musical notes can make a chord, and combining dozens of musical notes together can produce some quite interesting and qualitatively dissimilar sounds.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170084"></a>Figure 13.3 Starting with the graph of a function <i class="fm-in-times-italic">f</i>(<i class="fm-char-times-italic1">t</i>) (top) and sampling some of the y values (bottom) to send to an audio library</p>
+
+  <p class="body"><a id="pgfId-1153450"></a>Our last goal will be to decompose a function representing any sound wave into a sum of (pure) musical notes and their corresponding volumes, which make up the sound wave (figure 13.4). Such a decomposition into a sum is called a <i class="fm-italics">Fourier series</i>(pronounced <i class="fm-italics">FOR-ee-yay)</i>. Once we’ve found the sound waves making up a Fourier series, we can play them together and get the original sound.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153455"></a>Figure 13.4 Decomposing a sound wave function into a combination of simpler ones using a Fourier series</p>
+
+  <p class="body"><a id="pgfId-1153456"></a>Mathematically, finding a Fourier series means writing a function as a sum or, more specifically, a linear combination of sine and cosine functions. This procedure and its variants are among the most important algorithms of all time. Methods similar to the ones we’ll cover are used in common applications like MP3 compression, as well as in more grandiose ones like the recent Nobel prize-winning detection of gravitational waves.</p>
+
+  <p class="body"><a id="pgfId-1153457"></a>It’s one thing to look at these sound waves as graphs, but it’s another to actually hear them coming out of your speakers. Let’s <a id="marker-1167019"></a>make <a id="marker-1167024"></a>some<a id="marker-1167029"></a> noise!</p>
+
+  <h2 class="fm-head" id="heading_id_4"><a id="pgfId-1153459"></a><a id="id_7ac23w59b603"></a>13.2 Playing sound waves in Python</h2>
+
+  <p class="body"><a id="pgfId-1153460"></a>To play sounds<a id="marker-1167034"></a> in Python, we turn to the PyGame library that we used in a few of the preceding chapters. A particular function in this library takes an array of numbers as input and plays a sound as a result. As a first step, we use a random sequence of numbers in Python and write code to interpret and play these sounds with PyGame. This will<a id="marker-1153461"></a> just be <i class="fm-italics">noise</i>(yes, that’s a technical term!) rather than beautiful music at this point, but we need to start somewhere.</p>
+
+  <p class="body"><a id="pgfId-1153462"></a>After producing some noise, we’ll make a slightly more appealing sound by running the same process on a sequence of numbers that have repeating patterns, rather than just being completely random. This sets us up for the next section, where we’ll get a sequence of repeating numbers by sampling a periodic function.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1153464"></a><a id="id_t3voxc7i3myj"></a>13.2.1 Producing our first sound</h3>
+
+  <p class="body"><a id="pgfId-1153465"></a>Before we <a id="marker-1167044"></a>pass PyGame an array of numbers representing a sound, we need to tell it how the numbers should be interpreted. There are several technical details about audio data here, and I’ll explain them so you know how PyGame thinks about that, but these details won’t be critical to the rest of the chapter.</p>
+
+  <p class="body"><a id="pgfId-1153466"></a>In this application, we use conventions typically used in CD audio. Specifically, we’ll represent one second of audio with an array of 44,100 values, each of which is a 16-bit integer (between <span class="fm-in-cambria">−</span>32,768 and 32,767). These numbers roughly represent the intensity of the sound at every step of time, with 44,100 steps in a second. This is not unlike how we represented an image in chapter 6. Instead of an array of values giving the brightness of pixels, we have an array of values giving the intensity of a sound wave at different moments in time. Eventually, we’ll get these numbers as the <i class="fm-in-times-italic">y</i>-coordinates of points on a sound wave graph, but for now, we’re going to pick them randomly to make <i class="fm-italics">some</i> noise.</p>
+
+  <p class="body"><a id="pgfId-1157276"></a>We also use a single <i class="fm-italics">channel</i>, meaning we only play one sound wave as opposed to <i class="fm-italics">stereo</i> audio, which produces two sound waves simultaneously, one in the left speaker and one in the right. The other thing we configure is the bit depth of the sound. While frequency is analogous to the resolution of an image, <i class="fm-italics">bit depth</i> is like<a id="marker-1157277"></a> the number of allowable pixel colors, more bit depth means a more refined range of sound intensities. We used three numbers between 0 and 256 for the color of a pixel, but here, we use a single 16-bit number to represent the sound intensity at a moment in time. With these parameters selected, the first step in our code is to import PyGame and initialize the sound library:</p>
+  <pre class="programlisting">&gt;&gt;&gt; import pygame, pygame.sndarray
+&gt;&gt;&gt; pygame.mixer.init(frequency=44100, 
+                      size=−16,          <span class="fm-combinumeral">❶</span>
+                      channels=1) </pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1168037"></a><span class="fm-combinumeral">❶</span> −16 indicates a bit depth of 16 and an input of 16-bit signed integers ranging from <span class="fm-in-cambria">−</span>32,768 to 32,767</p>
+
+  <p class="body"><a id="pgfId-1157285"></a>To start with the simplest possible example, we can generate one second of audio by creating a NumPy array of 44,100 random integers between <span class="fm-in-cambria">−</span>32,768 and 32,767. We can do this in one line with NumPy’s <code class="fm-code-in-text">randint</code> function:</p>
+  <pre class="programlisting">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; arr = np.random.randint(−32768, 32767, size=44100)
+&gt;&gt;&gt; arr
+array([−16280, 30700, −12229, ..., 2134, 11403, 13338])</pre>
+
+  <p class="body"><a id="pgfId-1153476"></a>To interpret this array as a sound wave, we can plot its first few values on a scatter graph. I’ve included a <code class="fm-code-in-text">plot_sequence</code> function in the source code for this book to help you quickly plot an array of integer values like this. If you run <code class="fm-code-in-text">plot_sequence (arr,max=100)</code>, you get a picture of the first 100 values of this array. As compared to numbers sampled from a smooth function, these numbers are all over the place (figure 13.5).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153481"></a>Figure 13.5 Sampled values from a sound wave (left) vs. our random values (right)</p>
+
+  <p class="body"><a id="pgfId-1153482"></a>If you connect the dots, you can picture them as defining a function over this time period. Figure 13.6 shows two graphs of the array of numbers with the dots connected, showing the first 100 and 441 numbers, respectively. This data is completely random, so there’s nothing particularly interesting to see, but this will be the first sound wave we play.</p>
+
+  <p class="body"><a id="pgfId-1157330"></a> Because 44,100 values define the whole second of sound, the 441 values on the bottom define the sound during the first one-hundredth of a second. Next, we can play the sound using a library call.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153490"></a>Figure 13.6 The first 100 values (top) and the first 441 values (bottom) connected to define a function</p>
+
+  <p class="fm-callout"><a id="pgfId-1153492"></a><span class="fm-callout-head">CAUTION</span> Before you run the next few lines of Python code, make sure your speaker volume isn’t too high. The first sound we’ve made won’t be that pleasant, not to mention, you don’t want to hurt your ears!</p>
+
+  <p class="body"><a id="pgfId-1153493"></a>To play the sound, you can run:</p>
+  <pre class="programlisting">sound = pygame.sndarray.make_sound(arr)
+sound.play()</pre>
+
+  <p class="body"><a id="pgfId-1153495"></a>The result should sound like one second of static, as if you turned on the radio without tuning it to a station. A sound wave like this, consisting of random values<a id="marker-1153496"></a> over time, is called <i class="fm-italics">white noise</i>.</p>
+
+  <p class="body"><a id="pgfId-1153497"></a>About the only thing you can adjust about white noise is the volume. The human ear responds to changes in pressure, and the bigger the sound wave, the bigger the changes in pressure, and the louder the perceived sound. If this white noise was unpleasantly loud for you, you can create a quieter version by generating sound data consisting of smaller numbers. For instance, this white noise is generated by numbers ranging from −10,000 to 10,000:</p>
+  <pre class="programlisting">arr = np.random.randint(−10000, 10000, size=44100)
+sound = pygame.sndarray.make_sound(arr)
+sound.play()</pre>
+
+  <p class="body"><a id="pgfId-1153499"></a>This sound should be nearly identical to the first white noise you played, except that it is quieter. The loudness of a sound wave depends on how big the function values are, and the measure of this is called<a id="marker-1153500"></a> the <i class="fm-italics">amplitude</i> of the wave. In this case, because the values vary 10,000 units from the average value of 0, the amplitude is said to be 10,000.</p>
+
+  <p class="body"><a id="pgfId-1157417"></a>Although some people find white noise soothing, it’s not very interesting. Let’s produce a more interesting sound, namely a<a id="marker-1167054"></a> musical note.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1157425"></a>13.2.2 <a id="id_rouxf5h2zzhx"></a>Playing a musical note</h3>
+
+  <p class="body"><a id="pgfId-1157426"></a>When<a id="marker-1167069"></a> we hear a musical note, our ears are detecting a pattern in the vibrations in contrast to the randomness of white noise. We can put together a series of 44,100 numbers with an obvious pattern, and you’ll hear them produce a musical note. Specifically, let’s start by repeating the number 10,000 fifty times and then repeating the number −10,000 fifty times. I picked 10,000 because we just saw it’s a big enough amplitude to make the sound wave audible. Figure 13.7 shows the plot for the first 100 numbers returned from the following code snippet:</p>
+  <pre class="programlisting">form = np.repeat([10000,−10000],50)     <span class="fm-combinumeral">❶</span>
+plot_sequence(form)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1168127"></a><span class="fm-combinumeral">❶</span> Repeats each value in the list the specified number of times</p>
+
+  <p class="body"><a id="pgfId-1153512"></a>If we repeat this sequence of 100 numbers 441 times, we have 44,100 total values that define one second of audio. To achieve this, we can use another handy NumPy function, called <code class="fm-code-in-text">tile</code>, which repeats a given array a specified number of times:</p>
+  <pre class="programlisting">arr = np.tile(form,441)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170214"></a>Figure 13.7 A plot of the sequence, consisting of the number 10,000 repeated 50 times followed by the number −10,000 repeated 50 times.</p>
+
+  <p class="body"><a id="pgfId-1153514"></a>Figure 13.8 shows the plot of the first 1,000 values of the array with the “dots” connected. You can see that it jumps back and forth between 10,000 and −10,000 every 50 numbers. That means the pattern repeats every 100 numbers.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170260"></a>Figure 13.8 A plot of the first 1,000 of 44,100 numbers shows the repeating pattern.</p>
+
+  <p class="body"><a id="pgfId-1153521"></a>This waveform is called a <i class="fm-italics">square wave</i> because its<a id="marker-1153520"></a> graph has sharp, <span class="fm-in-cambria">90°</span> corners. (Note that the vertical lines are only there because MatPlotLib connects all of the dots; there are no values of the sequence between 10,000 and −10,000, just a dot at 10,000 connected to a dot at −10,000.)</p>
+
+  <p class="body"><a id="pgfId-1153522"></a>The 44,100 numbers represent one second, so the 1,000 numbers graphed in figure 13.8 represent 1/44.1 seconds (or 0.023 seconds) of audio. Playing this sound data using the following lines produces a clear musical note. This is approximately the note A (or A<sub class="fm-subscript">4</sub> in scientific pitch notation). You can listen to it with<a id="marker-1153523"></a> the same <code class="fm-code-in-text">play()</code> method as used in section 13.2.1:</p>
+  <pre class="programlisting">sound = pygame.sndarray.make_sound(arr)
+sound.play()</pre>
+
+  <p class="body"><a id="pgfId-1153525"></a>The rate of repetition (in this case, 441 repetitions per second) is called the <i class="fm-italics">frequency</i> of the sound wave, and it determines<a id="marker-1153526"></a> the <i class="fm-italics">pitch</i> of the note, or how high or low the note sounds. Frequencies of repetition are measured<a id="marker-1153527"></a> in units of <i class="fm-italics">hertz</i>, abbreviated Hz, where 441 Hz means the same thing as 441 per second. The most common definition for the pitch A is 440 Hz, but 441 is close enough, and it conveniently divides the CD sampling rate of 44,100 values per second.</p>
+
+  <p class="body"><a id="pgfId-1153530"></a>Interesting sound waves come from <i class="fm-italics">periodic</i> functions, which repeat<a id="marker-1153529"></a> themselves on fixed intervals like the square wave in figure 13.8. The repeated sequence for the square wave consists of 100 numbers, and we repeat it 441 times to get 44,100 numbers giving one second of audio. That’s a repetition rate of 441 Hz or once every 0.0023 seconds. What our ear detects as a musical note is this rate of repetition. In the next section, we’ll play sounds corresponding to the most important periodic functions, sine and <a id="marker-1167079"></a>cosine, at different frequencies.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1153532"></a><a id="id_tlh6j3j5oa1p"></a>13.2.3 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1157594"></a><b class="fm-exercise-head">Exercise 13.1</b>: Our <a id="marker-1167084"></a>musical note A was a pattern that repeated 441 times in one second. Create a similar pattern that repeats 350 times in one second, which produces the musical note F.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1157595"></a><b class="fm-exercise-head">Solution</b>: Fortunately, the frequency of 44,100 Hz is divisible by 350: 44,100 / 350 = 126. With 63 values of 10,000 and 63 values of −10,000, we can repeat that sequence 350 times to create one second of audio. The resulting note sounds lower than the A and<a id="marker-1167094"></a> is indeed an <a id="marker-1167109"></a>F:</p>
+        <pre class="programlisting">form = np.repeat([10000,−10000],63)
+arr = np.tile(form,350)
+sound = pygame.sndarray.make_sound(arr)
+sound.play()</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_8"><a id="pgfId-1153539"></a><a id="id_v1vhzr27y87l"></a>13.3 Turning a sinusoidal wave into a sound</h2>
+
+  <p class="body"><a id="pgfId-1153540"></a>The <a id="marker-1167114"></a>sound <a id="marker-1167119"></a>we played with the square wave was a recognizable musical note, but it wasn’t very natural sounding. That’s because in nature, things don’t usually vibrate in square waves. More often, vibrations are <i class="fm-italics">sinusoidal</i>, meaning if we measure and graph these, we get results that look like the graphs of the sine or cosine functions. These functions turn out to be mathematically natural as well, so we can use them as the building blocks for the music we’re going to make. After sampling the notes and passing them to PyGame, you’ll be able to hear the difference between a square wave and a sinusoidal wave.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1153542"></a><a id="id_utute4fx6fju"></a>13.3.1 Making audio from sinusoidal functions</h3>
+
+  <p class="body"><a id="pgfId-1153543"></a>The <a id="marker-1167124"></a>sinusoidal<a id="marker-1167129"></a> functions sine and cosine, which we’ve used several times already in this book, are intrinsically periodic functions. That’s because their inputs are interpreted as angles; if you rotate <span class="fm-in-cambria">360°</span> or 2<i class="fm-in-cambria2">π</i> radians, you’re back where you started, and the sine and cosine functions return the same values. Therefore, <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">t</i>) and <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">t</i>) repeat themselves every 2<i class="fm-in-cambria2">π</i> units as shown in figure 13.9.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153548"></a>Figure 13.9 Every 2<i class="fm-in-cambria2">π</i> units, the function <span class="fm-in-times">sin</span>(<i class="fm-char-times-italic1">t</i>) repeats the same value.</p>
+
+  <p class="body"><a id="pgfId-1153549"></a>This interval of repetition is called the <i class="fm-italics">period</i> of the periodic function, so for both sine and cosine, the period is 2<i class="fm-in-cambria2">π</i>. When you graph them (figure 13.10), you can see that they look the same between 0 and 2<i class="fm-in-cambria2">π</i> as they do between 2<i class="fm-in-cambria2">π</i> and 4<i class="fm-in-cambria2">π</i>, or between 4<i class="fm-in-cambria2">π</i> and 6<i class="fm-in-cambria2">π</i>, and so on.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153554"></a>Figure 13.10 Because the sine function is periodic with period 2<i class="fm-in-cambria2">π</i>, its graph has the same shape over every 2<i class="fm-in-cambria2">π</i> interval.</p>
+
+  <p class="body"><a id="pgfId-1153555"></a>The only difference for the cosine function is that the graph is shifted by <i class="fm-in-cambria2">π</i>/2 units to the left, but it still repeats itself every 2<i class="fm-in-cambria2">π</i> units (figure 13.11).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170355"></a>Figure 13.11 The graph of the cosine function has the same shape as the graph of the sine function, but it is shifted to the left. It also repeats itself every 2<i class="fm-in-cambria2">π</i> units.</p>
+
+  <p class="body"><a id="pgfId-1153561"></a>For the purposes of audio, one repetition every 2<i class="fm-in-cambria2">π</i> seconds is a frequency of 1/2<i class="fm-in-cambria2">π</i> or about 0.159 Hz, which turns out to be too small to be audible by the human ear. The amplitude of 1.0 also turns out to be too small to hear in 16-bit audio. To solve this, let’s write a Python function, <code class="fm-code-in-text">make_sinusoid(frequency,amplitude)</code>, which produces a sine function that is stretched or compressed vertically and horizontally to have a more desirable frequency and amplitude. A frequency of 441 Hz and an amplitude of 10,000 should represent an audible sound wave.</p>
+
+  <p class="body"><a id="pgfId-1153562"></a>Once we’ve produced that function, we want to extract 44,100 evenly spaced values of the function to pass to PyGame. The process of extracting function values<a id="marker-1153563"></a> like this is called <i class="fm-italics">sampling</i>, so we can write a function called <code class="fm-code-in-text">sample(f,start,end,count)</code> that gets the specified count number of values of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">t</i>) in the<a id="marker-1153564"></a> range of <i class="fm-in-times-italic">t</i> values between <code class="fm-code-in-text">start</code> and <code class="fm-code-in-text">end</code>. Once we have our desired sinusoid function, we can run <code class="fm-code-in-text">sample (sinusoid,0,1,44100)</code> to get an array of 44,100 samples to pass to PyGame, and we’ll hear what a sinusoidal wave <a id="marker-1167134"></a>sounds<a id="marker-1167139"></a> like.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1153566"></a><a id="id_f0vk862p7su5"></a>13.3.2 Changing the frequency of a sinusoid</h3>
+
+  <p class="body"><a id="pgfId-1166015"></a>As a first <a id="marker-1167144"></a>example, <a id="marker-1167149"></a>let’s create a sinusoid with a frequency of 2, meaning a function shaped like a sine graph but repeating itself twice between zero and one. The period of the sine function is 2<i class="fm-in-cambria2">π</i>, so by default, it takes 4<i class="fm-in-cambria2">π</i> units to repeat itself twice (figure 13.12).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1166019"></a>Figure 13.12 The sine function repeats itself twice between t = 0 and t = 4<i class="fm-in-cambria2">π</i>.</p>
+
+  <p class="body"><a id="pgfId-1166020"></a>To get two periods of the sine function graph, we need the sine function to receive values from 0 to 4<i class="fm-in-cambria2">π</i> as inputs, but we want the input variable <i class="fm-in-times-italic">t</i> to vary from 0 to 1. To achieve that, we can use the function <span class="fm-in-times">sin</span>(4<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>). From <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 1, all of the values between 0 and 4<i class="fm-in-cambria2">π</i> are passed to the sine function. The plot of <span class="fm-in-times">sin</span>(4<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) in figure 13.13 has the same graph as figure 13.12 but with two full periods of the sine function squished into the first 1.0 units.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153578"></a>Figure 13.13 The graph of <span class="fm-in-times">sin</span>(4<i class="fm-in-cambria2">π</i>t) is sinusoidal, repeating itself twice in every unit of t for a frequency of 2.</p>
+
+  <p class="body"><a id="pgfId-1153579"></a>The period of the function <span class="fm-in-times">sin</span>(4<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) is <span class="fm-in-cambria">½</span> instead of 2<i class="fm-in-cambria2">π</i>, so the “squishing factor” is 4<i class="fm-in-cambria2">π</i>. That is, the original period was 2<i class="fm-in-cambria2">π</i>, and the reduced period is 4<i class="fm-in-cambria2">π</i> times shorter. In general, for any constant <i class="fm-italics">k</i>, a function of the form <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">t</i>) = <span class="fm-in-times">sin</span>(<i class="fm-italics">kt</i>) has a period shrunk by a factor of <i class="fm-italics">k</i> to 2<i class="fm-in-cambria2">π</i>/ <i class="fm-italics">k</i>. The frequency is increased by a factor of <i class="fm-italics">k</i> from the usual value of 1/(2<i class="fm-in-cambria2">π</i>) to <i class="fm-italics">k</i>/2<i class="fm-in-cambria2">π</i>.</p>
+
+  <p class="body"><a id="pgfId-1153580"></a>If we want a sinusoidal function with a frequency of 441, the appropriate value of <i class="fm-italics">k</i> would be 441 <span class="fm-in-cambria">·</span> 2 <span class="fm-in-cambria">·</span> <i class="fm-in-cambria2">π</i>. That gives us a frequency of</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F13_Orland_EQ01.png"/></p>
+
+  <p class="body"><a id="pgfId-1153586"></a>Increasing the amplitude of the sinusoid is simpler by comparison. All you need to do is multiply the sine function by a constant factor, and the amplitude increases by the same factor. With that, we have what we need to define our <code class="fm-code-in-text">make_sinusoid</code> function:</p>
+  <pre class="programlisting">def make_sinusoid(frequency,amplitude):
+    def f(t):                                      <span class="fm-combinumeral">❶</span>
+        return amplitude * <span class="fm-in-times1">sin</span>(2*pi*frequency*t)   <span class="fm-combinumeral">❷</span>
+    return f</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1168473"></a><span class="fm-combinumeral">❶</span> Defines <i class="fm-in-times-italic1">f</i>(<i class="fm-char-times-italic1">t</i>)−the sinusoidal function that is returned</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1168504"></a><span class="fm-combinumeral">❷</span> Multiplies the input t by 2 ⋅ <i class="fm-in-cambria2">π</i> times the frequency, then multiplies the output of the sine function by the amplitude</p>
+
+  <p class="body"><a id="pgfId-1153590"></a>We can test this, for example, by making a sinusoidal function with a frequency of 5 and an amplitude of 4, and plotting it (figure 13.14) from <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 1:</p>
+  <pre class="programlisting">&gt;&gt;&gt; plot_function(make_sinusoid(5,4),0,1)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1158542"></a>Figure 13.14 The graph of <code class="fm-code-in-text">make_sinusoid(5,4)</code> has a height (amplitude) of 4 and repeats itself 5 times from t = 0 to t = 5, so it has a frequency of 5.</p>
+
+  <p class="body"><a id="pgfId-1158543"></a>Next, we work with the sound wave function that is the result of <code class="fm-code-in-text">make_sinusoid (441,8000)</code> having a frequency of 441 Hz and<a id="marker-1167159"></a> an <a id="marker-1167169"></a>mplitude of 8,000.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1153599"></a><a id="id_y94lrx9nkqdu"></a>13.3.3 Sampling and playing the sound wave</h3>
+
+  <p class="body"><a id="pgfId-1153600"></a>To play <a id="marker-1167252"></a>the sound <a id="marker-1167253"></a>wave mentioned in the last section, we need to sample it to get the array of numbers that are playable by PyGame. Let’s set</p>
+  <pre class="programlisting">sinusoid = make_sinusoid(441,8000)</pre>
+
+  <p class="body"><a id="pgfId-1153602"></a>so the <code class="fm-code-in-text">sinusoid</code> function from <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 1 represents 1 second of a sound wave we try to play. We pick 44,100 values of <i class="fm-in-times-italic">t</i>, evenly spaced between 0 and 1, and the resulting function values are the corresponding values of sinusoid(<i class="fm-in-times-italic">t</i>).</p>
+
+  <p class="body"><a id="pgfId-1153603"></a>We can use the NumPy function <code class="fm-code-in-text">np.arange</code>, which provides evenly spaced numbers on a given interval. For instance, <code class="fm-code-in-text">np.arange(0,1,0.1)</code> gives 10 evenly spaced values, starting from 0 and below 1 at 0.1 unit intervals:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.arange(0,1,0.1)
+array([0. , 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])</pre>
+
+  <p class="body"><a id="pgfId-1153605"></a>For our application, we want to use 44,100 time values between 0 and 1, which are evenly spaced by 1/44100 units:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.arange(0,1,1/44100)
+array([0.00000000e+00, 2.26757370e-05, 4.53514739e-05, ...,
+       9.99931973e-01, 9.99954649e-01, 9.99977324e-01])</pre>
+
+  <p class="body"><a id="pgfId-1153607"></a>We want to apply the sinusoid function to every entry of this array to produce another NumPy array as a result. The NumPy function <code class="fm-code-in-text">np.vectorize(f)</code> takes a Python function <code class="fm-code-in-text">f</code> and produces a new one that applies the same operation to <i class="fm-italics">every</i> entry of an array. So for us, <code class="fm-code-in-text">np.vectorize(sinusoid)(arr)</code> applies the sinusoid function to every entry of an array.</p>
+
+  <p class="body"><a id="pgfId-1158451"></a>This is almost a complete procedure for sampling a function. The last detail we need to include is converting the outputs to 16-bit integer values<a id="marker-1158452"></a> using the <code class="fm-code-in-text">astype</code> method on NumPy arrays. Putting these steps together, we can build the following general sampling function:</p>
+  <pre class="programlisting">def sample(f,start,end,count):                    <span class="fm-combinumeral">❶</span>
+    mapf = np.vectorize(f)                        <span class="fm-combinumeral">❷</span>
+    ts = np.arange(start,end,(end-start)/count)   <span class="fm-combinumeral">❸</span>
+    values = mapf(ts)                             <span class="fm-combinumeral">❹</span>
+    return values.astype(np.int16)                <span class="fm-combinumeral">❺</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1158517"></a><span class="fm-combinumeral">❶</span> Inputs are the function f to sample the start and end of the range and the number of values we want.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1168687"></a><span class="fm-combinumeral">❷</span> Creates a version of f that can be applied to a NumPy array</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1158518"></a><span class="fm-combinumeral">❸</span> Creates the evenly spaced input values for the function over the desired range</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1168724"></a><span class="fm-combinumeral">❹</span> Applies the function to every value in the NumPy array</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1168790"></a><span class="fm-combinumeral">❺</span> Converts the resulting array to 16-bit integer values and returns it</p>
+
+  <p class="body"><a id="pgfId-1158067"></a>Equipped with the following function, you can hear the sound of a 441 Hz sinusoidal wave:</p>
+  <pre class="programlisting">sinusoid = make_sinusoid(441,8000)
+arr = sample(sinusoid, 0, 1, 44100)
+sound = pygame.sndarray.make_sound(arr)
+sound.play()</pre>
+
+  <p class="body"><a id="pgfId-1153618"></a>If you play this alongside the 441 Hz square wave, you’ll notice that it plays the same note; in other words, it has the same pitch. However, the quality of the sound is much different; the sinusoidal wave plays a much smoother sound. It sounds almost like it could be coming out of a flute rather than out of an old-school video game. This quality<a id="marker-1153619"></a> of sound is called <i class="fm-italics">timbre</i>(pronounced <i class="fm-italics">TAM-ber)</i>.</p>
+
+  <p class="body"><a id="pgfId-1158425"></a>For the rest of the chapter, we focus on sound waves that are built as combinations of sinusoids. It turns out that with the right combination, you can approximate any shape of wave and, therefore, any timbre <a id="marker-1167188"></a>you <a id="marker-1167257"></a>want.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1158447"></a><a id="id_j3oi82bhep9o"></a>13.3.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1158429"></a><b class="fm-exercise-head">Exercise 13.2</b>: Plot the<a id="marker-1167262"></a> tangent<a id="marker-1167267"></a> function tan(<i class="fm-in-times-italic1">t</i>) = <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">t</i>)/<span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">t</i>). What is its period?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1158430"></a><b class="fm-exercise-head">Solution</b>: The tangent function gets infinitely big in every period, so it helps to plot it with a restricted range of <i class="fm-in-times-italic1">y</i> values:</p>
+        <pre class="programlisting">from math import tan
+plot_function(tan,0,5*pi)
+plt.ylim(−10,10)            <span class="fm-combinumeral">❶</span></pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1169059"></a><span class="fm-combinumeral">❶</span> Limits the graph window to a y range of −10 &lt; y &lt; 10</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1158441"></a>A graph of tan(<i class="fm-in-times-italic1">x</i>), which is periodic, looks like this:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F14_Orland_UN01.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1158442"></a>Because tan(<i class="fm-in-times-italic1">t</i>) depends only on the values of <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">t</i>) and <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">t</i>), it should repeat itself at least every 2<i class="fm-in-cambria2">π</i> units. In fact, it repeats itself <i class="fm-italics">twice</i> every 2<i class="fm-in-cambria2">π</i> units; we can see on the graph that its period is <i class="fm-in-cambria2">π</i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1158445"></a><b class="fm-exercise-head">Exercise 13.3</b>: What is the frequency of <span class="fm-in-times1">sin</span>(3<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic1">t</i>)? What is the period?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1158446"></a><b class="fm-exercise-head">Solution</b>: The frequency of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">t</i>) is 1/(2<i class="fm-in-cambria2">π</i>) and multiplying the argument by 3<i class="fm-in-cambria2">π</i> increases this frequency by a factor of 3<i class="fm-in-cambria2">π</i>. The resulting frequency is (3<i class="fm-in-cambria2">π</i>)/(2<i class="fm-in-cambria2">π</i>) = 3/2. The period is the reciprocal of this value, which is 2/3.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1158560"></a><b class="fm-exercise-head">Exercise 13.4</b>: Find the value of <i class="fm-italics">k</i> such that <span class="fm-in-times1">cos</span>(<i class="fm-italics">kt</i>) has a frequency of 5. Plot the resulting function <span class="fm-in-times1">cos</span>(<i class="fm-italics">kt</i>) from zero to one and show <a id="marker-1167287"></a>that it <a id="marker-1167282"></a>repeats <a id="marker-1167272"></a>itself <a id="marker-1167277"></a>5 times.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1158583"></a><b class="fm-exercise-head">Solution</b>: The <a id="marker-1167292"></a>default frequency of <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">t</i>) is 1/2<i class="fm-in-cambria2">π</i>, so <span class="fm-in-times1">cos</span>(<i class="fm-italics">kt</i>) has a frequency of <i class="fm-italics">k</i>/2<i class="fm-in-cambria2">π</i>. If we want this value to equal 5, we need to have <i class="fm-italics">k</i> = 10<i class="fm-in-cambria2">π</i>. The resulting function is <span class="fm-in-times1">cos</span>(10<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic1">t</i>):</p>
+        <pre class="programlisting">&gt;&gt;&gt; plot_function(lambda t: <span class="fm-in-times1">cos</span>(10*pi*t),0,1)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1158588"></a>Here is its graph, where it repeats itself five times between the values <i class="fm-in-times-italic1">t</i> = 0 to <i class="fm-in-times-italic1">t</i> = 1.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F14_Orland_UN02.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_13"><a id="pgfId-1153650"></a><a id="id_thfhmnnh6sge"></a>13.4 Combining sound waves to make new ones</h2>
+
+  <p class="body"><a id="pgfId-1153651"></a>In chapter 6, you learned that functions can be treated like vectors; you can add functions or multiply them by scalars to produce new functions. When you create linear combinations of functions defining sound waves, you can create new, interesting sounds.</p>
+
+  <p class="body"><a id="pgfId-1153652"></a>The simplest way to combine two sound waves in Python is to sample both and then add the corresponding values of the two arrays to create a new one. We start by writing some Python code to add sampled sound waves of different frequencies, and the result they produce will sound like a musical chord, just as if you strummed several strings of a guitar at once.</p>
+
+  <p class="body"><a id="pgfId-1153653"></a>Once we do that, we can do a more advanced and more surprising example−we’ll add together several dozen sinusoidal sound waves of different frequencies in a prescribed linear combination, and the result will look and sound like the square wave from before.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1153655"></a><a id="id_5ji48ztqseem"></a>13.4.1 Adding sampled sound waves to build a chord</h3>
+
+  <p class="body"><a id="pgfId-1153657"></a>NumPy <a id="marker-1167297"></a>arrays can be added using the ordinary <code class="fm-code-in-text">+</code> operator in Python, making the<a id="marker-1153656"></a> job of adding sampled sound waves easy. Here’s a small example showing that NumPy does addition by adding the corresponding values of each array to build a new array:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.array([1,2,3]) + np.array([4,5,6])
+array([5, 7, 9])</pre>
+
+  <p class="body"><a id="pgfId-1153659"></a>It turns out that doing this operation with two sampled sound waves produces the same sound as if you played both at once. Here are two samples: our sinusoid at 441 Hz and a second sinusoid at 551 Hz, approximately 5/4 of the frequency of the first:</p>
+  <pre class="programlisting">sample1 = sample(make_sinusoid(441,8000),0,1,44100)
+sample2 = sample(make_sinusoid(551,8000),0,1,44100)</pre>
+
+  <p class="body"><a id="pgfId-1153661"></a>If you ask PyGame to start one and immediately start playing the next, it plays the two sounds almost simultaneously. If you run the following code, you should hear a chord consisting of two different musical notes. If you run either of the last two lines on its own, you hear one of the two individual notes:</p>
+  <pre class="programlisting">sound1 = pygame.sndarray.make_sound(sample1)
+sound2 = pygame.sndarray.make_sound(sample2)
+sound1.play()
+sound2.play()</pre>
+
+  <p class="body"><a id="pgfId-1153663"></a>Now, using NumPy, we can add the two sample arrays to produce a new one and play it with PyGame. When <code class="fm-code-in-text">sample1</code> and <code class="fm-code-in-text">sample2</code> are added, a new array of length 44,100 is created, containing the sums of entries from <code class="fm-code-in-text">sample1</code> and <code class="fm-code-in-text">sample2</code>. If you play the result, it sounds exactly like playing the previous <a id="marker-1167302"></a>sounds:</p>
+  <pre class="programlisting">chord = pygame.sndarray.make_sound(sample1 + sample2)
+chord.play()</pre>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1153665"></a>13.4.2 Picturing the sum of two sound waves</h3>
+
+  <p class="body"><a id="pgfId-1153666"></a>Let’s see <a id="marker-1167307"></a>what this looks like in terms of the graphs of the sound waves. Here are the first 400 points of <code class="fm-code-in-text">sample1</code>(441 Hz) and <code class="fm-code-in-text">sample2</code>(551 Hz). In figure 13.15, you can see that sample 1 makes it through four periods, while sample 2 makes it through five periods.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170480"></a>Figure 13.15 Plotting the first 400 points of <code class="fm-code-in-text">sample1</code> and <code class="fm-code-in-text">sample2</code></p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170532"></a>Figure 13.16 Plotting the sum of the two waves, <code class="fm-code-in-text">sample1 + sample2</code></p>
+
+  <p class="body"><a id="pgfId-1153672"></a>It might come as a surprise that the sum of <code class="fm-code-in-text">sample1</code> and <code class="fm-code-in-text">sample2</code> doesn’t produce a sinusoid even though it’s built out of two sinusoids. Instead, the sequence <code class="fm-code-in-text">sample1 + sample2</code> traces a wave whose amplitude seems to fluctuate. Figure 13.16 shows what the sum looks like.</p>
+
+  <p class="body"><a id="pgfId-1153678"></a> Let’s look closely at the summation to see how we got this shape. Near the 85th point of the sample, the waves are both large and positive, so the 85th point of the sum is also large and positive. Around the 350th point, both waves have large, negative values and so does their sum. When two waves align, their sum is even bigger (and louder), which is<a id="marker-1153679"></a> called <i class="fm-italics">constructive interference</i>.</p>
+
+  <p class="body"><a id="pgfId-1153680"></a> There’s an interesting effect in figure 13.17, where the values are opposite (at the 200th point). For example, <code class="fm-code-in-text">sample1</code> is large and positive while <code class="fm-code-in-text">sample2</code> is large and negative. This causes their sum to be close to zero even though neither wave on its own is close to zero. When two waves cancel each other out like<a id="marker-1153681"></a> this, it is called <i class="fm-italics">destructive interference</i>.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170577"></a>Figure 13.17 The absolute value of the sum wave is large where there is constructive interference and small where there is destructive interference.</p>
+
+  <p class="body"><a id="pgfId-1153682"></a>Because the waves have different frequencies, they go in and out of sync with each other, alternating between constructive and destructive interference. As a consequence, the sum of the waves is not a sinusoid; rather, it appears to change amplitude over time. Figure 13.17 displays the two graphs lined up, showing the relationship between the two samples and their sum.</p>
+
+  <p class="body"><a id="pgfId-1153688"></a>As you can see, the relative frequencies of summed sinusoids have an influence on the shape of the resulting graph. Next, I show you an even more extreme example of this as we build a linear combination with several dozen sinusoidal<a id="marker-1167312"></a> functions.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1153690"></a><a id="id_bhn4y0ww9vmj"></a>13.4.3 Building a linear combination of sinusoids</h3>
+
+  <p class="body"><a id="pgfId-1153691"></a>Let’s <a id="marker-1167317"></a>start <a id="marker-1167322"></a>with a big collection of sinusoids of different frequencies. We can make a list (as long as we want) of sine functions, starting with:</p>
+
+  <p class="fm-equation"><span class="fm-in-times2">sin</span>(2<i class="fm-in-cambria2">π</i>t), <span class="fm-in-times2">sin</span>(4<i class="fm-in-cambria2">π</i>t), <span class="fm-in-times2">sin</span>(6<i class="fm-in-cambria2">π</i>t), <span class="fm-in-times2">sin</span>(8<i class="fm-in-cambria2">π</i>t), ...</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-22.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153697"></a>These functions have the frequencies 1, 2, 3, 4, and so on. Likewise, the list of cosine functions, starting with</p>
+
+  <p class="fm-equation"><span class="fm-in-times2">cos</span>(2<i class="fm-in-cambria2">π</i>t), <span class="fm-in-times2">cos</span>(4<i class="fm-in-cambria2">π</i>t), <span class="fm-in-times2">cos</span>(6<i class="fm-in-cambria2">π</i>t), <span class="fm-in-times2">cos</span>(8<i class="fm-in-cambria2">π</i>t), ...</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-23.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1165005"></a>has the respective frequencies 1, 2, 3, 4, and so on. The idea is that with so many different frequencies at our disposal, we can create a wide variety of different shapes by taking linear combinations of these functions. For reasons we’ll see later, I’ll also include a constant function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = 1 in the linear combination. If we pick some highest frequency <i class="fm-italics">N</i>, the most general linear combination of the sines, cosines, and a constant is given by figure 13.18.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F18_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1165009"></a>Figure 13.18 The sine and cosine functions in our linear combination</p>
+
+  <p class="body"><a id="pgfId-1153709"></a>This linear combination is a Fourier series, and it is, itself, a function of the variable <i class="fm-in-times-italic">t</i>. It is specified by 2 <i class="fm-italics">N</i> + 1 numbers: the constant term <i class="fm-in-times-italic">a</i> 0, the coefficients <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub> through <i class="fm-italics">aN</i> on the cosine functions, and the coefficients <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub> through <i class="fm-italics">bN</i> on the sine functions. We can evaluate the function by plugging a given <i class="fm-in-times-italic">t</i> value into every sine and cosine, and adding the linear combination of results. Let’s do this in Python, so we can easily test out a few different Fourier series.</p>
+
+  <p class="body"><a id="pgfId-1153710"></a>The <code class="fm-code-in-text">fourier_series</code> function takes a single constant <i class="fm-in-times-italic">a</i> 0, and lists <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> containing the coefficients <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub>, ... , <i class="fm-italics">aN</i> and <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub>, ... , <i class="fm-italics">bN</i>, respectively. This function works even if the arrays are different lengths; it’s as if the unspecified coefficients are zero. Note that the sine and cosine frequencies start from one, while Python’s enumerate starts with zero, so (<i class="fm-in-times-italic">n</i> + 1) is the frequency corresponding to the coefficient at index <i class="fm-in-times-italic">n</i> in either of the arrays:</p>
+  <pre class="programlisting">def const(n):                                <span class="fm-combinumeral">❶</span>
+    return 1
+
+def fourier_series(a0,a,b):
+    def result(t):
+        cos_terms = [an*<span class="fm-in-times1">cos</span>(2*pi*(n+1)*t) 
+            for (n,an) in enumerate(a)]      <span class="fm-combinumeral">❷</span>
+        sin_terms = [bn*<span class="fm-in-times1">sin</span>(2*pi*(n+1)*t)
+            for (n,bn) in enumerate(b)]      <span class="fm-combinumeral">❸</span>
+        return a0*const(t) + \
+            sum(cos_terms) + sum(sin_terms)  <span class="fm-combinumeral">❹</span>
+    return result</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169122"></a><span class="fm-combinumeral">❶</span> Creates a constant function that returns 1 for any input</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169150"></a><span class="fm-combinumeral">❷</span> Evaluates all cosine terms with their respective constants and adds the results</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169167"></a><span class="fm-combinumeral">❸</span> Evaluates the sine terms with their respective constants and adds the results</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169184"></a><span class="fm-combinumeral">❹</span> Adds both of the results with the constant coefficient <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">0</sub> times the value of the constant function (1)</p>
+
+  <p class="body"><a id="pgfId-1153722"></a>Here’s an example for calling this function with <i class="fm-in-times-italic">b</i><sub class="fm-subscript">4</sub> = 1 and <i class="fm-in-times-italic">b</i><sub class="fm-subscript">5</sub> = 1, and all other constants are 0. This is a very short Fourier series, <span class="fm-in-times">sin</span>(8<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) + <span class="fm-in-times">sin</span>(10<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>), whose plot is shown in figure 13.19. Because the ratio of the frequencies is 4 : 5, the shape of the result should look like the last graph we plotted (figure 13.17):</p>
+  <pre class="programlisting">&gt;&gt;&gt; f = fourier_series(0,[0,0,0,0,0],[0,0,0,1,1])
+&gt;&gt;&gt; plot_function(f,0,1)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F19_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170649"></a>Figure 13.19 The graph of the Fourier series <span class="fm-in-times">sin</span>(8<i class="fm-in-cambria2">π</i>t) + <span class="fm-in-times">sin</span>(10<i class="fm-in-cambria2">π</i>t)</p>
+
+  <p class="body"><a id="pgfId-1153729"></a>This is a good test to see if our function is working, but it doesn’t show the full power of the Fourier series yet. Next, we try a Fourier series<a id="marker-1167327"></a> with <a id="marker-1167332"></a>more terms.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1153731"></a><a id="id_tinbkhzag18j"></a>13.4.4 Building a familiar function with sinusoids</h3>
+
+  <p class="body"><a id="pgfId-1153732"></a>Let’s <a id="marker-1167337"></a>create a <a id="marker-1167342"></a>Fourier series that still has no constant and no cosine terms, but a lot more sine terms. Specifically, we use the following sequence of values for <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">3</sub>, and so on:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F19_Orland_EQ04.png"/></p>
+
+  <p class="body"><a id="pgfId-1164272"></a>Or <i class="fm-in-times-italic">b<sub class="fm-subscript1">n</sub></i> = 0 for every even <i class="fm-in-times-italic">n</i>, while <i class="fm-in-times-italic">b<sub class="fm-subscript1">n</sub></i> = 4/(<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i>) when <i class="fm-in-times-italic">n</i> is odd. This gives us a base to make a Fourier series with as many terms as we want. For instance, the first non-zero term is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F19_Orland_EQ05.png"/></p>
+
+  <p class="body"><a id="pgfId-1164279"></a>and with the next term that gets added, the series becomes</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F19_Orland_EQ06.png"/></p>
+
+  <p class="fm-figure-caption">Figure 13.20 A plot of the first term and then the first two terms of the Fourier series</p>
+
+  <p class="body"><a id="pgfId-1153785"></a>Here is the code, and figure 13.20 shows the graphs of these two functions plotted simultaneously.</p>
+  <pre class="programlisting">&gt;&gt;&gt; f1 = fourier_series(0,[],[4/pi])
+&gt;&gt;&gt; f3 = fourier_series(0,[],[4/pi,0,4/(3*pi)])
+&gt;&gt;&gt; plot_function(f1,0,1)
+&gt;&gt;&gt; plot_function(f3,0,1)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F20_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170701"></a>Figure 13.20 A plot of the first term and then the first two terms of the Fourier series</p>
+
+  <p class="body"><a id="pgfId-1153792"></a>Using a list comprehension, we can make a much longer list of the coefficients, <i class="fm-in-times-italic">b<sub class="fm-subscript1">n</sub></i>, and construct the Fourier series programmatically. We can leave the list of cosine coefficients empty, and it will be as if all of the <i class="fm-in-times-italic">a<sub class="fm-subscript1">n</sub></i> values are set to 0:</p>
+  <pre class="programlisting"><i class="fm-in-times-italic1">b</i> = [4/(n * pi) 
+    if n%2 != 0 else 0 for n in range(1,10)]    <span class="fm-combinumeral">❶</span>
+f = fourier_series(0,[],b)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169373"></a><span class="fm-combinumeral">❶</span> Lists the values of bn = 4/n<i class="fm-in-cambria2">π</i> for odd values of n and bn = 0, otherwise</p>
+
+  <p class="body"><a id="pgfId-1153796"></a>This list covers 1 <span class="fm-in-cambria">≤</span> <i class="fm-in-times-italic">n</i> &lt; 10, so the non-zero coefficients are <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">3</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">5</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">7</sub>, and <i class="fm-in-times-italic">b</i><sub class="fm-subscript">9</sub>. With these terms, the graph of the series looks like figure 13.21.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F21_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170746"></a>Figure 13.21 A sum of the first 5 non-zero terms of the Fourier series</p>
+
+  <p class="body"><a id="pgfId-1153802"></a>This is an interesting pattern of constructive and destructive interference! Around <i class="fm-in-times-italic">t</i> = 0 and <i class="fm-in-times-italic">t</i> = 1, all of the sine functions are simultaneously increasing, while around <i class="fm-in-times-italic">t</i> = 0.5, they are all simultaneously decreasing. This constructive interference is the dominant effect, while alternating constructive and destructive interference keeps the graph relatively flat in the other regions. With <i class="fm-in-times-italic">n</i> ranging up to 19, as shown in figure 13.22, there are 10 non-zero terms and this effect is even more striking.</p>
+  <pre class="programlisting">&gt;&gt;&gt; b = [4/(n * pi) if n%2 != 0 else 0 for n in range(1,20)]
+&gt;&gt;&gt; f = fourier_series(0,[],b)</pre>
+
+  <p class="body"><a id="pgfId-1153809"></a>If we let <i class="fm-in-times-italic">n</i> range all the way up to 99, we get a sum of 50 sine functions, and the function becomes nearly flat outside of a few big jumps (figure 13.23).</p>
+  <pre class="programlisting">&gt;&gt;&gt; b = [4/(n * pi) if n%2 != 0 else 0 for n in range(1,100)]
+&gt;&gt;&gt; f = fourier_series(0,[],b)
+ </pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F22_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170803"></a>Figure 13.22 The first 10 non-zero terms of the Fourier series</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F23_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170835"></a>Figure 13.23 With 99 terms, the graph of the Fourier series is nearly flat, apart from big steps at 0, 0.5, and 1.0.</p>
+
+  <p class="body"><a id="pgfId-1153816"></a>If you zoom out, you can see that this Fourier series comes close to the square wave we plotted at the beginning of the chapter (figure 13.24).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F24_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1175265"></a>Figure 13.24 The first 50 non-zero terms of the Fourier series are close to a square wave, like the first function we met in this chapter.</p>
+
+  <p class="body"><a id="pgfId-1153822"></a>What we’ve done here is to build an approximation of the square wave function as a linear combination of sinusoids. It’s counterintuitive that we can do this! After all, all of the sinusoids in the Fourier series are round and smooth, and the square wave is flat and jagged. We’ll conclude this chapter by showing how to reverse engineer this approximation, starting with any periodic function and recovering the coefficients for a Fourier series <a id="marker-1167347"></a>that <a id="marker-1167352"></a>approximates it.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1153824"></a><a id="id_er7ca48jr3il"></a>13.4.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1160320"></a><b class="fm-exercise-head">Exercise 13.5−Mini Project</b>: <a id="marker-1167357"></a>Create a manipulated version of the square wave Fourier series so that its frequency is 441 Hz, then sample it and confirm that it doesn’t just look like the square wave. It should sound like the square <a id="marker-1167367"></a>wave as <a id="marker-1167362"></a>well.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_19"><a id="pgfId-1153829"></a><a id="id_n8d40hagj2k6"></a>13.5 Decomposing a sound wave into its Fourier series</h2>
+
+  <p class="body"><a id="pgfId-1153830"></a>Our <a id="marker-1167372"></a>last goal <a id="marker-1167377"></a>is to take an arbitrary periodic function, like the square wave, and figure out how to write it (or at least an approximation of it) as a linear combination of sinusoidal functions. This means breaking any sound wave into a combination of pure notes. As a basic example, we’ll look at a sound wave defining a chord and identify which notes make up the chord. More profoundly, we can break any sound into musical notes: a person talking, a dog barking, or a car revving its engine. Behind this result are some elegant mathematical ideas, and you now have all the background you need to understand them.</p>
+
+  <p class="body"><a id="pgfId-1153831"></a>The process of breaking a function into its Fourier series is analogous to writing a vector as a linear combination of basis vectors as we did in part 1. Here’s how the analogy works. We’ll work in the vector space of functions and think of a function like the square wave, as a function of interest. Then, we’ll think of our basis as the set of functions <span class="fm-in-times">sin</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>), <span class="fm-in-times">sin</span>(4<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>), <span class="fm-in-times">sin</span>(6<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>), and so on. In section 13.3, we approximated the square wave as a linear combination beginning with</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F24_Orland_EQ07.png"/></p>
+
+  <p class="body"><a id="pgfId-1153837"></a>You can picture two of the basis vectors, <span class="fm-in-times">sin</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) and <span class="fm-in-times">sin</span>(6<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>), as defining two perpendicular directions in the infinite-dimensional space of functions with many other directions defined by the other basis vectors. The square wave has a component of length 4/<i class="fm-in-cambria2">π</i> in the <span class="fm-in-times">sin</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) direction and a component of length 4/3<i class="fm-in-cambria2">π</i> in the <span class="fm-in-times">sin</span>(6<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) direction. These are the first two in what would be an infinite list of coordinates for the square wave in this basis (figure 13.25).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F25_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170905"></a>Figure 13.25 You can think of the square wave as a vector in the space of functions with a component length of 4/<i class="fm-in-cambria2">π</i> in the <span class="fm-in-times">sin</span>(2<i class="fm-in-cambria2">π</i>t) direction and component length of 4/3<i class="fm-in-cambria2">π</i> in the <span class="fm-in-times">sin</span>(6<i class="fm-in-cambria2">π</i>t) direction. The square wave has infinitely many more components beyond these two.</p>
+
+  <p class="body"><a id="pgfId-1153843"></a>We can write a <code class="fm-code-in-text">fourier_coefficients(f,N)</code> function that takes a function <i class="fm-in-times-italic">f</i> , which is periodic with period one, and a number <i class="fm-italics">N</i> of desired coefficients. The function treats the constant function, as well as the functions <span class="fm-in-times">cos</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) and <span class="fm-in-times">sin</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) from 1 <span class="fm-in-cambria">≤</span> <i class="fm-in-times-italic">n</i> &lt; <i class="fm-italics">N</i>, as directions in the vector space of functions and find the components of <i class="fm-in-times-italic">f</i> in those directions. It returns the Fourier coefficient <i class="fm-in-times-italic">a</i><sub class="fm-subscript">0</sub>, representing the constant function, a list of Fourier coefficients <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub>, ..., <i class="fm-italics">aN</i>, and a list of Fourier coefficients <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">2</sub>, ..., <i class="fm-italics">bN</i> as a result.</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1153845"></a>13.5.1 <a id="id_eunqeoojxw63"></a>Finding vector components with an inner product</h3>
+
+  <p class="body"><a id="pgfId-1153846"></a>In chapter 6, <a id="marker-1167387"></a>we<a id="marker-1167382"></a> covered <a id="marker-1167392"></a>how to do vector sums and scalar multiples with functions in analogy with the operations with 2D and 3D vectors. Another tool we need is an analogy for the dot product. The dot product is one example of an <i class="fm-italics">inner product</i>, a way of multiplying two vectors to get a scalar that measures how aligned are the two vectors.</p>
+
+  <p class="body"><a id="pgfId-1153847"></a>Let’s think back to the 3D world for a moment and show how to use the dot product to find components of a 3D vector, then we’ll do the same thing to find components of a function in the basis of sinusoidal functions. Suppose our goal is to find the components of the vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (3, 4, 5) in the directions of the standard basis vectors, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0, 0), <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1, 0), and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> = (0, 0, 1). This question is so obvious that we never put much thought into it. The components are 3, 4, and 5, respectively; that’s what the coordinates (3, 4, 5) mean!</p>
+
+  <p class="body"><a id="pgfId-1164412"></a>Here, I’ll show you another way to find the components of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (3, 4, 5) using the dot product. It’s going to be overkill because we already have the answer, but it will be useful for the case of function vectors. Notice that each of the dot products of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> with a standard basis vector gives us back one of the components:</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">v</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">1</sub> = (3, 4, 5) <span class="fm-in-cambria">·</span> (1, 0,0) = 3 + 0 + 0 = 3</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">v</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">2</sub> = (3, 4, 5) <span class="fm-in-cambria">·</span> (0, 1,0) = 0 + 4 + 0 = 4</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">v</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">3</sub> = (3, 4, 5) <span class="fm-in-cambria">·</span> (0, 0,1) = 0 + 0 + 5 = 5</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-36.gif" ALT=""></P>-->
+  <!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-37.gif" ALT=""></P>-->
+  <!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-38.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1164422"></a>These dot products immediately tell us how to build <i class="fm-in-times-italic">v</i> as a linear combination of the standard basis: <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = 3<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> + 4<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> + 5<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>. Be careful. This only works because the dot product agrees with our definitions of lengths and angles. Any pair of perpendicular standard basis vectors has zero dot product:</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">e</i><sub class="fm-subscript">1</sub> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">2</sub> = <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">2</sub> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">3</sub> = <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">3</sub> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">1</sub> = 0</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-39.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153870"></a>And the dot products of standard basis vectors with themselves yield their (squared) lengths of one:</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">e</i><sub class="fm-subscript">1</sub> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">1</sub> = <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">2</sub> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">2</sub> = <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">3</sub> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">e</i><sub class="fm-subscript">3</sub> = |<i class="fm-in-times-italic2">e</i><sub class="fm-subscript">1</sub>|<sup class="fm-superscript">2</sup> = |<i class="fm-in-times-italic2">e</i><sub class="fm-subscript">2</sub>|<sup class="fm-superscript">2</sup> = |<i class="fm-in-times-italic2">e</i><sub class="fm-subscript">3</sub>|<sup class="fm-superscript">2</sup> = 1</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-40.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153876"></a>Another way to look at these relationships is that, according to the dot product, none of the standard basis vectors have components in the direction of the other standard basis vectors. Furthermore, each standard basis vector has component 1 in its own direction. If we want to invent an inner product to calculate components of functions, we need our basis to have the same desirable properties. In other words, we need to know that our basis functions, like <span class="fm-in-times">sin</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>), <span class="fm-in-times">cos</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>), and so on, are all perpendicular and have length 1. We’ll create an inner product for functions<a id="marker-1167397"></a> and <a id="marker-1167402"></a>test <a id="marker-1167407"></a>these facts.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1153878"></a><a id="id_ek6i2akriew3"></a>13.5.2 Defining an inner product for periodic functions</h3>
+
+  <p class="body"><a id="pgfId-1153879"></a>Suppose <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">t</i>) and<a id="marker-1167412"></a> <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">t</i>) are <a id="marker-1167417"></a>two <a id="marker-1167422"></a>functions defined on the interval from <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 1, and that these repeat themselves every one unit of <i class="fm-in-times-italic">t</i>. We can write the inner product of <i class="fm-in-times-italic">f</i> and <i class="fm-in-times-italic">g</i> as &lt;<i class="fm-in-times-italic">f</i> , <i class="fm-in-times-italic">g</i> &gt; and define it by a definite integral:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F25_Orland_EQ11.png"/></p>
+
+  <p class="body"><a id="pgfId-1153885"></a>Let’s implement this in Python code, approximating the integral as a Riemann sum (as we did in chapter 8), so you can get a sense for how this inner product works like the familiar dot product. This Riemann sum<a id="marker-1153886"></a> defaults to 1,000 time steps as shown here:</p>
+  <pre class="programlisting">def inner_product(f,g,N=1000):
+    dt = 1/N                                    <span class="fm-combinumeral">❶</span>
+    return 2*sum([f(t)*g(t)*dt 
+                  for t in np.arange(0,1,dt)])  <span class="fm-combinumeral">❷</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1153891"></a><span class="fm-combinumeral">❶</span> The dt size defaults to 1/1000 = 0.001.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1160779"></a><span class="fm-combinumeral">❷</span> For each time step, the contribution to the integral is <i class="fm-in-times-italic1">f</i>(<i class="fm-char-times-italic1">t</i>) * g(<i class="fm-char-times-italic1">t</i>) * dt. The integral’s result is multiplied by 2, according to the formula.</p>
+
+  <p class="body"><a id="pgfId-1160782"></a>Like the dot product, this integral approximation is a sum of products of values from the input vectors. Instead of being a sum of products of coordinates, it is a sum of products of function values. You can think of a function’s values as a set of infinitely many coordinates, and this inner product as being a kind of “infinite dot product” over these coordinates.</p>
+
+  <p class="body"><a id="pgfId-1153892"></a>Let’s take this inner product for a spin. For convenience, let’s define some Python functions to create the <i class="fm-in-times-italic">n</i><sup class="fm-superscript">th</sup> sine and cosine functions in our basis, and then we can test them with the <code class="fm-code-in-text">inner_product</code> function. These functions are like simplified versions of the <code class="fm-code-in-text">make_sinusoid</code> function from section 13.3.2:</p>
+  <pre class="programlisting">def s(n):                     <span class="fm-combinumeral">❶</span>
+    def f(t):
+        return <span class="fm-in-times1">sin</span>(2*pi*n*t)
+    return f
+
+def c(n):                      <span class="fm-combinumeral">❷</span>
+    def f(t):
+        return <span class="fm-in-times1">cos</span>(2*pi*n*t)
+    return f</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169570"></a><span class="fm-combinumeral">❶</span> s(n) takes a whole number n and returns the function <span class="fm-in-times1">sin</span>(2n<i class="fm-in-cambria2">π</i>t).</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169591"></a><span class="fm-combinumeral">❷</span> c(n) takes a whole number n and returns the function <span class="fm-in-times1">cos</span>(2n<i class="fm-in-cambria2">π</i>t).</p>
+
+  <p class="body"><a id="pgfId-1153896"></a>A dot product of two 3D vectors like (1, 0, 0) and (0, 1, 0) returns zero, confirming they are perpendicular. Our inner product shows that all of our pairs’ basis functions are (approximately) perpendicular. For instance,</p>
+  <pre class="programlisting">&gt;&gt;&gt; inner_product(s(1),c(1))
+4.2197487366314734e−17
+&gt;&gt;&gt; inner_product(s(1),s(2))
+−1.4176155163484784e−18
+&gt;&gt;&gt; inner_product(c(3),s(10))
+−1.7092447249233977e−16</pre>
+
+  <p class="body"><a id="pgfId-1153898"></a>These numbers are extremely close to zero, confirming that <span class="fm-in-times">sin</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) and <span class="fm-in-times">cos</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) are perpendicular, and <span class="fm-in-times">sin</span>(2<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) and <span class="fm-in-times">sin</span>(4<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) are perpendicular, as well as <span class="fm-in-times">cos</span>(6<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) and <span class="fm-in-times">cos</span>(20<i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>). Using exact integration formulas, which we won’t cover here, it’s possible to <i class="fm-italics">prove</i> that for any whole numbers <i class="fm-in-times-italic">n</i> and <i class="fm-in-times-italic">m</i> :</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">〈</span><span class="fm-in-times2">sin</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>), <span class="fm-in-times2">cos</span>(2<i class="fm-in-times-italic2">m</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>)<span class="fm-in-cambria">〉</span> = 0</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-42.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153904"></a>And for any pair of distinct whole numbers <i class="fm-in-times-italic">n</i> and <i class="fm-in-times-italic">m</i>, both</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">〈</span><span class="fm-in-times2">sin</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>), <span class="fm-in-times2">sin</span>(2<i class="fm-in-times-italic2">m</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>)<span class="fm-in-cambria">〉</span> = 0</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-43.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153910"></a>and</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">〈</span><span class="fm-in-times2">cos</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>), <span class="fm-in-times2">cos</span>(2<i class="fm-in-times-italic2">m</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>)<span class="fm-in-cambria">〉</span> = 0</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-44.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153916"></a>This is a way of saying that with respect to this inner product, all of our sinusoidal basis functions are perpendicular; none has a component in the direction of another. The other thing we need to check is that the inner product implies our basis vectors have components of 1 in their own directions. Indeed, within numerical error, this looks to be true:</p>
+  <pre class="programlisting">&gt;&gt;&gt; inner_product(s(1),s(1))
+1.0000000000000002
+&gt;&gt;&gt; inner_product(c(1),c(1))
+0.9999999999999999
+&gt;&gt;&gt; inner_product(c(3),c(3))
+1.0</pre>
+
+  <p class="body"><a id="pgfId-1153918"></a>Even though we won’t go through it here, using integral formulas makes it possible to prove directly that for any whole number <i class="fm-in-times-italic">n</i></p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">〈</span><span class="fm-in-times2">sin</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>), <span class="fm-in-times2">sin</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>)<span class="fm-in-cambria">〉</span> = 1</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-45.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153924"></a>and</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">〈</span><span class="fm-in-times2">cos</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>), <span class="fm-in-times2">cos</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>)<span class="fm-in-cambria">〉</span> = 1</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-46.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153930"></a>The last bit of tidying up we need to do is to include our constant function in this discussion. I promised before that I’d explain why we need to include a constant term in the Fourier series, and now I can give an initial explanation. The constant function is required to build a complete basis of functions; not including this would be like omitting <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> from the basis for 3D space and going forward with <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>. If you did that, there’d be functions you simply couldn’t build out of basis vectors.</p>
+
+  <p class="body"><a id="pgfId-1153931"></a>Any constant function is perpendicular to every sine and cosine function in our basis, but we need to pick the value of the constant function so that it has component 1 in its own direction. That is, if we implement a Python function <code class="fm-code-in-text">const(<i class="fm-char-times-italic">t</i>)</code>, we should find that <code class="fm-code-in-text">inner_product(const,const)</code> returns 1. The right constant value for <code class="fm-code-in-text">const</code> to return turns out to be 1/<span class="fm-in-cambria">√</span>2 (and you can check in the following exercise that this value makes sense!):</p>
+  <pre class="programlisting">from math import sqrt
+
+def const(n):
+    return 1 /sqrt(2)</pre>
+
+  <p class="body"><a id="pgfId-1153933"></a>With this defined, we can confirm the constant function has the right properties:</p>
+  <pre class="programlisting">&gt;&gt;&gt; inner_product(const,s(1))
+−2.2580204307905138e−17
+&gt;&gt;&gt; inner_product(const,c(1))
+<span class="fm-in-cambria">−</span>3.404394821604484e−17
+&gt;&gt;&gt; inner_product(const,const)
+1.0000000000000007</pre>
+
+  <p class="body"><a id="pgfId-1153935"></a>We now have the tools we need to find the Fourier coefficients of a periodic function. These coefficients are nothing more than components of the function in the <a id="marker-1167437"></a>basis <a id="marker-1167432"></a>we’ve <a id="marker-1167427"></a>defined.</p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1153937"></a>13.5.3 <a id="id_k3hwqmkypawb"></a>Writing a function to find Fourier coefficients</h3>
+
+  <p class="body"><a id="pgfId-1153938"></a>In the 3D <a id="marker-1167442"></a>example, we <a id="marker-1167447"></a>saw that the dot product of a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> with a basis vector <i class="fm-in-times-italic"><b class="fm-bold">e</b></i> <i class="fm-in-times-italic">i</i> gave us the component of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> in the direction of <i class="fm-in-times-italic"><b class="fm-bold">e</b></i> <i class="fm-in-times-italic">i</i>. We’ll use the same process for a periodic function <i class="fm-in-times-italic">f</i> .</p>
+
+  <p class="body"><a id="pgfId-1153939"></a>The coefficients <i class="fm-in-times-italic">a<sub class="fm-subscript1">n</sub></i> for <i class="fm-in-times-italic">n</i> ≥ 1 tell us the components of <i class="fm-in-times-italic">f</i> in the direction of the basis function <span class="fm-in-times">cos</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>). They are computed as the inner products of <i class="fm-in-times-italic">f</i> with these basis functions:</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">a<sub class="fm-subscript">n</sub></i> = <span class="fm-in-cambria">〈</span><i class="fm-in-times-italic2">f</i>, <span class="fm-in-times2">cos</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>)<span class="fm-in-cambria">〉</span> , n <span class="fm-in-cambria">≥</span> 1</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-48.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153945"></a>Likewise, every Fourier coefficient <i class="fm-in-times-italic">b<sub class="fm-subscript1">n</sub></i> tells us the component of <i class="fm-in-times-italic">f</i> in the direction of a basis function <span class="fm-in-times">sin</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) and can also be computed with an inner product:</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">b<sub class="fm-subscript">n</sub></i> = <span class="fm-in-cambria">〈</span><i class="fm-in-times-italic2">f</i>, <span class="fm-in-times2">sin</span>(2<i class="fm-in-times-italic2">n</i><span class="fm-in-cambria">π</span><i class="fm-in-times-italic2">t</i>)<span class="fm-in-cambria">〉</span></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-49.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1153953"></a>Finally, the number <i class="fm-in-times-italic">a</i> 0 is the inner product of <i class="fm-in-times-italic">f</i> with the constant function, whose value is 1/<span class="fm-in-cambria">√</span>2. All of these Fourier coefficients can be computed with Python functions we’ve already written, so we’re ready to assemble the <code class="fm-code-in-text">fourier_coefficients</code> function we set out to write. Remember, the first argument to the function is the function we want to analyze, and the second argument is the maximum number of sine and cosine terms we want:</p>
+  <pre class="programlisting">def fourier_coefficients(f,N):
+    a0 = inner_product(f,const)     <span class="fm-combinumeral">❶</span>
+    an = [inner_product(f,c(n)) 
+          for n in range(1,N+1)]    <span class="fm-combinumeral">❷</span>
+    bn = [inner_product(f,s(n)) 
+          for n in range(1,N+1)]    <span class="fm-combinumeral">❸</span>
+    return a0, an, bn</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1153960"></a><span class="fm-combinumeral">❶</span> The constant term <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">0</sub> is the inner product of <i class="fm-in-times-italic1">f</i> with the constant basis function.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169730"></a><span class="fm-combinumeral">❷</span> The coefficients an are given by inner products of f with <span class="fm-in-times1">cos</span>(2n<i class="fm-in-cambria2">π</i>t) for 1 &lt; <i class="fm-in-times-italic1">n</i> &lt; <i class="fm-in-times-italic1">N</i> + 1.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1169747"></a><span class="fm-combinumeral">❸</span> The coefficients bn are given by inner products of f with <span class="fm-in-times1">sin</span>(2n<i class="fm-in-cambria2">π</i>t) for 1 <span class="fm-in-cambria">≤</span> <i class="fm-in-times-italic1">n</i> &lt; <i class="fm-in-times-italic1">N</i> + 1.</p>
+
+  <p class="body"><a id="pgfId-1161330"></a>As a sanity check, a Fourier series should give back its own coefficients. For instance</p>
+  <pre class="programlisting">&gt;&gt;&gt; f = fourier_series(0,[2,3,4],[5,6,7])
+&gt;&gt;&gt; fourier_coefficients(f,3)
+(−3.812922200197022e−15,
+ [1.9999999999999887, 2.999999999999999, 4.0],
+ [5.000000000000002, 6.000000000000001, 7.0000000000000036])</pre>
+
+  <p class="fm-callout"><a id="pgfId-1153962"></a><span class="fm-callout-head">Note</span> If you want the inputs and outputs to match non-zero constant terms, you need to revise the const function to be <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">t</i>) = 1/<span class="fm-in-cambria">√</span>2 instead of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">t</i>) = 1. See exercise 13.8.</p>
+
+  <p class="body"><a id="pgfId-1153963"></a>Now that we can automatically compute Fourier coefficients, we can conclude our exploration by building some Fourier approximations of interestingly shaped<a id="marker-1167457"></a> periodic<a id="marker-1167452"></a> functions.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1153965"></a>13.5.4 <a id="id_n4s81bt7w8z8"></a>Finding the Fourier coefficients for the square wave</h3>
+
+  <p class="body"><a id="pgfId-1153966"></a>We<a id="marker-1167462"></a> saw in <a id="marker-1167467"></a>the last section that the Fourier coefficients for the square wave were all zero except for the <i class="fm-in-times-italic">b<sub class="fm-subscript1">n</sub></i> coefficients for odd <i class="fm-in-times-italic">n</i> values. That is, the Fourier series is built as a linear combination of the function <span class="fm-in-times">sin</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) for odd values of <i class="fm-in-times-italic">n</i>. For odd <i class="fm-in-times-italic">n</i>, the coefficient was <i class="fm-italics">bn = 4/n</i><i class="fm-in-cambria2">π</i>. I didn’t explain why those were the coefficients, but now we can check our work.</p>
+
+  <p class="body"><a id="pgfId-1153968"></a>To make a square wave that repeats itself every unit of <i class="fm-in-times-italic">t</i>, we can<a id="marker-1153967"></a> use the value <code class="fm-code-in-text">t%1</code> in Python, which computes the fractional part of <i class="fm-in-times-italic">t</i>. Because, for example, <code class="fm-code-in-text">2.3</code> <code class="fm-code-in-text">%</code> <code class="fm-code-in-text">1</code> is <code class="fm-code-in-text">0.3</code> and <code class="fm-code-in-text">0.3</code> <code class="fm-code-in-text">%</code> <code class="fm-code-in-text">1</code> is <code class="fm-code-in-text">0.3</code>, a function written in terms of <code class="fm-code-in-text">t</code> <code class="fm-code-in-text">%</code> 1 is automatically periodic with the period 1. The square wave has a value of +1 when <code class="fm-code-in-text">t</code> <code class="fm-code-in-text">%</code> <code class="fm-code-in-text">1</code> <code class="fm-code-in-text">&lt;</code> <code class="fm-code-in-text">0.5</code> and −1 otherwise</p>
+  <pre class="programlisting">def square(t):
+    return 1 if (t%1) &lt; 0.5 else −1</pre>
+
+  <p class="body"><a id="pgfId-1153970"></a>Let’s look at the first 10 Fourier coefficients for this square wave. Run</p>
+  <pre class="programlisting">a0, a, b = fourier_coefficients(square,10)</pre>
+
+  <p class="body"><a id="pgfId-1153972"></a>and you’ll see that <i class="fm-in-times-italic">a</i><sub class="fm-subscript">0</sub> and the entries of <i class="fm-in-times-italic">a</i> are all small, as with every other entry of <i class="fm-in-times-italic">b</i>. The values of <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">3</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">5</sub>, and so on are represented by <code class="fm-code-in-text">b[0],</code> <code class="fm-code-in-text">b[2],</code> <code class="fm-code-in-text">b[4]</code>, ..., because Python arrays are zero-indexed. These are all close to the expected values:</p>
+  <pre class="programlisting">&gt;&gt;&gt; b[0], 4/pi
+(1.273235355942202, 1.2732395447351628)
+&gt;&gt;&gt; b[2], 4/(3*pi)
+(0.4244006151333577, 0.4244131815783876)
+&gt;&gt;&gt; b[4], 4/(5*pi)
+(0.2546269646514865, 0.25464790894703254)</pre>
+
+  <p class="body"><a id="pgfId-1153974"></a>We already saw that a Fourier series with these coefficients is a solid approximation of the square wave graph. Let’s conclude this section by looking at two example functions we haven’t seen before and plotting the Fourier series alongside the original functions to show that the<a id="marker-1167477"></a> approximation<a id="marker-1167472"></a> works.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1153976"></a>13.5.5 <a id="id_dyjx2spube72"></a>Fourier coefficients for other waveforms</h3>
+
+  <p class="body"><a id="pgfId-1156978"></a>Next, <a id="marker-1167482"></a>we consider <a id="marker-1167487"></a>more functions beyond the square wave graph that can be modeled using a Fourier transform. Figure 13.26 shows a new, interestingly shaped waveform called a <i class="fm-italics">sawtooth wave</i>.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F26_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1170985"></a>Figure 13.26 A sawtooth wave plotted over five periods</p>
+
+  <p class="body"><a id="pgfId-1156983"></a>On the intervals from <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 1, the sawtooth wave is identical to the function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">t</i> and then it repeats itself every one unit. To define the sawtooth wave as a Python function, we can simply write</p>
+  <pre class="programlisting">def sawtooth(t):
+    return t%1</pre>
+
+  <p class="body"><a id="pgfId-1153985"></a>To see its Fourier series approximation with up to 10 sine and cosine terms, we can plug the Fourier coefficients directly into our Fourier series function. Plotting it alongside the sawtooth, as shown in figure 13.27, we can see it has a good fit.</p>
+  <pre class="programlisting">&gt;&gt;&gt; approx = fourier_series(*fourier_coefficients(sawtooth,10))
+&gt;&gt;&gt; plot_function(sawtooth,0,5)
+&gt;&gt;&gt; plot_function(approx,0,5)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F27_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1171035"></a>Figure 13.27 The original sawtooth wave from figure 13.26 with its Fourier series approximation</p>
+
+  <p class="body"><a id="pgfId-1153992"></a>Once again, it’s striking how close we can come to a function with sharp corners using only a linear combination of smooth sine and cosine waves. This function happens to have a non-zero constant coefficient <i class="fm-in-times-italic">a</i><sub class="fm-subscript">0</sub>. That’s required because this function only has values above zero, while sine and cosine functions contribute negative values.</p>
+
+  <p class="body"><a id="pgfId-1153993"></a>As a final example, take a look at the following function defined as <code class="fm-code-in-text">speedbumps(<i class="fm-char-times-italic">t</i>)</code> in the source code for this book. Figure 13.28 shows the graph.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F28_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153998"></a>Figure 13.28 The <code class="fm-code-in-text">speedbumps(<i class="fm-char-times-italic">t</i>)</code> function that alternates between flat stretches and round bumps</p>
+
+  <p class="body"><a id="pgfId-1153999"></a>The implementation of this function isn’t important, but this one is an interesting example because it has non-zero coefficients for the cosine functions and all zeros for the sines. Even with 10 terms, we get a good approximation. Figure 13.29 shows the graph of the Fourier series with <i class="fm-in-times-italic">a</i><sub class="fm-subscript">0</sub> and ten cosine terms (the coefficients <i class="fm-in-times-italic">b<sub class="fm-subscript1">n</sub></i> are all zero).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F29_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1154004"></a>Figure 13.29 The constant term and first 10 cosine terms for the Fourier series of the <code class="fm-code-in-text">speedbumps(<i class="fm-char-times-italic">t</i>)</code> function</p>
+
+  <p class="body"><a id="pgfId-1154005"></a>You can see some wobbles when we graph these approximations, but when these waveforms are translated to sound, the Fourier series can be good enough. Because we are able to transform waveforms of all shapes to lists of their Fourier coefficients, we can store and transmit audio<a id="marker-1167492"></a> files <a id="marker-1167497"></a>efficiently.</p>
+
+  <h3 class="fm-head1" id="heading_id_25"><a id="pgfId-1154007"></a><a id="id_4rdc0q62ksm3"></a>13.5.6 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1161549"></a><b class="fm-exercise-head">Exercise 13.6</b>: <a id="marker-1167502"></a>The <a id="marker-1167507"></a>vectors <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">1</sub> = (2, 0, 0), <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">2</sub> = (0, 1, 1), and <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">3</sub> = (1, 0, −1) form a basis for <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">3</sup>. For a vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (3, 4, 5), compute three dot products <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub> = <i class="fm-in-times-italic1">v</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub> = <i class="fm-in-times-italic1">v</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">2</sub>, and <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">3</sub> = <i class="fm-in-times-italic1">v</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">3</sub>. Show that <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is <i class="fm-italics">not</i> equal to <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">2</sub> + <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">3</sub> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i><sub class="fm-subscript2">3</sub>. Why aren’t they equal?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1161559"></a><b class="fm-exercise-head">Solution</b>: The dot products are</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> = <i class="fm-in-times-italic2"><b class="calibre23">v</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="calibre23">u</b></i><sub class="fm-subscript">1</sub> = (3, 4, 5) <span class="fm-in-cambria">·</span> (2, 0, 0) = 6</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> = <i class="fm-in-times-italic2"><b class="calibre23">v</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="calibre23">u</b></i><sub class="fm-subscript">2</sub> = (3, 4, 5) <span class="fm-in-cambria">·</span> (0, 1, 1) = 9</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub> = <i class="fm-in-times-italic2"><b class="calibre23">v</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="calibre23">u</b></i><sub class="fm-subscript">3</sub> = (3, 4, 5) <span class="fm-in-cambria">·</span> (1, 0,<span class="fm-in-cambria">−</span>1) = <span class="fm-in-cambria">−</span>2</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-13-56.gif" ALT=""></P>-->
+
+        <p class="fm-sidebar"><a id="pgfId-1161561"></a>That makes the linear combination 6 <span class="fm-in-cambria">·</span> (2, 0, 0) + 9 <span class="fm-in-cambria">·</span> (0, 1, 1) − 2 <span class="fm-in-cambria">·</span> (1, 0, −1) = (16, 9, 2), which is not equal to (3, 4, 5). This approach does not give the correct result because these basis vectors do not have length 1 and are not perpendicular to each other.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1161606"></a><b class="fm-exercise-head">Exercise 13.7-Mini Project</b>: Suppose <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">t</i>) is constant, meaning <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">t</i>) = <i class="fm-italics">k</i>. Use the integral formula for the inner product to find a value <i class="fm-italics">k</i> making &lt;<i class="fm-in-times-italic1">f</i> , <i class="fm-in-times-italic1">f</i> &gt; = 1. (Yes, I’ve already told you that <i class="fm-italics">k</i> =1/<span class="fm-in-cambria">√</span>2 but see if you can get to that value yourself!)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1161651"></a><b class="fm-exercise-head">Solution</b>: If <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">t</i>) = <i class="fm-italics">k</i>, then &lt;<i class="fm-in-times-italic1">f</i> , <i class="fm-in-times-italic1">f</i> &gt; is given by the integral:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH13_F29_Orland_EQ18.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1161657"></a>(The area under the constant function <i class="fm-italics">k</i><sup class="fm-superscript1">2</sup> from 0 to 1 is <i class="fm-italics">k</i><sup class="fm-superscript1">2</sup>.) If we want 2 <i class="fm-italics">k</i><sup class="fm-superscript1">2</sup> to equal 1, then <i class="fm-italics">k</i><sup class="fm-superscript1">2</sup> = and <i class="fm-italics">k</i> = <span class="fm-in-cambria">√</span>1/2 = 1/<span class="fm-in-cambria">√</span>2.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1161727"></a><b class="fm-exercise-head">Exercise 13.8</b>: Update the <code class="fm-code-in-text1">fourier_series</code> function to use <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">t</i>) = 1/<span class="fm-in-cambria">√</span>2 for the constant function instead of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">t</i>) = 1.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1161728"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def fourier_series(a0,a,b):
+    def result(t):
+        cos_terms = [an*<span class="fm-in-times1">cos</span>(2*pi*(n+1)*t) for (n,an) in enumerate(a)]
+        sin_terms = [bn*<span class="fm-in-times1">sin</span>(2*pi*(n+1)*t) for (n,bn) in enumerate(b)]
+        return a0/sqrt(2) + sum(cos_terms) + sum(sin_terms)          <span class="fm-combinumeral">❶</span>
+    return result</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1169875"></a><span class="fm-combinumeral">❶</span> Multiplies the coefficient <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">0</sub> by the constant function <i class="fm-in-times-italic1">f</i>(<i class="fm-char-times-italic1">t</i>) = 1/<span class="fm-in-cambria">√</span>2 to the Fourier series result regardless of the value of t</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1161816"></a><b class="fm-exercise-head">Exercise 13.9−Mini Project</b>: Play a sawtooth wave at 441 Hz and compare it with the square and sinusoidal waves you played at that frequency.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1161817"></a><b class="fm-exercise-head">Solution</b>: We can create a modified sawtooth wave function with amplitude 8,000 and frequency 441 and then sample it to pass to PyGame:</p>
+        <pre class="programlisting">def modified_sawtooth(t):
+    return 8000 * sawtooth(441*t)
+arr = sample(modified_sawtooth,0,1,44100)
+sound = pygame.sndarray.make_sound(arr)
+sound.play()</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1161819"></a>People often compare the sound of a sawtooth <a id="marker-1167527"></a>wave to<a id="marker-1167522"></a> that of a <a id="marker-1167512"></a>string<a id="marker-1167517"></a> instrument, like a violin.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_26"><a id="pgfId-1154051"></a><a id="id_8qj0y19sy3gl"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154052"></a>Sound waves are pressure changes over time that propagate through the air to our ears where we perceive these as sounds. We can represent a sound wave as a function that loosely represents the change in air pressure over time.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154053"></a>PyGame and most other digital audio systems used <i class="fm-italics">sampled</i> audio. Rather than a function defining a sound wave, these systems use arrays of values of the function taken at uniform intervals. For instance, CD audio commonly uses 44,100 values for each second of audio.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154054"></a>Sound waves with random shapes sound like noise, while waves with shapes that repeat on fixed intervals produce well-defined musical notes. A function that repeats its values on a certain interval is called a <i class="fm-italics">periodic function</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154055"></a>The sine and cosine functions are periodic functions, and their graphs repeat curved shapes called <i class="fm-italics">sinusoids.</i></p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154056"></a>Sine and cosine repeat their values every 2<i class="fm-in-cambria2">π</i> units. That value is called their <i class="fm-italics">period</i>. The <i class="fm-italics">frequency</i> of a periodic function is the reciprocal of the period, which is 1/(2<i class="fm-in-cambria2">π</i>) for sine and cosine.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154057"></a>A function of the form <span class="fm-in-times">sin</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) or <span class="fm-in-times">cos</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) has frequency <i class="fm-in-times-italic">n</i>. High frequency sound wave functions produce high-pitched musical notes.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154058"></a>The maximum height of a periodic function is called its <i class="fm-italics">amplitude</i>. Multiplying a sine or cosine function by a number increases the amplitude of the function and the volume of the corresponding sound wave.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154059"></a>To create the effect of two sounds playing at once, you can add the functions that define their corresponding sound waves to create a new function and a new sound wave. Generally, you can take any linear combination of existing sound waves to create a new sound wave.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154060"></a>A linear combination of a constant function along with functions of the form <span class="fm-in-times">sin</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) and <span class="fm-in-times">cos</span>(2<i class="fm-in-times-italic">n</i><i class="fm-in-cambria2">π</i><i class="fm-in-times-italic">t</i>) for various values of <i class="fm-in-times-italic">n</i> is called a <i class="fm-italics">Fourier series</i>. Despite being built out of smooth sine and cosine functions, Fourier series can be good approximations for any periodic functions, even those with sharp corners like square waves.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154061"></a>You can think of the constant function along with the sines and cosines at different frequencies as a basis for the vector space of periodic functions. The linear combination of these basis vectors that best approximate a given function are called <i class="fm-italics">Fourier coefficients</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154062"></a>We can use the dot product of a 2D or 3D vector with a standard basis vector to find its component in the direction of that basis vector.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1154063"></a>Analogously, we can take a special inner product of a periodic function with a sine or cosine function to find a component associated with that function. The inner product for periodic functions is a definite integral taken over a specified range, in our case, from zero to <a id="marker-1167532"></a>one.</p>
+    </li>
+  </ul>
+</body>
+</html>

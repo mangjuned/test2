@@ -1,0 +1,272 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>appendix C</title>
+    
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1100377"></a><a id="pgfId-1109463"></a><a id="id_vqxwn38qf6vb"></a>appendix C. Loading and rendering 3D Models with OpenGL and PyGame</h1>
+  </div>
+
+  <p class="body"><a id="pgfId-1109464"></a>Beyond <a id="marker-1111773"></a>chapter 3, <a id="marker-1111778"></a>when <a id="marker-1111783"></a>we start writing programs that transform and animate graphics, I use OpenGL and PyGame instead of Matplotlib. This appendix provides an overview of how to set up a game loop in PyGame and render 3D models in successive frames. The culmination is an implementation of a <code class="fm-code-in-text">draw_model</code> function that renders a single image of a 3D model like the teapot we used in chapter 4.</p>
+
+  <p class="body"><a id="pgfId-1109465"></a>The goal of <code class="fm-code-in-text">draw_model</code> is to encapsulate the library-specific work, so you don’t have to spend a lot of time wrestling with OpenGL. But if you want to understand how the function works, feel free to follow along in this appendix and play with the code yourself. Let’s start with our octahedron from chapter 3 and recreate it with PyOpenGL, an OpenGL binding for Python and PyGame.</p>
+
+  
+
+
+<h2 class="fm-head" id="heading_id_3"><a id="pgfId-1109467"></a><a id="id_3znysh7"></a>C.1 Recreating the octahedron from chapter 3</h2>
+
+  <p class="body"><a id="pgfId-1109468"></a>To<a id="marker-1111788"></a> begin <a id="marker-1111793"></a>working <a id="marker-1111798"></a>with the PyOpenGL and PyGame libraries, you need to install them. I recommend using pip as follows:</p>
+  <pre class="programlisting">&gt; pip install PyGame
+&gt; pip install PyOpenGL</pre>
+
+  <p class="body"><a id="pgfId-1109470"></a>The first thing I’ll show you is how to use these libraries to recreate work we’ve already done, rendering a simple 3D object.</p>
+
+  <p class="body"><a id="pgfId-1109471"></a>In a new Python file called octahedron.py (which you can find in the source code for appendix C), we start with a bunch of imports. The first few come from the two new libraries, PyGame and PyOpenGL, and the rest should be familiar from chapter 3. In particular, we’ll continue to use all of the 3D vector arithmetic functions we already built, organized in the file vectors.py in the source code for this book. Here are the import statements:</p>
+  <pre class="programlisting">import pygame
+from pygame.locals import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
+import matplotlib.cm
+from vectors import *
+from math import *</pre>
+
+  <p class="body"><a id="pgfId-1109473"></a>While OpenGL has automatic shading capabilities, let’s continue to use our shading mechanism from chapter 3. We can use a blue color map from Matplotlib to compute colors for the shaded sides of the octahedron:</p>
+  <pre class="programlisting">def normal(face):
+    return(cross(subtract(face[1], face[0]), subtract(face[2], face[0])))
+
+blues = matplotlib.cm.get_cmap('Blues')
+
+def shade(face,color_map=blues,light=(1,2,3)):
+    return color_map(1 − dot(unit(normal(face)), unit(light)))</pre>
+
+  <p class="body"><a id="pgfId-1109475"></a>Next, we have to specify the geometry of the octahedron and the light source. Again, this is the same as in chapter 3:</p>
+  <pre class="programlisting">light = (1,2,3)
+faces = [
+    [(1,0,0), (0,1,0), (0,0,1)],
+    [(1,0,0), (0,0,-1), (0,1,0)],
+    [(1,0,0), (0,0,1), (0,-1,0)],
+    [(1,0,0), (0,-1,0), (0,0,-1)],
+    [(−1,0,0), (0,0,1), (0,1,0)],
+    [(−1,0,0), (0,1,0), (0,0,-1)],
+    [(−1,0,0), (0,-1,0), (0,0,1)],
+    [(−1,0,0), (0,0,-1), (0,-1,0)],
+]</pre>
+
+  <p class="body"><a id="pgfId-1109477"></a>Now it’s time for some unfamiliar territory. We’re going to show the octahedron as a PyGame game window, which requires a few lines of boilerplate. Here, we start the game, set the window size in pixels, and tell PyGame to use OpenGL as the graphics engine:</p>
+  <pre class="programlisting">pygame.init()
+display = (400,400) 
+window = pygame.display.set_mode(display,            <span class="fm-combinumeral">❶</span>
+                                 DOUBLEBUF|OPENGL)   <span class="fm-combinumeral">❷</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1109482"></a><span class="fm-combinumeral">❶</span> Asks PyGame to show our graphics in a 400 × 400 pixel window</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1110324"></a><span class="fm-combinumeral">❷</span> Lets PyGame know that we’re using OpenGL for our graphics and indicates that we want to use a built-in optimization called double-buffering, which isn’t important to understand for our purposes</p>
+
+  <p class="body"><a id="pgfId-1110327"></a>In our simplified example in section 3.5, we drew the octahedron from the perspective of someone looking from a point far up the z-axis. We computed which triangles should be visible to such an observer and projected them to 2D by removing the z-axis. OpenGL has built-in functions to configure our perspective even more precisely:</p>
+  <pre class="programlisting">gluPerspective(45, 1, 0.1, 50.0)
+glTranslatef(0.0,0.0, -5)
+glEnable(GL_CULL_FACE)
+glEnable(GL_DEPTH_TEST)
+glCullFace(GL_BACK)</pre>
+
+  <p class="body"><a id="pgfId-1109484"></a>For the purpose of learning math, you don’t really need to know what these functions do, but I’ll give you a short overview in case you are curious. The call to <code class="fm-code-in-text">gluPerspective</code> describes our perspective looking at the scene, where we have a <span class="fm-in-cambria">45°</span> viewing angle and an aspect ratio of 1. This means the vertical units and the horizontal units display as the same size. As a performance optimization, the numbers 0.1 and 50.0 put limits on the <i class="fm-in-times-italic">z</i> -coordinates that are rendered: no objects further than 50.0 units from the observer or closer than 0.1 units will show up. Our use of <code class="fm-code-in-text">glTranslatef</code> indicates that we’ll observe the scene from 5 units up the z-axis, meaning we move the scene down by vector (0, 0, -5). Calling <code class="fm-code-in-text">glEnable(GL_CULL _FACE)</code> turns on an OpenGL option that automatically hides polygons oriented away from the viewer, saving us some work we already did in chapter 3, and <code class="fm-code-in-text">glEnable (GL_DEPTH_TEST)</code> ensures that we render polygons closer to us on top of those further from us. Finally, <code class="fm-code-in-text">glCullFace(GL_BACK)</code> enables an OpenGL option that automatically hides polygons that are facing us but that are behind other polygons. For the sphere, this wasn’t a problem, but for more complex shapes it can be.</p>
+
+  <p class="body"><a id="pgfId-1109485"></a>Finally, we can implement the main code that draws our octahedron. Because our eventual goal is to animate objects, we’ll actually write code that draws the object over and over repeatedly. These successive drawings, like frames of a movie, show the same octahedron over time. And, like any video of any stationary object, the result is indistinguishable from a static picture.</p>
+
+  <p class="body"><a id="pgfId-1109486"></a>To render a single frame, we loop through the vectors, decide how to shade them, draw them with OpenGL, and update the frame with PyGame. Inside of an infinite <code class="fm-code-in-text">while</code> loop, this process can be automatically repeated as fast as possible as long as the program runs:</p>
+  <pre class="programlisting">clock = pygame.time.Clock()                            <span class="fm-combinumeral">❶</span>
+while True:
+    for event in pygame.event.get():                   <span class="fm-combinumeral">❷</span>
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+
+    clock.tick()                                       <span class="fm-combinumeral">❸</span>
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+    glBegin(GL_TRIANGLES)                              <span class="fm-combinumeral">❹</span>
+    for face in faces:
+        color = shade(face,blues,light)
+        for vertex in face:
+            glColor3fv((color[0], 
+                        color[1], 
+                        color[2]))                     <span class="fm-combinumeral">❺</span>
+            glVertex3fv(vertex)                        <span class="fm-combinumeral">❻</span>
+    glEnd()
+    pygame.display.flip()                              <span class="fm-combinumeral">❼</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1109497"></a><span class="fm-combinumeral">❶</span> Initializes a clock to measure the advancement of time for PyGame</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1110652"></a><span class="fm-combinumeral">❷</span> In each iteration, checks the events PyGame receives and quits if the user closes the window</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1110672"></a><span class="fm-combinumeral">❸</span> Indicates to the clock that time should elapse</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112233"></a><span class="fm-combinumeral">❹</span> Instructs OpenGL that we are about to draw triangles</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112250"></a><span class="fm-combinumeral">❺</span> For each vertex of each face (triangle), sets the color based on the shading</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112267"></a><span class="fm-combinumeral">❻</span> Specifies the next vertex of the current triangle</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112284"></a><span class="fm-combinumeral">❼</span> Indicates to PyGame that the newest frame of the animation is ready and makes it visible</p>
+
+  <p class="body"><a id="pgfId-1110655"></a>Running this code, we see a 400 £ 400 pixel PyGame window appear, containing an image that looks like the one from chapter 3 (figure C.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPC_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113050"></a>Figure C.1 The octahedron rendered in a PyGame window</p>
+
+  <p class="body"><a id="pgfId-1109503"></a>If you want to prove that something more interesting is happening, you can include the following line at the end of the <code class="fm-code-in-text">while True</code> loop:</p>
+  <pre class="programlisting">print(clock.get_fps())</pre>
+
+  <p class="body"><a id="pgfId-1109505"></a>This prints instantaneous quotes of the rate (in frames per second, or fps) at which PyGame is rendering and re-rendering the octahedron. For a simple animation like this, PyGame should reach or exceed its default maximum frame rate of 60 fps.</p>
+
+  <p class="body"><a id="pgfId-1109506"></a>But what’s the point of rendering so many frames if nothing changes? Once we include a vector transformation with each frame, we see the octahedron move in various ways. For now, we can cheat by moving the “camera” with <a id="marker-1111803"></a>each<a id="marker-1111808"></a> frame <a id="marker-1111813"></a>instead <a id="marker-1111818"></a>of actually moving the octahedron.</p>
+
+  <h2 class="fm-head" id="heading_id_4"><a id="pgfId-1109508"></a><a id="id_2et92p0"></a>C.2 Changing our perspective</h2>
+
+  <p class="body"><a id="pgfId-1109509"></a>The <code class="fm-code-in-text">glTranslatef</code> <a id="marker-1111823"></a>function<a id="marker-1111828"></a> in the <a id="marker-1111833"></a>previous section tells OpenGL the position from which we want to see the 3D scene we’re rendering. Similarly, there is a <code class="fm-code-in-text">glRotatef</code> function that lets us change the angle at which we observe the scene. Calling <code class="fm-code-in-text">glRotatef (theta,</code> <code class="fm-code-in-text">x,</code> <code class="fm-code-in-text">y,</code> <code class="fm-code-in-text">z)</code> rotates the whole scene by the angle <code class="fm-code-in-text">theta</code> about an axis specified by the vector (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>).</p>
+
+  <p class="body"><a id="pgfId-1109510"></a>Let me clarify what I mean by “rotating by an angle about an axis.” You can think of the familiar example of the Earth rotating in space. The Earth rotates by <span class="fm-in-cambria">3<span class="fm-in-cambria">60°</span></span> every day or <span class="fm-in-cambria">15°</span> every hour. The <i class="fm-italics">axis</i> is the invisible line that the Earth rotates around; it passes through the North and South poles−the only two points that aren’t rotating. For the Earth, the axis of rotation is not directly upright, rather it is tilted by 23.5° (figure C.2).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPC_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113097"></a>Figure C.2 A familiar example of an object rotating about an axis. The Earth’s axis of rotation is tilted at 23.5° relative to its orbital plane.</p>
+
+  <p class="body"><a id="pgfId-1109516"></a>The vector (0, 0, 1) points along the z-axis, so calling <code class="fm-code-in-text">glRotatef(30,0,0,1)</code> rotates the scene by <span class="fm-in-cambria">30°</span> about the z-axis. Likewise, <code class="fm-code-in-text">glRotatef(30,0,1,1)</code> rotates the scene by <span class="fm-in-cambria">30°</span> but, instead, about the axis (0, 1, 1), which is <span class="fm-in-cambria">45°</span> tilted between the y- and z-axes. If we call <code class="fm-code-in-text">glRotatef (30,0,0,1)</code> or <code class="fm-code-in-text">glRotatef(30,0,1,1)</code> after <code class="fm-code-in-text">glTranslatef(...)</code> in the octahedron code, we see the octahedron rotated (figure C.3).</p>
+
+  <p class="body"><a id="pgfId-1109528"></a>Notice that the shading of the four visible sides of the octahedron in figure C.3 has not changed. This is because none of the vectors change; the vertices of the octahedron and the light source are all the same! We have only changed the position of the “camera” relative to the octahedron. When we actually change the position of the octahedron, we’ll see the shading change too.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPC_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113140"></a>Figure C3. The octahedron as seen from three different rotated perspectives using the <code class="fm-code-in-text">glRotatef</code> function from OpenGL</p>
+
+  <p class="body"><a id="pgfId-1109529"></a>To animate the rotation of the cube, we can call <code class="fm-code-in-text">glRotate</code> with a small angle in every frame. For instance, if PyGame draws the octahedron at about 60 fps, and we call <code class="fm-code-in-text">glRotatef(1,x,y,z)</code> in every frame, the octahedron rotates about <span class="fm-in-cambria">60°</span> every second about the axis (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>). Adding <code class="fm-code-in-text">glRotatef(1,1,1,1)</code> within the infinite <code class="fm-code-in-text">while</code> loop before <code class="fm-code-in-text">glBegin</code> causes the octahedron to rotate by <span class="fm-in-cambria">1°</span> per frame about an axis in the direction (1, 1, 1) as shown in figure C.4.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPC_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113190"></a>Figure C.4 Every tenth frame of our octahedron rotating at <span class="fm-in-cambria">1°</span> per frame. After 36 frames, the octahedron completes a full rotation.</p>
+
+  <p class="body"><a id="pgfId-1109535"></a>This rotation rate is only accurate if PyGame draws exactly 60 fps. In the long run, this may not be true; if a complex scene requires more than a sixtieth of a second to compute all vectors and draw all polygons, the motion actually slows down. To keep the motion of the scene constant regardless of the frame rate, we can use PyGame’s clock.</p>
+
+  <p class="body"><a id="pgfId-1109536"></a>Let’s say we want our scene to rotate by a full rotation (<span class="fm-in-cambria">3<span class="fm-in-cambria">60°</span></span>) every 5 seconds. PyGame’s clock thinks in milliseconds, which are thousandths of a second. For a thousandth of a second, the angle rotated is divided by 1,000:</p>
+  <pre class="programlisting">degrees_per_second = 360./5
+degrees_per_millisecond = degrees_per_second / 1000</pre>
+
+  <p class="body"><a id="pgfId-1109539"></a>The PyGame clock we created has a <code class="fm-code-in-text">tick()</code> method<a id="marker-1109538"></a> that both advances the clock and returns the number of milliseconds since <code class="fm-code-in-text">tick()</code> was last called. This gives us a reliable number of milliseconds since the last frame was rendered, and lets us compute the angle that the scene should be rotated in that time:</p>
+  <pre class="programlisting">milliseconds = clock.tick()
+glRotatef(milliseconds * degrees_per_millisecond, 1,1,1)</pre>
+
+  <p class="body"><a id="pgfId-1109541"></a>Calling <code class="fm-code-in-text">glRotatef</code> like this every frame guarantees that the scene rotates exactly <span class="fm-in-cambria">3<span class="fm-in-cambria">60°</span></span> every 5 seconds. In the file rotate_octahedron.py in the appendix C source code, you can see exactly how this code is inserted.</p>
+
+  <p class="body"><a id="pgfId-1109542"></a>With the ability to move our perspective over time, we already have better rendering capabilities than we developed in chapter 3. Now, we can turn our attention to drawing a more interesting shape than an <a id="marker-1111838"></a>octahedron <a id="marker-1111843"></a>or a <a id="marker-1111848"></a>sphere.</p>
+
+  <h2 class="fm-head" id="heading_id_5"><a id="pgfId-1109544"></a><a id="id_tyjcwt"></a>C.3 Loading and rendering the Utah teapot</h2>
+
+  <p class="body"><a id="pgfId-1109545"></a>As <a id="marker-1111853"></a>we manually<a id="marker-1111858"></a> identified<a id="marker-1111863"></a> the <a id="marker-1111868"></a>vectors outlining a 2D dinosaur in chapter 2, we could manually identify the vertices of any 3D object, organize them into triples representing triangles, and build the surface as a list of triangles. Artists who design 3D models have specialized interfaces for positioning vertices in space and then saving them to files. In this section, we use a famous pre-built 3D model: the <i class="fm-italics">Utah teapot</i>. The rendering of this teapot is the Hello World program for graphics programmers: a simple, recognizable example for testing.</p>
+
+  <p class="body"><a id="pgfId-1109546"></a>The teapot model is saved in the file teapot.off in the source code, where the .off filename extension stands for Object File Format. This is a plaintext format, specifying the polygons that make up the surface of a 3D object and the 3D vectors that are vertices of the polygon. The teapot.off file looks something like what is shown in this listing.</p>
+
+  <p class="fm-code-listing-caption"><a id="pgfId-1109922"></a>Listing C.1 A schematic of the teapot.off file</p>
+  <pre class="programlisting">OFF                                <span class="fm-combinumeral">❶</span>
+480  448  926                      <span class="fm-combinumeral">❷</span>
+0  0  0.488037                     <span class="fm-combinumeral">❸</span>
+0.00390625  0.0421881  0.476326
+0.00390625  -0.0421881  0.476326
+0.0107422  0  0.575333
+...
+4 324 306 304 317                  <span class="fm-combinumeral">❹</span>
+4 306 283 281 304
+4 283 248 246 281
+...</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112709"></a><span class="fm-combinumeral">❶</span> Indicates that this file follows the Object File Format</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112730"></a><span class="fm-combinumeral">❷</span> Contains the number of vertices, faces, and edges of the 3D model in that order</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112747"></a><span class="fm-combinumeral">❸</span> Specifies 3D vectors for each of the vertices, as x-, y-, and z-coordinate values</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1112764"></a><span class="fm-combinumeral">❹</span> Specifies the 448 faces of the model</p>
+
+  <p class="body"><a id="pgfId-1109554"></a>For the last lines of this file, specifying the faces, the first number of each line tells us what kind of polygon the face is. The number 3 indicates a triangle, 4 a quadrilateral, 5 a pentagon, and so on. Most of the teapot’s faces turn out to be quadrilaterals. The next numbers on each line tell us the indices of the vertices from the previous lines that form the corners of the given polygon.</p>
+
+  <p class="body"><a id="pgfId-1109555"></a>In the file teapot.py in the appendix C source code, you’ll find the functions <code class="fm-code-in-text">load_vertices()</code> and <code class="fm-code-in-text">load_polygons()</code> that load the vertices and faces (polygons) from the teapot.off file. The first function returns a list of 440 vectors, which are all the vertices for the model. The second returns a list of 448 lists, each one containing vectors that are the vertices of one of the 448 polygons making up the model. Finally, I included a third function, <code class="fm-code-in-text">load_triangles()</code>, that breaks up the polygons with four or more vertices so that our entire model is built out of triangles.</p>
+
+  <p class="body"><a id="pgfId-1109556"></a>I’ve left it as a mini-project for you to dig deeper into my code or to try to load the teapot.off file as well. For now, I’ll continue with the triangles loaded by teapot.py, so we can get to drawing and playing with our teapot more quickly. The other step I skip is organizing the PyGame and OpenGL initialization into a function so that we don’t have to repeat it every time we draw a model. In draw_model.py, you’ll find the following function:</p>
+  <pre class="programlisting">def draw_model(faces, color_map=blues, light=(1,2,3)):
+        ...</pre>
+
+  <p class="body"><a id="pgfId-1109558"></a>It takes the faces of a 3D model (assumed to be correctly oriented triangles), a color map for shading, and a vector for the light source, and draws the model accordingly. There are also a few more keyword arguments that we introduced in chapters 4 and 5. Like our code to draw the octahedron, it draws whatever model is passed in, over and over in a loop. This listing shows how I put these together in draw_teapot.py.</p>
+
+  <p class="fm-code-listing-caption"><a id="pgfId-1109950"></a>Listing C.2 Loading the teapot triangles and passing those to <code class="fm-code-in-text">draw_model</code></p>
+  <pre class="programlisting">from teapot import load_triangles
+from draw_model import draw_model
+
+draw_model(load_triangles())</pre>
+
+  <p class="body"><a id="pgfId-1109561"></a>The result is an overhead view of a teapot. You can see the circular lid, the handle on the left, and the spout on the right (figure C.5).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPC_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113237"></a>Figure C.5 Rendering the teapot</p>
+
+  <p class="body"><a id="pgfId-1111449"></a>Now that we can render a shape that’s more interesting than a simple geometric figure, it’s time to play! If you read chapter 4, you learned about the mathematical transformations that you can do on all of the vertices of the teapot to move and distort it in 3D space. Here, I’ve also left you some exercises if you want to do some<a id="marker-1111873"></a> guided<a id="marker-1111878"></a> exploration <a id="marker-1111883"></a>of the <a id="marker-1111888"></a>rendering code.</p>
+
+  <h2 class="fm-head" id="heading_id_6"><a id="pgfId-1111467"></a><a id="id_3dy6vkm"></a>C.4 Exercises<a id="marker-1111969"></a></h2>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1111453"></a><b class="fm-exercise-head">Exercise C.1</b>: Modify <a id="marker-1111893"></a>the <code class="fm-code-in-text1">draw_model</code> function <a id="marker-1111903"></a>to display the input figure from any rotated perspective. Specifically, give the <code class="fm-code-in-text1">draw_model</code> function a keyword argument <code class="fm-code-in-text1">glRotatefArgs</code> that provides a tuple of four numbers corresponding to the four arguments of <code class="fm-code-in-text1">glRotatef</code>. With this extra information, add an appropriate call to <code class="fm-code-in-text1">glRotatef</code> within the body of <code class="fm-code-in-text1">draw_model</code> to execute the rotation.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1111454"></a><b class="fm-exercise-head">Solution</b>: In the source code for this book, see draw_model.py for the solution and draw_teapot_glrotatef.py for an example usage.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1111457"></a><b class="fm-exercise-head">Exercise C.2</b>: If we call <code class="fm-code-in-text1">glRotatef(1,1,1,1)</code> in every frame, how many seconds does it take for the scene to complete a full revolution?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1111458"></a><b class="fm-exercise-head">Solution</b>: The answer depends on the frame rate. This call to <code class="fm-code-in-text1">glRotatef</code> rotates the perspective by <span class="fm-in-cambria">1°</span> each frame. At 60 fps, it would rotate <span class="fm-in-cambria">60°</span> per second and complete a full rotation of <span class="fm-in-cambria">3<span class="fm-in-cambria">60°</span></span> in 6 seconds.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1111461"></a><b class="fm-exercise-head">Exercise C.3−Mini Project</b>: Implement the <code class="fm-code-in-text1">load_triangles()</code> function shown previously, which loads the teapot from the teapot.off file and produces a list of triangles in Python. Each triangle should be specified by three 3D vectors. Then, pass your result to <code class="fm-code-in-text1">draw_model()</code> and confirm that you see the same result.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1111462"></a><b class="fm-exercise-head">Solution</b>: In the source code, you can find <code class="fm-code-in-text1">load _triangles()</code> implemented in the file teapot.py.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1111547"></a><b class="fm-exercise-head">Hint</b>: You can turn the quadrilaterals into pairs of triangles by connecting their opposite vertices.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPC_UN01_Orland.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1111466"></a>Indexing four vertices of a quadrilateral, two triangles are formed by vertices 0, 1, 2 and 0, 2, 3, respectively.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1111508"></a><b class="fm-exercise-head">Exercise C.4−Mini Project</b>: Animate the teapot by changing the arguments to <code class="fm-code-in-text1">gluPerspective</code> and <code class="fm-code-in-text1">glTranslatef</code>. This will help you visualize the effects of each of the parameters.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1111509"></a><b class="fm-exercise-head">Solution</b>: In the file animated_octahedron.py in the source code, an example is given for rotating the octahedron by 360 / 5 = 72° per second by updating the <code class="fm-code-in-text1">angle</code> parameter of <code class="fm-code-in-text1">glRotatef</code> every frame. You can try<a id="marker-1111908"></a> similar <a id="marker-1111913"></a>modifications <a id="marker-1111918"></a>yourself <a id="marker-1111923"></a>with <a id="marker-1111928"></a>either the <a id="marker-1111938"></a>teapot or the octahedron.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

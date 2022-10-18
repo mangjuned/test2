@@ -1,0 +1,1883 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>6</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1120140"></a>6 <a id="id_8vfnp69cp7do"></a>Generalizing to higher dimensions</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1121787"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1121788"></a>Implementing a Python abstract base class for general vectors</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1121789"></a>Defining vector spaces and listing their useful properties</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1121790"></a>Interpreting functions, matrices, images, and sound waves as vectors</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1121791"></a>Finding useful subspaces of vector spaces containing data of interest</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1120146"></a>Even if you’re not interested in animating teapots, the machinery of vectors, linear transformations, and matrices can still be useful. In fact, these concepts are so useful there’s an entire branch of math devoted to them: <i class="fm-italics">linear algebra</i>. Linear algebra generalizes<a id="marker-1120147"></a> everything we know about 2D and 3D geometry to study data in any number of dimensions.</p>
+
+  <p class="body"><a id="pgfId-1120148"></a>As a programmer, you’re probably skilled at generalizing ideas. When writing complex software, it’s common to find yourself writing similar code over and over. At some point, you catch yourself doing this, and you consolidate the code into one class or function capable of handling all of the cases you see. This saves you typing and often improves code organization and maintainability. Mathematicians follow the same process: after encountering similar patterns over and over, they can better state exactly what they see and refine their definitions.</p>
+
+  <p class="body"><a id="pgfId-1120149"></a>In this chapter, we use this kind of logic to define <i class="fm-italics">vector spaces</i>. Vector spaces are collections<a id="marker-1120150"></a> of objects we can treat like vectors. These can be arrows in the plane, tuples of numbers, or objects completely different from the ones we’ve seen so far. For instance, you can treat images as vectors and take a linear combination of them (figure 6.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1120155"></a>Figure 6.1 A linear combination of two pictures produces a new picture.</p>
+
+  <p class="body"><a id="pgfId-1120156"></a>The key operations in a vector space are vector addition and scalar multiplication. With these, you can make linear combinations (including negation, subtraction, weighted averages, and so on), and you can reason about which transformations are linear. It turns out these operations help us make sense<a id="marker-1120157"></a> of the word <i class="fm-italics">dimension</i>. For instance, we’ll see that the images used in figure 6.1 are 270,000-dimensional objects! We’ll cover higher-dimensional and even infinite-dimensional spaces soon enough, but let’s start by reviewing the 2D and 3D spaces we already know.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1120159"></a><a id="id_bqtydumd9ap6"></a>6.1 Generalizing our definition of vectors</h2>
+
+  <p class="body"><a id="pgfId-1120161"></a>Python supports object-oriented programming (OOP), which is a great framework<a id="marker-1120160"></a> for generalization. Specifically, Python classes support <i class="fm-italics">inheritance</i> : you can create new classes<a id="marker-1120162"></a> of objects that inherit properties and behaviors of an existing parent class. In our case, we want to realize the 2D and 3D vectors we’ve already seen as instances of a more general class of objects simply called vectors. Then any other objects that inherit behaviors from the parent class can rightly be called vectors as well (figure 6.2).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1136853"></a>Figure 6.2 Treating 2D vectors, 3D vectors, and other objects as special cases of vectors using inheritance</p>
+
+  <p class="body"><a id="pgfId-1120168"></a>If you haven’t done object-oriented programming or you haven’t seen it done in Python, don’t worry. I stick to simple use cases in this chapter and will help you pick it up as we go. In case you want to learn more about classes and inheritance in Python before getting started, I’ve covered them in appendix B.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1120170"></a><a id="id_zbotf6su984x"></a>6.1.1 Creating a class for 2D coordinate vectors</h3>
+
+  <p class="body"><a id="pgfId-1120171"></a>In code, our <a id="marker-1132735"></a>2D and 3D vectors have been <i class="fm-italics">coordinate</i> vectors, meaning that they were defined as tuples of numbers, which are their coordinates. (We also saw that vector arithmetic can be defined geometrically in terms of arrows, but we can’t translate that approach directly into Python code.) For 2D coordinate vectors, the data is the ordered pair of the <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates. A tuple is a great way to store this data, but we can equivalently use a class. We’ll call the class<a id="marker-1120172"></a> representing 2D coordinate vectors <code class="fm-code-in-text">Vec2</code> :</p>
+  <pre class="programlisting">class Vec2():
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y</pre>
+
+  <p class="body"><a id="pgfId-1120174"></a>We can initialize a vector like <code class="fm-code-in-text">v = Vec2(1.6,3.8)</code> and retrieve its coordinates as <code class="fm-code-in-text">v.x</code> and <code class="fm-code-in-text">v.y</code>. Next, we can give this class the methods required to do 2D vector arithmetic, specifically addition and scalar multiplication. The addition function, <code class="fm-code-in-text">add</code>, takes a second vector as an argument and returns a new <code class="fm-code-in-text">Vec2</code> object whose coordinates are the sum of the <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates, respectively:</p>
+  <pre class="programlisting">class Vec2():
+    ...                 <span class="fm-combinumeral">❶</span>
+    def add(self, v2):
+        return Vec2(self.x + v2.x, self.y + v2.y)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134038"></a><span class="fm-combinumeral">❶</span> When adding to an existing class, I sometimes use ... as a placeholder for existing code.</p>
+
+  <p class="body"><a id="pgfId-1120177"></a>Doing vector addition with <code class="fm-code-in-text">Vec2</code> could look like this:</p>
+  <pre class="programlisting">v = Vec2(3,4)          <span class="fm-combinumeral">❶</span>
+w = v.add(Vec2(−2,6))  <span class="fm-combinumeral">❷</span>
+print(w.x)             <span class="fm-combinumeral">❸</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134062"></a><span class="fm-combinumeral">❶</span> Creates a new Vec2 called <i class="fm-in-times-italic1">v</i> with an x-coordinate 3 and y-coordinate 4</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134079"></a><span class="fm-combinumeral">❷</span> Adds a second Vec2 to <i class="fm-in-times-italic1">v</i> to produce a new Vec2 instance called w. This operation returns (3,4) + (−2,6) = (1,10).</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134103"></a><span class="fm-combinumeral">❸</span> Prints the x-coordinate of w. The result is 1.</p>
+
+  <p class="body"><a id="pgfId-1120182"></a>Like our original implementation of vector addition, we do not perform the addition “in-place.” That is, the two input vectors are not modified; a new <code class="fm-code-in-text">Vec2</code> object is created to store the sum. We can implement scalar multiplication in a similar way, taking a scalar as input and returning a new, scaled vector as output:</p>
+  <pre class="programlisting">class Vec2():
+    ...
+    def scale(self, scalar):
+        return Vec2(scalar * self.x, scalar * self.y)</pre>
+
+  <p class="body"><a id="pgfId-1120184"></a><code class="fm-code-in-text">Vec(1,1).scale(50)</code> returns a new vector with the <i class="fm-in-times-italic">x</i> -and <i class="fm-in-times-italic">y</i>-coordinates both equal to 50. There’s one more critical detail we need to take care of: currently the output of a comparison like <code class="fm-code-in-text">Vec2(3,4) == Vec2(3,4)</code> is <code class="fm-code-in-text">False</code>. This is problematic because these instances represent the same vector. By default, Python compares instances by their references (asking whether they are located in the same place in memory) rather than by their values. We can fix this by overriding the equality method, which causes Python<a id="marker-1120185"></a> to treat the <code class="fm-code-in-text">==</code> operator differently for objects of the <code class="fm-code-in-text">Vec2</code> class. (If you haven’t seen<a id="marker-1120186"></a> this before, appendix B explains it in more depth.)</p>
+  <pre class="programlisting">class Vec2():
+    ...
+    def __eq__(self,other):
+        return self.x == other.x and self.y == other.y</pre>
+
+  <p class="body"><a id="pgfId-1120188"></a>We want two 2D coordinate vectors to be equal if their <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates agree, and this new definition of equality captures that. With this implemented, you’ll find that <code class="fm-code-in-text">Vec2(3,4) == Vec2(3,4)</code>.</p>
+
+  <p class="body"><a id="pgfId-1120190"></a>Our <code class="fm-code-in-text">Vec2</code> class now has the fundamental<a id="marker-1120189"></a> vector operations of addition and scalar multiplication, as well as an equality test that <a id="marker-1132745"></a>makes sense. We can now turn our attention to some syntactic sugar.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1120192"></a><a id="id_dg7x0pxfmzk6"></a>6.1.2 Improving the Vec2 class</h3>
+
+  <p class="body"><a id="pgfId-1120194"></a>As <a id="marker-1132750"></a>we changed the behavior of the <code class="fm-code-in-text">==</code> operator, we can also customize the Python operators <code class="fm-code-in-text">+</code> and <code class="fm-code-in-text">*</code> to mean vector<a id="marker-1120195"></a> addition and<a id="marker-1120196"></a> scalar multiplication, respectively. This is called <i class="fm-italics">operator overloading</i>, and it is covered<a id="marker-1120197"></a> in appendix B:</p>
+  <pre class="programlisting">class Vec2():
+    ...
+    def __add__(self, v2):
+        return self.add(v2)
+    def __mul__(self, scalar):     <span class="fm-combinumeral">❶</span>
+        return self.scale(scalar)
+    def __rmul__(self,scalar): 
+        return self.scale(scalar)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134316"></a><span class="fm-combinumeral">❶</span> The __mul__ and __rmul__ methods define both orders of multiplication, so we can multiply vectors by scalars on the left or the right. Mathematically, we consider both orders to mean the same thing.</p>
+
+  <p class="body"><a id="pgfId-1120200"></a>We can now write a linear combination concisely. For instance, <code class="fm-code-in-text">3.0 * Vec2(1,0) + 4.0 * Vec2(0,1)</code> gives us a new <code class="fm-code-in-text">Vec2</code> object with <i class="fm-in-times-italic">x</i>-coordinate 3.0 and <i class="fm-in-times-italic">y</i>-coordinate 4.0. It’s hard to read this in an interactive session though, because Python doesn’t print <code class="fm-code-in-text">Vec2</code> nicely:</p>
+  <pre class="programlisting">&gt;&gt;&gt; 3.0 * Vec2(1,0) + 4.0 * Vec2(0,1)
+&lt;__main__.Vec2 at 0x1cef56d6390&gt;</pre>
+
+  <p class="body"><a id="pgfId-1120202"></a>Python gives us the memory address of the resulting <code class="fm-code-in-text">Vec2</code> instance, but we already observed that’s not what’s important to us. Fortunately, we can change the string representation of <code class="fm-code-in-text">Vec2</code> objects by overriding<a id="marker-1120203"></a> the <code class="fm-code-in-text">__repr__</code> method:</p>
+  <pre class="programlisting">class Vec2():
+    ...
+    def __repr__(self):
+        return "Vec2({},{})".format(self.x,self.y)</pre>
+
+  <p class="body"><a id="pgfId-1120205"></a>This string representation shows the coordinates that are the most important data for a <code class="fm-code-in-text">Vec2</code> object. The results of <code class="fm-code-in-text">Vec2</code> arithmetic are much clearer now:</p>
+  <pre class="programlisting">&gt;&gt;&gt; 3.0 * Vec2(1,0) + 4.0 * Vec2(0,1)
+Vec2(3.0,4.0)</pre>
+
+  <p class="body"><a id="pgfId-1120207"></a>We’re doing the same math here as we did with our original tuple vectors but, in my opinion, this is a lot nicer. Building a class required some boilerplate, like the custom equality we wanted, but it also enabled operator overloading for vector arithmetic. The custom string representation also makes it clear that we’re not just working with <i class="fm-italics">any</i> tuples, but rather 2D vectors that we intend to use in a certain way. Now, we can implement 3D vectors <a id="marker-1132760"></a>represented by their own special class.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1120209"></a><a id="id_nqfnc57do81"></a>6.1.3 Repeating the process with 3D vectors</h3>
+
+  <p class="body"><a id="pgfId-1120210"></a>I’ll call the <a id="marker-1132775"></a>3D vector class <code class="fm-code-in-text">Vec3</code>, and it looks a lot like the 2D <code class="fm-code-in-text">Vec2</code> class except that its defining data will be three coordinates instead of two. In each method that explicitly references the coordinates, we need to make sure to properly use the <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i> values for <code class="fm-code-in-text">Vec3</code>.</p>
+  <pre class="programlisting">class Vec3():
+    def __init__(self,x,y,z): #1
+        self.x = x
+        self.y = y
+        self.z = z
+    def add(self, other):
+        return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
+    def scale(self, scalar):
+        return Vec3(scalar * self.x, scalar * self.y, scalar * self.z)
+    def __eq__(self,other):
+        return (self.x == other.x 
+                and self.y == other.y 
+                and self.z == other.z)
+    def __add__(self, other):
+        return self.add(other)
+    def __mul__(self, scalar):
+        return self.scale(scalar)
+    def __rmul__(self,scalar):
+        return self.scale(scalar)
+    def __repr__(self):
+        return "Vec3({},{},{})".format(self.x,self.y, self.z)</pre>
+
+  <p class="body"><a id="pgfId-1120214"></a>We can now write 3D vector math in Python using the built-in arithmetic operators:</p>
+  <pre class="programlisting">&gt;&gt;&gt; 2.0 * (Vec3(1,0,0) + Vec3(0,1,0))
+Vec3(2.0,2.0,0.0)</pre>
+
+  <p class="body"><a id="pgfId-1120217"></a>This <code class="fm-code-in-text">Vec3</code> class, much like the <code class="fm-code-in-text">Vec2</code> class, puts us<a id="marker-1120216"></a> in a good place to think about generalization. There are a few different directions we can go, and like many software design choices, the decision is subjective. We could, for example, focus on simplifying the arithmetic. Instead of implementing <code class="fm-code-in-text">add</code> differently for <code class="fm-code-in-text">Vec2</code> and <code class="fm-code-in-text">Vec3</code>, they can both use the <code class="fm-code-in-text">add</code> function we built in chapter 3, which already handles coordinate vectors of any size. We could also store coordinates internally as a tuple or list, letting the constructor accept any number of coordinates and create a 2D, 3D, or other coordinate vector. I’ll leave these possibilities as exercises for you, however, and take us in a different direction.</p>
+
+  <p class="body"><a id="pgfId-1120218"></a>The generalization I want to focus on is based on how we <i class="fm-italics">use</i> the vectors, not on how they work. This gets us to a mental model that both organizes the code well and aligns with the mathematical definition of a vector. For instance, we can write a generic <code class="fm-code-in-text">average</code> function that can be used on any kind of vector:</p>
+  <pre class="programlisting">def average(v1,v2):
+    return 0.5 * v1 + 0.5 * v2</pre>
+
+  <p class="body"><a id="pgfId-1120220"></a>We can insert either 3D vectors or 2D vectors; for instance, <code class="fm-code-in-text">average(Vec2(9.0, 1.0), Vec2(8.0,6.0))</code> and <code class="fm-code-in-text">average(Vec3(1,2,3), Vec3(4,5,6))</code> both give us correct and meaningful results. As a spoiler, we will soon be able to average pictures together as well. Once we’ve implemented a suitable class for images, we’ll be able to write <code class="fm-code-in-text">average(img1, img2)</code> and get a new image back.</p>
+
+  <p class="body"><a id="pgfId-1120221"></a>This is where we see the beauty and the economy that comes with generalization. We can write a single, generic function like <code class="fm-code-in-text">average</code> and use it for a wide variety of types of inputs. The only constraint on the input is that it needs to support multiplication by scalars and addition with one another. The implementation of arithmetic varies between <code class="fm-code-in-text">Vec2</code> objects, <code class="fm-code-in-text">Vec3</code> objects, images, or other kinds of data, but there’s always an important overlap in <i class="fm-italics">what</i> arithmetic we can do with them. When we separate the <i class="fm-italics">what</i> from the <i class="fm-italics">how</i>, we open the door for code reuse and far-reaching mathematical statements.</p>
+
+  <p class="body"><a id="pgfId-1120222"></a>How can we best describe <i class="fm-italics">what</i> we can do with vectors separately from the details of <i class="fm-italics">how</i> we carry them out? We can capture<a id="marker-1132790"></a> this in Python using an abstract base class.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1120224"></a><a id="id_d16yx9qzhg3b"></a>6.1.4 Building a vector base class</h3>
+
+  <p class="body"><a id="pgfId-1120226"></a>The basic <a id="marker-1132805"></a>things we can do with <code class="fm-code-in-text">Vec2</code> or <code class="fm-code-in-text">Vec3</code> include constructing<a id="marker-1120225"></a> a new instance, adding with other vectors<a id="marker-1120227"></a>, multiplying by a scalar, testing equality with another vector, and representing an instance as a string. Of these, only addition and scalar multiplication are distinctive vector operations. Any new Python class automatically includes the rest. This prompts a definition of a <code class="fm-code-in-text">Vector</code> base class:</p>
+  <pre class="programlisting">from abc import ABCMeta, abstractmethod
+
+class Vector(metaclass=ABCMeta):
+    @abstractmethod
+    def scale(self,scalar):
+        pass
+    @abstractmethod
+    def add(self,other):
+        pass</pre>
+
+  <p class="body"><a id="pgfId-1120230"></a>The <code class="fm-code-in-text">abc</code> module contains helper<a id="marker-1120229"></a> classes, functions, and method decorators that help define<a id="marker-1120231"></a> an <i class="fm-italics">abstract base class</i>, a class that is not intended to be instantiated. Instead, it’s designed to be used as a template for classes that inherit from it. The <code class="fm-code-in-text">@abstractmethod</code> decorator means that<a id="marker-1120232"></a> a method is not implemented in the base class and needs to be implemented for any child class. For instance, if you try to instantiate a vector with code like <code class="fm-code-in-text">v = Vector()</code>, you get the following <code class="fm-code-in-text">TypeError</code> :</p>
+  <pre class="programlisting">TypeError: Can't instantiate abstract class Vector with abstract methods add, scale</pre>
+
+  <p class="body"><a id="pgfId-1120234"></a>This makes sense; there is no such thing as a vector that is “just a vector.” It needs to have some concrete manifestation such as a list of coordinates, an arrow in the plane, or something else. But this is still a useful base class because it forces any child class to include requisite methods. It is also useful to have this base class because we can equip it with all the methods that depend only on addition and scalar multiplication, like our operator overloads:</p>
+  <pre class="programlisting">class Vector(metaclass=ABCMeta):
+    ...
+    def __mul__(self, scalar):
+        return self.scale(scalar)
+    def __rmul__(self, scalar):
+        return self.scale(scalar)
+    def __add__(self,other):
+        return self.add(other)</pre>
+
+  <p class="body"><a id="pgfId-1120238"></a>In contrast to the abstract methods <code class="fm-code-in-text">scale</code> and <code class="fm-code-in-text">add</code>, these implementations<a id="marker-1120237"></a> are automatically available to any child<a id="marker-1120239"></a> class. We can simplify <code class="fm-code-in-text">Vec2</code> and <code class="fm-code-in-text">Vec3</code> to inherit from <code class="fm-code-in-text">Vector</code>. Here’s a new implementation<a id="marker-1120240"></a> for <code class="fm-code-in-text">Vec2</code> :</p>
+  <pre class="programlisting">class Vec2(Vector):
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+    def add(self,other):
+        return Vec2(self.x + other.x, self.y + other.y)
+    def scale(self,scalar):
+        return Vec2(scalar * self.x, scalar * self.y)
+    def __eq__(self,other):
+        return self.x == other.x and self.y == other.y
+    def __repr__(self):
+        return "Vec2({},{})".format(self.x, self.y)</pre>
+
+  <p class="body"><a id="pgfId-1120242"></a>This has indeed saved us from repeating ourselves! The methods that were identical between <code class="fm-code-in-text">Vec2</code> and <code class="fm-code-in-text">Vec3</code> now live<a id="marker-1120243"></a> in the <code class="fm-code-in-text">Vector</code> class. All remaining methods on <code class="fm-code-in-text">Vec2</code> are specific to 2D vectors; they need to be modified to work for <code class="fm-code-in-text">Vec3</code>(as you will see in the exercises) or for vectors with any other number of coordinates.</p>
+
+  <p class="body"><a id="pgfId-1120244"></a>The <code class="fm-code-in-text">Vector</code> base class is a good representation of what we can do with vectors. If we can add any useful methods to it, chances are they will be useful for <i class="fm-italics">any</i> kind of vector. For instance, we can add two methods<a id="marker-1120245"></a> to <code class="fm-code-in-text">Vector</code> :</p>
+  <pre class="programlisting">class Vector(metaclass=ABCMeta):
+    ...
+    def subtract(self,other):
+        return self.add(−1 * other)
+    def __sub__(self,other):
+        return self.subtract(other)</pre>
+
+  <p class="body"><a id="pgfId-1120247"></a>And without any modification of <code class="fm-code-in-text">Vec2</code>, we can automatically subtract them:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Vec2(1,3) − Vec2(5,1)
+Vec2(−4,2)</pre>
+
+  <p class="body"><a id="pgfId-1120249"></a>This abstract class makes it easier to implement general vector operations, and it also agrees with the mathematical definition of a vector. Let’s switch languages from Python to English and see how the abstraction carries over from code to <a id="marker-1132820"></a>become a real mathematical definition.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1120251"></a><a id="id_fhjo64w308ld"></a>6.1.5 Defining vector spaces</h3>
+
+  <p class="body"><a id="pgfId-1120252"></a>In math, a vector is<a id="marker-1132835"></a> defined by what it does rather than what it is, much like how we defined the abstract <code class="fm-code-in-text">Vector</code> class. Here’s a first (incomplete) definition of a vector.</p>
+
+  <p class="fm-callout"><a id="pgfId-1120253"></a><span class="fm-callout-head">DEFINITION</span> A vector is an object equipped with a <i class="fm-italics">suitable</i> way to add it to other vectors and multiply it by scalars.</p>
+
+  <p class="body"><a id="pgfId-1120255"></a>Our <code class="fm-code-in-text">Vec2</code> or <code class="fm-code-in-text">Vec3</code> objects, or any other<a id="marker-1120254"></a> objects inheriting from the <code class="fm-code-in-text">Vector</code> class can be added to each<a id="marker-1120256"></a> other and multiplied by scalars. This definition is incomplete because I haven’t said what “suitable” means, and that ends<a id="marker-1120257"></a> up being the most important part of the definition!</p>
+
+  <p class="body"><a id="pgfId-1120258"></a>There are a few important rules outlawing weird behaviors, many of which you might have already assumed. It’s not necessary to memorize all these rules. If you ever find yourself testing whether a new kind of object can be thought of as a vector, you can refer back to these rules. The first set of rules says that addition should be well-behaved. Specifically:</p>
+
+  <ol class="calibre12">
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-1120259"></a>Adding vectors in any order shouldn’t matter: <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> for any vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>.</p>
+    </li>
+
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-1120260"></a>Adding vectors in any grouping shouldn’t matter: <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + (<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>) should be the same as (<i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) + <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, meaning that a statement like <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> should be unambiguous.</p>
+    </li>
+  </ol>
+
+  <p class="body"><a id="pgfId-1120261"></a>A good counterexample is adding strings by concatenation. In Python, you can do the sum <code class="fm-code-in-text">"hot" + "dog"</code>, but this doesn’t support the case that strings can be vectors because the sums <code class="fm-code-in-text">"hot" + "dog"</code> and <code class="fm-code-in-text">"dog" + "hot"</code> are not equal, violating rule 1.</p>
+
+  <p class="body"><a id="pgfId-1120262"></a>Scalar multiplication also needs to be well-behaved and compatible with addition. For instance, a whole number scalar multiple should be equal to a repeated addition (like 3<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). Here are the specific rules:</p>
+
+  <ol class="calibre12">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1120263"></a>Multiplying vectors by several scalars should be the same as multiplying by all the scalars at once. If <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> are scalars and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a vector, then <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) should be the same as (<i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">b</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1120264"></a>Multiplying a vector by 1 should leave it unchanged: 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1120265"></a>Addition of scalars should be compatible with scalar multiplication: <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> should be the same as (<i class="fm-in-times-italic">a</i> + <i class="fm-in-times-italic">b</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>.</p>
+    </li>
+
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-1120266"></a>Addition of vectors should also be compatible with scalar multiplication: <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>) should be the same as <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>.</p>
+    </li>
+  </ol>
+
+  <p class="body"><a id="pgfId-1120267"></a>None of these rules should be too surprising. For instance, 3 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + 5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> could be translated to English as “3 of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> added together plus 5 of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> added together.” Of course, this is the same as 8 of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> added together, or 8 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, agreeing with rule 5.</p>
+
+  <p class="body"><a id="pgfId-1120268"></a>The takeaway from these rules is that not all addition and multiplication operations are created equal. We need to verify each of the rules to ensure that addition and multiplication behave as expected. If so, the objects in question can rightly be called vectors.</p>
+
+  <p class="body"><a id="pgfId-1120269"></a>A <i class="fm-italics">vector space</i> is a collection of compatible vectors. Here’s the definition:</p>
+
+  <p class="fm-callout"><a id="pgfId-1120271"></a><span class="fm-callout-head">DEFINITION</span> A vector space<a id="marker-1120270"></a> is a collection of objects called vectors, equipped with suitable vector addition and scalar multiplication operations (obeying the rules above), such that every linear combination of vectors in the collection produces a vector that is also in the collection.</p>
+
+  <p class="body"><a id="pgfId-1120272"></a>A collection like <code class="fm-code-in-text">[Vec2(1,0),</code> <code class="fm-code-in-text">Vec2(5,<span class="fm-in-cambria1">−</span>3),</code> <code class="fm-code-in-text">Vec2(1.1,0.8)]</code> is a group of vec-tors that can be suitably added and multiplied, but it is not a vector space. For instance, <code class="fm-code-in-text">1 * Vec2(1,0) + 1 * Vec2(5,<span class="fm-in-cambria1">−</span>3)</code> is a linear combination whose result is <code class="fm-code-in-text">Vec2(6,<span class="fm-in-cambria1">−</span>3)</code>, which is not in the collection. One example of a vector space is the infinite collection of all possible 2D vectors. In fact, most vector spaces you meet are infinite sets; there are infinitely many linear combinations using infinitely many scalars after all!</p>
+
+  <p class="body"><a id="pgfId-1120273"></a>There are two implications of the fact that vector spaces need to contain all their scalar multiples, and these implications are important enough to mention on their own. First, no matter what vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> you pick in a vector space, 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> gives you the same result, which is called the <i class="fm-italics">zero vector</i> and denoted as <b class="fm-bold1">0</b>(bold, to distinguish it from the number 0). Adding the zero vector to any vector leaves that vector unchanged: <b class="fm-bold1">0</b> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <b class="fm-bold1">0</b> = <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. The second implication is that every vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> has an opposite vector, −1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> <i class="fm-italics">,</i> written as -<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Due to rule #5, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + -<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (1 + −1) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <b class="fm-bold1">0</b>. For every vector, there is another vector in the vector space that “cancels it out” by addition. As an exercise, you can improve the <code class="fm-code-in-text">Vector</code> class by adding a zero vector and a negation function as required members.</p>
+
+  <p class="body"><a id="pgfId-1120276"></a>A class like <code class="fm-code-in-text">Vec2</code> or <code class="fm-code-in-text">Vec3</code> is not a collection<a id="marker-1120274"></a> per se, but it does describe<a id="marker-1120275"></a> a collection of values. In this way, we can think of the classes <code class="fm-code-in-text">Vec2</code> and <code class="fm-code-in-text">Vec3</code> as representing two different vector spaces, and their instances represent vectors. We’ll see a lot more examples of vector spaces with classes that represent them in the next section, but first, let’s look at how to validate that they satisfy the <a id="marker-1132850"></a>specific rules we’ve covered.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1120278"></a><a id="id_e0m1lq94d6ob"></a>6.1.6 Unit testing vector space classes</h3>
+
+  <p class="body"><a id="pgfId-1120280"></a>It was helpful<a id="marker-1132865"></a> to<a id="marker-1132870"></a> use an abstract <code class="fm-code-in-text">Vector</code> base class to think about<a id="marker-1120279"></a> what a vector should be able to do, rather than how it’s done. But even giving the base class an abstract <code class="fm-code-in-text">add</code> method doesn’t guarantee every inheriting class will implement a suitable addition operation.</p>
+
+  <p class="body"><a id="pgfId-1120282"></a>In math, the usual way we guarantee suitability is by <i class="fm-italics">writing a proof</i>. In code, and especially<a id="marker-1120283"></a> in a dynamic language like Python, the best we can do is to write unit tests. For instance, we can check rule #6 from the previous section by creating two vectors and a scalar and making sure the equality holds:</p>
+  <pre class="programlisting">&gt;&gt;&gt; s = <span class="fm-in-cambria">−</span>3
+&gt;&gt;&gt; xu, <i class="fm-in-times-italic1">v</i>  = Vec2(42,−10), Vec2(1.5, 8)
+&gt;&gt;&gt; s * (<i class="fm-in-times-italic1">u + v</i>) == s * v  + s * u
+True</pre>
+
+  <p class="body"><a id="pgfId-1120285"></a>This is often how unit tests are written, but it’s a pretty weak test because we’re only trying one example. We can make it stronger by plugging in random numbers and ensuring that it works. Here I use the <code class="fm-code-in-text">random.uniform</code> function to generate evenly distributed floating-point numbers between −10 and 10:</p>
+  <pre class="programlisting">from random import uniform
+
+def random_scalar():
+    return uniform(−10,10)
+
+def random_vec2():
+    return Vec2(random_scalar(),random_scalar())
+
+a = random_scalar()
+u, v  = random_vec2(), random_vec2()
+assert a * (u + v) == a * v  + a * u</pre>
+
+  <p class="body"><a id="pgfId-1120288"></a>Unless you’re lucky, this test will fail with an <code class="fm-code-in-text">AssertionError</code>. Here are the<a id="marker-1120287"></a> offending values of <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">u</i>, and <i class="fm-in-times-italic">v</i> that caused the test to fail for me:</p>
+  <pre class="programlisting">&gt;&gt;&gt; a, <i class="fm-in-times-italic1">u</i>, v
+(0.17952747449930084,
+ Vec2(0.8353326458605844,0.2632539730989293),
+ Vec2(0.555146137477196,0.34288853317521084))</pre>
+
+  <p class="body"><a id="pgfId-1120290"></a>And the expressions from the left and right of the equals sign in the <code class="fm-code-in-text">assert</code> call from the previous code have these values:</p>
+  <pre class="programlisting">&gt;&gt;&gt; a * (u + v), a * <i class="fm-in-times-italic1">z</i> + a * v
+(Vec2(0.24962914431749222,0.10881923333807299),
+ Vec2(0.24962914431749225,0.108819233338073))</pre>
+
+  <p class="body"><a id="pgfId-1120292"></a>These are two different vectors, but only because their components differ by a few quadrillionths (very, very small numbers). This doesn’t mean that the math is wrong, just that floating-point arithmetic is approximate rather than exact.</p>
+
+  <p class="body"><a id="pgfId-1120293"></a>To ignore such small discrepancies, we can use another notion of equality suitable for testing. Python’s <code class="fm-code-in-text">math.isclose</code> function checks that two float values don’t differ by a significant amount (by default, by more than one-billionth of the larger value). Using that function instead, the test passes 100 times in a row:</p>
+  <pre class="programlisting">from math import isclose
+
+def approx_equal_vec2(v,w):
+    return isclose(v.x,w.x) and isclose(v.y,w.y)  <span class="fm-combinumeral">❶</span>
+
+for _ in range(0,100):                            <span class="fm-combinumeral">❷</span>
+    a = random_scalar()
+    u, v  = random_vec2(), random_vec2()
+    assert approx_equal_vec2(a * (u + v), 
+                             a * v + a * u)       <span class="fm-combinumeral">❸</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1120299"></a><span class="fm-combinumeral">❶</span> Tests whether the <i class="fm-in-times-italic1">x</i> and y components are close (even if not equal)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134449"></a><span class="fm-combinumeral">❷</span> Runs the test for 100 different randomly generated scalars and pairs of vectors</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134466"></a><span class="fm-combinumeral">❸</span> Replaces a strict equality check with the new function</p>
+
+  <p class="body"><a id="pgfId-1124800"></a>With the floating-point error removed from the equation, we can test all six of the vector space properties in this way:</p>
+  <pre class="programlisting">def test(eq, a, b, u, v, w):           <span class="fm-combinumeral">❶</span>
+    assert eq(u + v, v  + u)
+    assert eq(u + (v + w), (u + v) + w)
+    assert eq(a * (b * v), (a * b) * v)
+    assert eq(1 * v, v)
+    assert eq((a + b) * v, a * v  + b * v)
+    assert eq(a * v  + a * w, a * (v + w))
+
+for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_vec2(), random_vec2(), random_vec2()
+    test(approx_equal_vec2,a,b,u,v,w)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134407"></a><span class="fm-combinumeral">❶</span> Passes in the equality test function as eq. This keeps the test function agnostic as to the particular concrete vector implementation being passed in.</p>
+
+  <p class="body"><a id="pgfId-1120304"></a>This test shows that all six rules (properties) hold for 100 different random selections of scalars and vectors. That 600 randomized unit tests pass is a good indication<a id="marker-1120305"></a> that our <code class="fm-code-in-text">Vec2</code> class satisfies the list of properties from the previous section. Once you implement the <code class="fm-code-in-text">zero()</code> property and the negation operator in the exercises, you can test a few more properties.</p>
+
+  <p class="body"><a id="pgfId-1120306"></a>This setup isn’t completely generic; we had to write special functions to generate random <code class="fm-code-in-text">Vec2</code> instances and to compare them. The important part is that the <code class="fm-code-in-text">test</code> function itself and the expressions within it are completely generic. As long as the class we’re testing<a id="marker-1120307"></a> inherits from <code class="fm-code-in-text">Vector</code>, it can run expressions like <code class="fm-code-in-text"><i class="fm-in-times-italic2">a</i> * <i class="fm-in-times-italic2">v</i> + <i class="fm-in-times-italic2">a</i> * <i class="fm-in-times-italic2">w</i></code> and <code class="fm-code-in-text"><i class="fm-in-times-italic2">a</i> * (v + w)</code> that we can then test for equality. Now, we can go wild exploring all the different objects that can be treated as vectors, and <a id="marker-1132885"></a>we<a id="marker-1132890"></a> know how to test them as we go.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1124854"></a><a id="id_sl82p9ylehy4"></a>6.1.7 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1124871"></a><b class="fm-exercise-head">Exercise 6.1</b>: Implement a <code class="fm-code-in-text1">Vec3</code> class inheriting from <code class="fm-code-in-text1">Vector</code>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1124872"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">class Vec3(Vector):
+    def __init__(self,x,y,z):
+        self.x = x
+        self.y = y
+        self.z = z
+    def add(self,other):
+        return Vec3(self.x + other.x, 
+                    self.y + other.y, 
+                    self.z + other.z)
+    def scale(self,scalar):
+        return Vec3(scalar * self.x, 
+                    scalar * self.y, 
+                    scalar * self.z)
+    def __eq__(self,other):
+        return (self.x == other.x 
+                and self.y == other.y 
+                and self.z == other.z)
+    def __repr__(self):
+        return "Vec3({},{},{})".format(self.x, self.y, self.z)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1124902"></a><b class="fm-exercise-head">Exercise 6.2-Mini Project</b>: Implement a <code class="fm-code-in-text1">CoordinateVector</code> class inheriting from <code class="fm-code-in-text1">Vector</code> with an abstract property representing the dimension<a id="marker-1124903"></a>. This should save repetitious work when implementing specific coordinate vector classes. Inheriting from <code class="fm-code-in-text1">CoordinateVector</code> and setting the dimension to <code class="fm-code-in-text1">6</code> should be all you need to do to implement a <code class="fm-code-in-text1">Vec6</code> class.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1124905"></a><b class="fm-exercise-head">Solution</b>: We can use the dimension-independent operations <code class="fm-code-in-text1">add</code> and <code class="fm-code-in-text1">scale</code> from chapters 2 and 3. The only thing not implemented in the following class is the dimension, and not knowing how many dimensions we’re working with prevents us from instantiating a <code class="fm-code-in-text1">CoordinateVector</code> :</p>
+        <pre class="programlisting">from abc import abstractproperty
+from vectors import add, scale
+
+class CoordinateVector(Vector):
+    @abstractproperty
+    def dimension(self):
+        pass
+    def __init__(self,*coordinates):
+        self.coordinates = tuple(<i class="fm-in-times-italic1">x</i> for <i class="fm-in-times-italic1">x</i> in coordinates)
+    def add(self,other):
+        return self.__class__(*add(self.coordinates, other.coordinates))
+    def scale(self,scalar):
+        return self.__class__(*scale(scalar, self.coordinates))
+    def __repr__(self):
+        return "{}{}".format(self.__class__.__qualname__, self.coordinates)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1124974"></a>Once we pick a dimension (say 6), we have a concrete class that we can instantiate:</p>
+        <pre class="programlisting">class Vec6(CoordinateVector):
+    def dimension(self):
+        return 6</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1124977"></a>The definitions of addition, scalar multiplication, and so on are picked<a id="marker-1124976"></a> up from the <code class="fm-code-in-text1">CoordinateVector</code> base class:</p>
+        <pre class="programlisting">&gt;&gt;&gt; Vec6(1,2,3,4,5,6) + Vec6(1, 2, 3, 4, 5, 6)
+Vec6(2, 4, 6, 8, 10, 12)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1125016"></a><b class="fm-exercise-head">Exercise 6.3</b>: Add a <code class="fm-code-in-text1">zero</code> abstract method to the <code class="fm-code-in-text1">Vector</code> class to return the zero vector in a given vector space, as well as an implementation for the negation operator. These are useful because we’re required to have a zero vector and negations of any vector in a vector space.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1125017"></a><b class="fm-exercise-head">Solution</b></p>
+        <pre class="programlisting">from abc import ABCMeta, abstractmethod, abstractproperty
+
+class Vector(metaclass=ABCMeta):
+    ...
+    @classmethod             <span class="fm-combinumeral">❶</span>
+    @abstractproperty        <span class="fm-combinumeral">❷</span>
+    def zero():
+        pass
+    
+    def __neg__(self):       <span class="fm-combinumeral">❸</span>
+        return self.scale(−1)</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1125022"></a><span class="fm-combinumeral">❶</span> zero is a class method because there’s only one zero value for any vector space.</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1134717"></a><span class="fm-combinumeral">❷</span> It’s also an abstract property because we haven’t said what zero is yet.</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1134741"></a><span class="fm-combinumeral">❸</span> Special method name for overloading negation</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1125161"></a>We don’t need to implement <code class="fm-code-in-text1">__neg__</code> for any child class because its definition is included in the parent class, based only on<a id="marker-1125023"></a> scalar multiplication. We do, however, need to implement <code class="fm-code-in-text1">zero</code> for each class:</p>
+        <pre class="programlisting">class Vec2(Vector):
+    ...
+    def zero():
+        return Vec2(0,0)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1125205"></a><b class="fm-exercise-head">Exercise 6.4</b>: Write unit tests to show that the addition and scalar multiplication<a id="marker-1125204"></a> operations for <code class="fm-code-in-text1">Vec3</code> satisfy the vector space properties.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1125206"></a><b class="fm-exercise-head">Solution</b>: Because the test function is general, we only need to supply a new equality function for <code class="fm-code-in-text1">Vec3</code> objects and 100 random sets of inputs:</p>
+        <pre class="programlisting">def random_vec3():
+    return Vec3(random_scalar(),random_scalar(),random_scalar())
+ 
+def approx_equal_vec3(v,w):
+    return isclose(v.x,w.x) and isclose(v.y,w.y) and isclose(v.z, w.z)
+    
+for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_vec3(), random_vec3(), random_vec3()
+    test(approx_equal_vec3,a,b,u,v,w)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1125250"></a><b class="fm-exercise-head">Exercise 6.5</b>: Add unit tests to check that <b class="fm-bold1">0</b> + <i class="fm-in-times-italic1">v</i> = <i class="fm-in-times-italic1">v</i>, 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">v</i> = <b class="fm-bold1">0</b>, and -v + <i class="fm-in-times-italic1">v</i> = <b class="fm-bold1">0</b> for any vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, where again 0 is the number zero and <b class="fm-bold1">0</b> is the zero vector.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1125251"></a><b class="fm-exercise-head">Solution</b>: Because the zero vector is different, depending on which class we’re testing, we need to pass it in as an argument to the function:</p>
+        <pre class="programlisting">def test(zero,eq,a,b,u,v,w):
+    ...
+    assert eq(zero + <i class="fm-in-times-italic1">v</i>, v)
+    assert eq(0 * v, zero)
+    assert eq(−v + v, zero)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1125254"></a>We can test any vector<a id="marker-1125253"></a> class with a <code class="fm-code-in-text1">zero</code> method implemented (see exercise 6.3):</p>
+        <pre class="programlisting">for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_vec2(), random_vec2(), random_vec2()
+    test(Vec2.zero(), approx_equal_vec2, a,b,u,v,w)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1125281"></a><b class="fm-exercise-head">Exercise 6.6</b>: As equality is implemented for <code class="fm-code-in-text1">Vec2</code> and <code class="fm-code-in-text1">Vec3</code>, it turns out that <code class="fm-code-in-text1">Vec2(1,2) == Vec3(1,2,3)</code> returns <code class="fm-code-in-text1">True</code>. Python’s duck typing<a id="marker-1125282"></a> is too forgiving for its own good! Fix this by adding a check that classes must match before testing<a id="marker-1125283"></a> vector equality.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1125284"></a><b class="fm-exercise-head">Solution</b>: It turns out, we need to do the check for addition as well!</p>
+        <pre class="programlisting">class Vec2(Vector):
+    ...
+    def add(self,other):
+        assert self.__class__ == other.__class__
+        return Vec2(self.x + other.x, self.y + other.y)
+    ...
+    def __eq__(self,other):
+        return (self.__class__ == other.__class__
+            and self.x == other.x and self.y == other.y)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1125319"></a>To be safe, you can add checks like this to other child classes of <code class="fm-code-in-text1">Vector</code> as well.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1125384"></a><b class="fm-exercise-head">Exercise 6.7</b>: Implement a <code class="fm-code-in-text1">__truediv__</code> function on <code class="fm-code-in-text1">Vector</code> that allows you to divide<a id="marker-1125383"></a> vectors by scalars. You can divide vectors by a non-zero scalar by multiplying them by the reciprocal of the scalar (1.0/scalar).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1125385"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">class Vector(metaclass=ABCMeta):
+    ...
+    def __truediv__(self, scalar):
+        return self.scale(1.0/scalar)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1125387"></a>With this implemented, you can do division like <code class="fm-code-in-text1">Vec2(1,2)/2</code>, getting back <code class="fm-code-in-text1">Vec2(0.5,1.0)</code>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_11"><a id="pgfId-1120386"></a><a id="id_4wtlukoogpvj"></a>6.2 Exploring different vector spaces</h2>
+
+  <p class="body"><a id="pgfId-1120387"></a>Now that you know <a id="marker-1132930"></a>what a vector space is, let’s look at some examples. In each case, we take a new kind of object and implement it as a class that inherits from <code class="fm-code-in-text">Vector</code>. At that point, no matter what kind of object it is, we can do addition, scalar multiplication, or any other vector operation with it.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1120389"></a><a id="id_8hdgz15n2h7d"></a>6.2.1 Enumerating all coordinate vector spaces</h3>
+
+  <p class="body"><a id="pgfId-1120390"></a>We’ve spent <a id="marker-1132940"></a><i class="fm-in-times-italic">a</i> lot of time on the coordinate vectors <code class="fm-code-in-text">Vec2</code> and <code class="fm-code-in-text">Vec3</code> so far, so coordinate vectors in 2D and 3D don’t need much more explanation. It is worth reviewing, however, that a vector space of coordinate vectors can have <i class="fm-italics">any</i> number of coordinates. <code class="fm-code-in-text">Vec2</code> vectors have two coordinates, <code class="fm-code-in-text">Vec3</code> vectors have three, and we could just as well have a <code class="fm-code-in-text">Vec15</code> class with 15 coordinates. We can’t picture it geometrically, but <code class="fm-code-in-text">Vec15</code> objects represent points in a 15D space.</p>
+
+  <p class="body"><a id="pgfId-1120393"></a>One special case worth mentioning is the class<a id="marker-1120392"></a> we might call <code class="fm-code-in-text">Vec1</code>, vectors with a single coordinate. The implementation looks like this:</p>
+  <pre class="programlisting">class Vec1(Vector):
+    def __init__(self,x):
+        self.x = x
+    def add(self,other):
+        return Vec1(self.x + other.x)
+    def scale(self,scalar):
+        return Vec1(scalar * self.x)
+    @classmethod
+    def zero(cls):
+        return Vec1(0)
+    def __eq__(self,other):
+        return self.x == other.x
+    def __repr__(self):
+        return "Vec1({})".format(self.x)</pre>
+
+  <p class="body"><a id="pgfId-1120395"></a>This is a lot of boilerplate to wrap a single number, and it doesn’t give us any arithmetic we don’t already have. Adding and multiplying <code class="fm-code-in-text">Vec1</code> scalar objects is just addition and multiplication of the underlying numbers:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Vec1(2) + Vec1(2)
+Vec1(4)
+&gt;&gt;&gt; 3 * Vec1(1)
+Vec1(3)</pre>
+
+  <p class="body"><a id="pgfId-1120398"></a>For this reason, we probably will never need a <code class="fm-code-in-text">Vec1</code> class. But it is important<a id="marker-1120397"></a> to know that numbers on their own are vectors. The set of all real numbers (including integers, fractions, and irrational numbers like <i class="fm-in-cambria2">π</i>) is denoted as <span class="fm-in-cambria">ℝ</span>, and it is a vector space in its own right. This is a special case where the scalars and the vectors are the same kind of objects.</p>
+
+  <p class="body"><a id="pgfId-1120399"></a>Coordinate vector spaces are denoted <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript"><i class="fm-in-times-italic2">n</i></sup>, where <i class="fm-in-times-italic">n</i> is the dimension or number of coordinates. For instance, the 2D plane is denoted as <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup> and 3D space is denoted as <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup>. As long as you use real numbers as your scalars, any vector space you stumble across is some <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript"><i class="fm-in-times-italic2">n</i></sup> in disguise.<a href="#pgfId-1120402">1</a> This is why we need to mention the vector space <span class="fm-in-cambria">ℝ</span>, even if it is boring. The other vector space we need to mention<a id="marker-1120403"></a> is the <i class="fm-italics">zero-dimensional</i> one, <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">0</sup>. This is the set of vectors with zero coordinates<a id="marker-1120404"></a> that we can describe as empty tuples or as a <code class="fm-code-in-text">Vec0</code> class inheriting from <code class="fm-code-in-text">Vector</code> :</p>
+  <pre class="programlisting">class Vec0(Vector):
+    def __init__(self):
+        pass
+    def add(self,other):
+        return Vec0()
+    def scale(self,scalar):
+        return Vec0()
+    @classmethod
+    def zero(cls):
+        return Vec0()
+    def __eq__(self,other):
+        return self.__class__ == other.__class__ == Vec0
+    def __repr__(self):
+        return "Vec0()"</pre>
+
+  <p class="body"><a id="pgfId-1120406"></a>No coordinates don’t mean that there are no possible vectors; it means there is exactly one zero-dimensional vector. This makes zero-dimensional vector math stupidly easy; any result vector is always the same:</p>
+  <pre class="programlisting">&gt;&gt;&gt; − 3.14 * Vec0()
+Vec0()
+&gt;&gt;&gt; Vec0() + Vec0() + Vec0() + Vec0()
+Vec0()</pre>
+
+  <p class="body"><a id="pgfId-1120408"></a>This is something like a singleton class from an OOP perspective. From a mathematical perspective, we know that every vector space has to have a zero vector, so we can think of <code class="fm-code-in-text">Vec0()</code> as being this zero vector.</p>
+
+  <p class="body"><a id="pgfId-1120409"></a>That covers it for coordinate vectors of dimensions zero, one, two, three, or more. Now, when you see a vector in the wild, you’ll be able to <a id="marker-1132950"></a>match it up with one of these vector spaces.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1120411"></a><a id="id_t5w3nonp0tlz"></a>6.2.2 Identifying vector spaces in the wild</h3>
+
+  <p class="body"><a id="pgfId-1120412"></a>Let’s return <a id="marker-1132960"></a>to an example from chapter 1 and look at a data set of used Toyota Priuses. In the source code, you’ll see how to load the data set generously provided by my friend Dan Rathbone at CarGraph.com. To make the cars easy to work with, I’ve loaded them into a class:</p>
+  <pre class="programlisting">class CarForSale():
+    def __init__(self, model_year, mileage, price, posted_datetime, 
+                 model, source, location, description):
+        self.model_year = model_year
+        self.mileage = mileage
+        self.price = price
+        self.posted_datetime = posted_datetime
+        self.model = model
+        self.source = source
+        self.location = location
+        self.description = description</pre>
+
+  <p class="body"><a id="pgfId-1120414"></a>It would be useful to think of <code class="fm-code-in-text">CarForSale</code> objects as vectors. Then, for example, I could average them together as a linear combination to see what the typical Prius for sale looks like. To do that, I need to retrofit this class<a id="marker-1137052"></a> to inherit from <code class="fm-code-in-text">Vector</code>.</p>
+
+  <p class="body"><a id="pgfId-1120416"></a>How can we add two cars? The numeric fields <code class="fm-code-in-text">model_year</code>, <code class="fm-code-in-text">mileage</code>, and <code class="fm-code-in-text">price</code> can be added like components of a vector, but the string properties can’t be added in a meaningful way. (Remember, you saw that we can’t think of strings as vectors.) When we do arithmetic on cars, the result is not a real car for sale but a <i class="fm-italics">virtual</i> car defined by its properties. To represent this, I’ll change all the string properties to the string</p>
+
+  <p class="body"><a id="pgfId-1125573"></a><code class="fm-code-in-text">“(virtual)”</code> to remind us of this. Finally, we can’t add datetimes, but we can add time spans. In figure 6.3, I use the day I retrieved the data as a reference point and add the time spans since the cars were posted for sale. The code for the entire process is shown in listing 6.1.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137066"></a>Figure 6.3 Timeline of cars posted for sale</p>
+
+  <p class="body"><a id="pgfId-1120422"></a>All this applies to scalar multiplication as well. We can multiply the numeric properties and the time span since posting by a scalar. The string properties are no longer meaningful, however.</p>
+
+  <p class="fm-code-listing-caption"><a id="pgfId-1125642"></a>Listing 6.1 Making <code class="fm-code-in-text">CarForSale</code> behave like a <code class="fm-code-in-text">Vector</code> by implementing required methods</p>
+  <pre class="programlisting">from datetime import datetime
+ 
+class CarForSale(Vector):
+    retrieved_date = datetime(2018,11,30,12)                         <span class="fm-combinumeral">❶</span>
+    def __init__(self, model_year, mileage, price, posted_datetime, 
+                 model="(virtual)", 
+                         source="(virtual)",                         <span class="fm-combinumeral">❷</span>
+                 location="(virtual)", description="(virtual)"):
+        self.model_year = model_year
+        self.mileage = mileage
+        self.price = price
+        self.posted_datetime = posted_datetime
+        self.model = model
+        self.source = source
+        self.location = location
+        self.description = description
+    def add(self, other):
+        def add_dates(d1, d2):                                       <span class="fm-combinumeral">❸</span>
+            age1 = CarForSale.retrieved_date − d1
+            age2 = CarForSale.retrieved_date − d2
+            sum_age = age1 + age2
+            return CarForSale.retrieved_date − sum_age
+        return CarForSale(                                           <span class="fm-combinumeral">❹</span>
+            self.model_year + other.model_year,
+            self.mileage + other.mileage,
+            self.price + other.price,
+            add_dates(self.posted_datetime, other.posted_datetime)
+        )
+    def scale(self,scalar):
+        def scale_date(d):                                           <span class="fm-combinumeral">❺</span>
+            age = CarForSale.retrieved_date − d
+            return CarForSale.retrieved_date − (scalar * age)
+        return CarForSale(
+            scalar * self.model_year,
+            scalar * self.mileage,
+            scalar * self.price,
+            scale_date(self.posted_datetime)
+        )
+    @classmethod
+    def zero(cls):
+        return CarForSale(0, 0, 0, CarForSale.retrieved_date)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1120432"></a><span class="fm-combinumeral">❶</span> I retrieved the data set from CarGraph.com on 11/30/2018 at noon.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134903"></a><span class="fm-combinumeral">❷</span> To simplify construction of virtual cars, all of the string parameters are optional with a default value “(virtual)”.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134920"></a><span class="fm-combinumeral">❸</span> Helper function that adds dates by adding the time spans from the reference date</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134937"></a><span class="fm-combinumeral">❹</span> Adds CarForSale objects by adding underlying properties and constructing a new object</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1134954"></a><span class="fm-combinumeral">❺</span> Helper function that scales a datetime by scaling the time span from the reference date</p>
+
+  <p class="body"><a id="pgfId-1120438"></a>In the source code, you’ll find the complete implementation of the class as well as the code to load a list of sample car data. With the list of cars loaded, we can try some vector arithmetic:</p>
+  <pre class="programlisting">&gt;&gt;&gt; (cars[0] + cars[1]).__dict__
+{'model_year': 4012,
+ 'mileage': 306000.0,
+ 'price': 6100.0,
+ 'posted_datetime': datetime.datetime(2018, 11, 30, 3, 59),
+ 'model': '(virtual)',
+ 'source': '(virtual)',
+ 'location': '(virtual)',
+ 'description': '(virtual)'}</pre>
+
+  <p class="body"><a id="pgfId-1120440"></a>The sum of the first two cars is evidently a Prius from model year 4012 (maybe it can fly?) with 306,000 miles on it and going for an asking price of $6,100. It was posted for sale at 3:59 AM on the same day I looked at CarGraph.com. This unusual car doesn’t look too helpful, but bear with me, averages (as shown in the following) look a lot more meaningful:</p>
+  <pre class="programlisting">&gt;&gt;&gt; average_prius = sum(cars, CarForSale.zero()) * (1.0/len(cars))
+&gt;&gt;&gt; average_prius.__dict__
+
+{'model_year': 2012.5365853658536,
+ 'mileage': 87731.63414634147,
+ 'price': 12574.731707317074,
+ 'posted_datetime': datetime.datetime(2018, 11, 30, 9, 0, 49, 756098),
+ 'model': '(virtual)',
+ 'source': '(virtual)',
+ 'location': '(virtual)',
+ 'description': '(virtual)'}</pre>
+
+  <p class="body"><a id="pgfId-1120442"></a>We can learn real things from this result. The average Prius for sale is about 6 years old, has about 88,000 miles on it, is selling for about $12,500, and was posted at 9:49 AM the morning I accessed the website. (In Part 3, we spend a lot of time learning from data sets by treating them as vectors.)</p>
+
+  <p class="body"><a id="pgfId-1120443"></a>Ignoring the text data, <code class="fm-code-in-text">CarForSale</code> behaves like a vector. In fact, it behaves like a 4D vector having dimensions of price, model year, mileage, and datetime of posting. It’s not quite a coordinate vector because the posting date is not a number. Even though the data is not numeric, the class satisfies the vector space properties (you verify this with unit tests in the exercises), so its objects are vectors and can be manipulated as such. Specifically, they are 4D vectors, so it is possible to write a 1-to−1 mapping between <code class="fm-code-in-text">CarForSale</code> objects and <code class="fm-code-in-text">Vec4</code> objects (also an exercise for you). For our next example, we’ll see some objects that look even less like coordinate <a id="marker-1132970"></a>vectors but still satisfy the defining properties.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1120445"></a><a id="id_j9c11yfsom4x"></a>6.2.3 Treating functions as vectors</h3>
+
+  <p class="body"><a id="pgfId-1120446"></a>It turns <a id="marker-1132975"></a>out that <a id="marker-1132980"></a>mathematical functions c<a id="marker-1132990"></a>an be thought of as vectors. Specifically, I’m talking about functions that take in a single real number and return a single real number, though there are plenty of other types of mathematical functions. The mathematical shorthand to say that a function <i class="fm-in-times-italic">f</i> takes any real number and returns a real number is <i class="fm-in-times-italic">f</i>: <span class="fm-in-cambria">ℝ</span>: <span class="fm-in-cambria">→</span> <span class="fm-in-cambria">ℝ</span>. With Python, we’ll think of functions that take <code class="fm-code-in-text">float</code> values in and return <code class="fm-code-in-text">float</code> values.</p>
+
+  <p class="body"><a id="pgfId-1120447"></a>As with 2D or 3D vectors, we can do addition and scalar multiplication of functions visually or algebraically. To start, we can write functions algebraically; for instance, <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = 0.5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + 3 or <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). Alternatively, we can visualize these with a graph.</p>
+
+  <p class="body"><a id="pgfId-1120448"></a>In the source code, I’ve written a simple <code class="fm-code-in-text">plot</code> function that draws the graph of one or more functions on a specified range of inputs (figure 6.4). For instance, the following code plots both of our functions <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) and <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) on <i class="fm-in-times-italic">x</i> values between −10 and 10:</p>
+  <pre class="programlisting">def f(x):
+    return 0.5 * <i class="fm-in-times-italic1">x</i> + 3
+def <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>):
+    return <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>)
+plot([f,g],−10,10)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137115"></a>Figure 6.4 Graph of the functions <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = 0.5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + 3 and <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>)</p>
+
+  <p class="body"><a id="pgfId-1120455"></a>Algebraically, we can add functions by adding the expressions that define them. This means <i class="fm-in-times-italic">f</i> + <i class="fm-in-times-italic">g</i> is a function defined by (<i class="fm-in-times-italic">f</i> + <i class="fm-in-times-italic">g</i>)(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) + <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = 0.5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + 3 + <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). Graphically, the <i class="fm-in-times-italic">y</i> values of each point are added, so it’s something like stacking the two functions together as shown in figure 6.5.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137158"></a>Figure 6.5 Visualizing the sum of two functions on a graph</p>
+
+  <p class="body"><a id="pgfId-1120461"></a>To implement this sum, you can write some functional Python code. This code takes two functions as inputs and returns a new one, which is their sum:</p>
+  <pre class="programlisting">def add_functions(f,g):
+    def new_function(<i class="fm-in-times-italic1">x</i>):
+        return <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) + <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>)
+    return new_function</pre>
+
+  <p class="body"><a id="pgfId-1120463"></a>Likewise, we can multiply a function by a scalar by multiplying its expression by the scalar. For instance, 3 <i class="fm-in-times-italic">g</i> is defined by (3 <i class="fm-in-times-italic">g</i>)(<i class="fm-in-times-italic">x</i>) = 3 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = 3 <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). This has the effect of stretching the graph of the function <i class="fm-in-times-italic">g</i> in the <i class="fm-in-times-italic">y</i> direction by a factor of 3 (figure 6.6).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1120468"></a>Figure 6.6 The function (3g) looks like the function g stretched by a factor of 3 in the y direction.</p>
+
+  <p class="body"><a id="pgfId-1120469"></a>It’s possible to nicely wrap Python functions in a class that inherits from vector, and I leave it as an exercise for you. After doing so, you can write satisfying function arithmetic expressions like 3 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">f</i> or 2 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">f</i> − 6 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">g</i>. You can even make the class<a id="marker-1120470"></a> <i class="fm-italics">callable</i> or able to accept arguments as if it were a function to allow expressions like (<i class="fm-italics">f</i> + <i class="fm-in-times-italic">g</i>)(6). Unfortunately, unit testing to determine if functions satisfy the vector space properties is much harder because it’s difficult to generate random functions or to test whether two functions are equal. To really know if two functions are equal, you have to know that they return the same output for every single possible input. That means a test for every real number or at least every <code class="fm-code-in-text">float</code> value!</p>
+
+  <p class="body"><a id="pgfId-1120471"></a>This brings us to another question: what is the <i class="fm-italics">dimension</i> of the vector space of functions? Or, to be concrete, how many real number coordinates are needed to uniquely identify a function?</p>
+
+  <p class="body"><a id="pgfId-1120472"></a>Instead of naming the coordinates of a <code class="fm-code-in-text">Vec3</code> object <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i>, you could index them from <i class="fm-in-times-italic">i</i> = 1 to 3. Likewise, you could index the coordinates of a <code class="fm-code-in-text">Vec15</code> from <i class="fm-in-times-italic">i</i> = 1 to 15. A function, however, has infinitely many numbers that define it; for instance, the values <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) for any value of <i class="fm-in-times-italic">x</i>. In other words, you can think of the coordinates of <i class="fm-in-times-italic">f</i> as being its values at every point, indexed by all real numbers instead of the first few integers. This means that the vector space<a id="marker-1120473"></a> of functions is <i class="fm-italics">infinite dimensional</i>. This has important implications, but it mostly makes the vector space of all functions hard to work with. We’ll return to this space later, specifically looking at some subsets that are simpler. For now, let’s return to the comfort of finitely many dimensions and <a id="marker-1132995"></a>look <a id="marker-1133000"></a>at two more <a id="marker-1133010"></a>examples.</p>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1120475"></a><a id="id_6kh1a6rbc85c"></a>6.2.4 Treating matrices as vectors</h3>
+
+  <p class="body"><a id="pgfId-1120477"></a>Because<a id="marker-1133015"></a> an <i class="fm-in-times-italic">n</i> -by- <i class="fm-in-times-italic">m</i> matrix is a list of <i class="fm-in-times-italic">n</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">m</i> numbers, <a id="marker-1133020"></a>albeit arranged in a <a id="marker-1133025"></a>rectangle, we can treat it as a <i class="fm-in-times-italic">n</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">m</i> -dimensional vector. The only difference between the vector space of, say, 5<span class="fm-in-cambria">×</span>3 matrices from the vector space of 15D coordinate vectors is that the coordinates are presented in a matrix. We still add and scalar multiply coordinate by coordinate. Figure 6.7 shows how this addition looks.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137218"></a>Figure 6.7 Adding two 5<span class="fm-in-cambria">×</span>3 matrices by adding their corresponding entries</p>
+
+  <p class="body"><a id="pgfId-1120484"></a>Implementing a class for 5<span class="fm-in-cambria">×</span>3 matrices inheriting<a id="marker-1120483"></a> from <code class="fm-code-in-text">Vector</code> is more typing than simply implementing a <code class="fm-code-in-text">Vec15</code> class because you need two loops to iterate over a matrix. The arithmetic, however, is no more complicated than as that shown in this listing.</p>
+
+  <p class="fm-code-listing-caption"><a id="pgfId-1126199"></a>Listing 6.2 A class representing 5<span class="fm-in-cambria">×</span>3 matrices thought of as vectors</p>
+  <pre class="programlisting">class Matrix5_by_3(Vector):
+    rows = 5                                          <span class="fm-combinumeral">❶</span>
+    columns = 3
+    def __init__(self, matrix):
+        self.matrix = matrix
+    def add(self, other):
+        return Matrix5_by_3(tuple(
+            tuple(a + b for a,b in zip(row1, row2))
+            for (row1, row2) in zip(self.matrix, other.matrix)
+        ))
+    def scale(self,scalar):
+        return Matrix5_by_3(tuple(
+            tuple(scalar * <i class="fm-in-times-italic1">x</i> for <i class="fm-in-times-italic1">x</i> in row)
+            for row in self.matrix
+        ))
+    @classmethod
+    def zero(cls):
+        return Matrix5_by_3(tuple(                    <span class="fm-combinumeral">❷</span>
+            tuple(0 for j in range(0, cls.columns))
+            for i in range(0, cls.rows)
+        ))</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135330"></a><span class="fm-combinumeral">❶</span> You need to know the number of rows and columns to be able to construct the zero matrix.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135351"></a><span class="fm-combinumeral">❷</span> The zero vector for 5<span class="fm-in-cambria">×</span>3 matrices is a 5<span class="fm-in-cambria">×</span>3 matrix consisting of all zeroes. Adding this to any other 5<span class="fm-in-cambria">×</span>3 matrix M returns M.</p>
+
+  <p class="body"><a id="pgfId-1120491"></a>You could just as well create a <code class="fm-code-in-text">Matrix2_by_2</code> class or a <code class="fm-code-in-text">Matrix99_by_17</code> class to represent different vector spaces. In these cases, much of the implementation would be the same, but the dimensions would no longer be 15, they would be 2 <span class="fm-in-cambria">·</span> 2 = 4 or 99 <span class="fm-in-cambria">·</span> 17 = 1,683. As an exercise, you can<a id="marker-1120493"></a> create a <code class="fm-code-in-text">Matrix</code> class inheriting from <code class="fm-code-in-text">Vector</code> that includes all the data except for specified numbers of rows and columns. Then any <code class="fm-code-in-text">MatrixM_by_N</code> class could inherit from <code class="fm-code-in-text">Matrix</code>.</p>
+
+  <p class="body"><a id="pgfId-1120495"></a>The interesting thing about matrices isn’t that they are numbers arranged in grids, but rather that we can think of them as representing linear functions. We already saw that lists of numbers and functions are two cases of vector spaces, but it turns out that matrices are vectors in both senses. If a matrix <i class="fm-in-times-italic">a</i> has <i class="fm-in-times-italic">n</i> rows and <i class="fm-in-times-italic">m</i> columns, it represents<a id="marker-1120496"></a> a linear function from <i class="fm-in-times-italic">m</i> -dimensional space<a id="marker-1120497"></a> to <i class="fm-in-times-italic">n</i> -dimensional space. (You can write <i class="fm-in-times-italic">a</i> : <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript"><i class="fm-in-times-italic2">m</i></sup> <span class="fm-in-cambria">→</span> <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript"><i class="fm-in-times-italic2">n</i></sup> to say this same sentence in mathematical shorthand.)</p>
+
+  <p class="body"><a id="pgfId-1120498"></a>Just as we added and scalar-multiplied functions from <span class="fm-in-cambria">ℝ</span> <span class="fm-in-cambria">→</span> <span class="fm-in-cambria">ℝ</span>, so can we add and scalar multiply functions from <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript"><i class="fm-in-times-italic2">m</i></sup> <span class="fm-in-cambria">→</span> <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript"><i class="fm-in-times-italic2">n</i></sup>. In a mini-project at the end of this section, you can try running the vector space unit tests on matrices to check they are vectors in both senses. That doesn’t mean grids of numbers aren’t useful in their own right; sometimes we don’t care to interpret them as functions. For instance, <a id="marker-1133068"></a>we <a id="marker-1133069"></a>can use<a id="marker-1133070"></a> arrays<a id="marker-1133071"></a> of numbers to represent images.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1120500"></a><a id="id_stllca440a18"></a>6.2.5 Manipulating images with vector operations</h3>
+
+  <p class="body"><a id="pgfId-1120501"></a>On a <a id="marker-1133081"></a>computer,<a id="marker-1133086"></a> images <a id="marker-1133091"></a>are <a id="marker-1133096"></a>displayed as arrays of colored squares called <i class="fm-italics">pixels</i>. A typical image<a id="marker-1120502"></a> can be a few hundred pixels tall by a few hundred pixels wide. In a color image, three numbers are needed to<a id="marker-1120503"></a> specify the red, green, and blue (RGB) content of the color of any given pixel (figure 6.8). In total, a 300<span class="fm-in-cambria">×</span>300 pixel image is specified by 300 <span class="fm-in-cambria">·</span> 300 <span class="fm-in-cambria">·</span> 3 = 270,000 numbers. When thinking of images of this size as vectors, the pixels live in a 270,000-dimensional space!</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1120508"></a>Figure 6.8 Zooming in on a picture of my dog, Melba, until we can pick out one pixel with red, green, and blue content (230, 105, 166, respectively)</p>
+
+  <p class="body"><a id="pgfId-1120509"></a>Depending on what format you’re reading this, you may or may not see the pink color of Melba’s tongue. But because we’ll represent color numerically rather than visually in this discussion, everything should still make sense. You can also see the pictures in full color in the source code for this book.</p>
+
+  <p class="body"><a id="pgfId-1120510"></a>Python has a de-facto standard image manipulation library, PIL, which is distributed in pip under the package name <code class="fm-code-in-text">pillow</code>. You won’t need to learn much about the library because we immediately encapsulate<a id="marker-1120511"></a> our use of it inside a new class (listing 6.3). This class, <code class="fm-code-in-text">ImageVector</code>, inherits from <code class="fm-code-in-text">Vector</code>, stores the pixel<a id="marker-1120512"></a> data of a 300<span class="fm-in-cambria">×</span>300 image, and supports addition and scalar multiplication.</p>
+
+  <p class="fm-code-listing-caption"><a id="pgfId-1126436"></a>Listing 6.3 A class representing an image as a vector</p>
+  <pre class="programlisting">from PIL import Image
+class ImageVector(Vector):
+    size = (300,300)                                                <span class="fm-combinumeral">❶</span>
+    def __init__(self,input):
+        try:
+            img = Image.open(input).\
+                  resize(ImageVector.size)                          <span class="fm-combinumeral">❷</span>
+            self.pixels = img.getdata()
+        except:
+            self.pixels = input                                     <span class="fm-combinumeral">❸</span>
+    def image(self):
+        img = Image.new('RGB', ImageVector.size)                    <span class="fm-combinumeral">❹</span>
+        img.putdata([(int(r), int(g), int(b)) 
+                     for (r,g,b) in self.pixels])
+        return img
+    def add(self,img2):                                             <span class="fm-combinumeral">❺</span>
+        return ImageVector([(r1+r2,g1+g2,b1+b2) 
+                            for ((r1,g1,b1),(r2,g2,b2)) 
+                            in zip(self.pixels,img2.pixels)])
+    def scale(self,scalar):                                         <span class="fm-combinumeral">❻</span>
+        return ImageVector([(scalar*r,scalar*g,scalar*b) 
+                      for (r,g,b) in self.pixels])
+    @classmethod
+    def zero(cls):                                                  <span class="fm-combinumeral">❼</span>
+        total_pixels = cls.size[0] * cls.size[1]
+        return ImageVector([(0,0,0) for _ in range(0,total_pixels)])
+    def _repr_png_(self):                                           <span class="fm-combinumeral">❽</span>
+        return self.image()._repr_png_()</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1120550"></a><span class="fm-combinumeral">❶</span> Handles images of a fixed size: 300<span class="fm-in-cambria">×</span>300 pixels, for example</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135523"></a><span class="fm-combinumeral">❷</span> The constructor accepts the name of an image file. We create an Image object with PIL, resize it to 300<span class="fm-in-cambria">×</span>300, and then extract its list of pixels with the getdata() method. Each pixel is a triple consisting of red, green, and blue values.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1126920"></a><span class="fm-combinumeral">❸</span> The constructor also accepts a list of pixels directly.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1126923"></a><span class="fm-combinumeral">❹</span> This method returns the underlying PIL image, reconstructed from the pixels stored as an attribute on the class. The values must be converted to integers to create a displayable image.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135575"></a><span class="fm-combinumeral">❺</span> Performs vector addition for images by adding the respective red, green, and blue values for each pixel</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135592"></a><span class="fm-combinumeral">❻</span> Performs scalar multiplication by multiplying every red, green, and blue value for every pixel by the given scalar</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135609"></a><span class="fm-combinumeral">❼</span> The zero image has zero red, green, or blue content at any pixel.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135626"></a><span class="fm-combinumeral">❽</span> Jupyter notebooks can display PIL images inline, as long as we pass the implementation of the function _repr_png_ from the underlying image.</p>
+
+  <p class="body"><a id="pgfId-1126925"></a>Equipped with this library, we can load images by filename and do vector arithmetic with the images. For instance, the average of two pictures can be computed as a linear combination as follows with a result shown in figure 6.9:</p>
+  <pre class="programlisting">0.5 * ImageVector("inside.JPG") + 0.5 * ImageVector("outside.JPG")
+ </pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137278"></a>Figure 6.9 The average of two images of Melba as a linear combination</p>
+
+  <p class="body"><a id="pgfId-1120558"></a>While any <code class="fm-code-in-text">ImageVector</code> is valid, the minimum<a id="marker-1120557"></a> and maximum color values that render as visually different are 0 and 255, respectively. Because of this, the negative of any image you import will be black, having gone below the minimum brightness at every pixel. Likewise, positive scalar multiples quickly become washed out with most pixels exceeding the maximum displayable brightness. Figure 6.10 shows these characteristics.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1120563"></a>Figure 6.10 Negation and scalar multiplication of an image</p>
+
+  <p class="body"><a id="pgfId-1120564"></a>To make visually interesting changes, you need to do operations that land you in the right brightness range for all colors. The zero vector (black) and the vector with all values equal to 255 (white) are good reference points. For instance, subtracting an image from an all white image has the effect of reversing the colors. As figure 6.11 shows, for the following white vector</p>
+  <pre class="programlisting">white = ImageVector([(255,255,255) for _ in range(0,300*300)])</pre>
+
+  <p class="body"><a id="pgfId-1120566"></a>subtracting an image yields an eerily recolored picture. (The difference should be striking even if you’re looking at the picture in black and white.)</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1120571"></a>Figure 6.11 Reversing the color of an image by subtracting it from a plain, white image</p>
+
+  <p class="body"><a id="pgfId-1127066"></a>Vector arithmetic is clearly a general concept: the defining concepts of addition and scalar multiplication apply to numbers, coordinate vectors, functions, matrices, images, and many other kinds of objects. It’s striking to see such visual results when we apply the same math across unrelated domains. We’ll keep all of these examples of vector spaces<a id="marker-1133111"></a> in <a id="marker-1133116"></a>mind and <a id="marker-1133121"></a>continue to explore the generalizations we can make across them.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1127068"></a><a id="id_vwutmvxiaxrx"></a>6.2.6 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127086"></a><b class="fm-exercise-head">Exercise 6.8</b>: Run<a id="marker-1133126"></a> the vector space unit tests with float values for <code class="fm-code-in-text1">u</code>, <code class="fm-code-in-text1">v</code>, and <code class="fm-code-in-text1">w</code>, rather than with objects inheriting<a id="marker-1127087"></a> from the <code class="fm-code-in-text1">Vector</code> class. This demonstrates that real numbers are indeed vectors.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127088"></a><b class="fm-exercise-head">Solution</b>: With vectors as random scalars, the number zero as the zero vector, and <code class="fm-code-in-text1">math.isclose</code> as the equality<a id="marker-1127089"></a> test, the 100 random tests pass:</p>
+        <pre class="programlisting">for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_scalar(), random_scalar(), random_scalar()
+    test(0, isclose, a,b,u,v,w)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127122"></a><b class="fm-exercise-head">Exercise 6.9−Mini Project</b>: Run the vector space unit tests for <code class="fm-code-in-text1">CarForSale</code> to show its objects form a vector space (ignoring their textual attributes).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127123"></a><b class="fm-exercise-head">Solution</b>: Most of the work is generating random data and building an approximate equality test that handles datetimes as shown here:</p>
+        <pre class="programlisting">from math import isclose
+from random import uniform, random, randint
+from datetime import datetime, timedelta
+
+def random_time():
+    return CarForSale.retrieved_date − timedelta(days=uniform(0,10))
+
+def approx_equal_time(t1, t2):
+    test = datetime.now()
+    return isclose((test-t1).total_seconds(), (test-t2).total_seconds())
+
+def random_car():
+    return CarForSale(randint(1990,2019), randint(0,250000), 
+              27000. * random(), random_time())
+
+def approx_equal_car(c1,c2):
+    return (isclose(c1.model_year,c2.model_year) 
+            and isclose(c1.mileage,c2.mileage) 
+            and isclose(c1.price, c2.price)
+            and approx_equal_time(c1.posted_datetime, c2.posted_datetime))
+    
+for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_car(), random_car(), random_car()
+    test(CarForSale.zero(), approx_equal_car, a,b,u,v,w)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127185"></a><b class="fm-exercise-head">Exercise 6.10</b>: Implement the class <code class="fm-code-in-text1">Function(Vector)</code> that takes a function<a id="marker-1127184"></a> of one variable as an argument<a id="marker-1127186"></a> to its constructor and implement a <code class="fm-code-in-text1">__call__</code> method so you can treat it as a function. You should be able to run <code class="fm-code-in-text1">plot([f,g,f+g,3*g],−10,10)</code>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127187"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">class Function(Vector):
+    def __init__(self, f):
+        self.function = f
+    def add(self, other):
+        return Function(lambda x: self.function(<i class="fm-in-times-italic1">x</i>) + other.function(<i class="fm-in-times-italic1">x</i>))
+    def scale(self, scalar):
+        return Function(lambda x: scalar * self.function(<i class="fm-in-times-italic1">x</i>))
+    @classmethod
+    def zero(cls):
+        return Function(lambda x: 0)
+    def __call__(self, arg):
+        return self.function(arg)
+    
+f = Function(lambda x: 0.5 * <i class="fm-in-times-italic1">x</i> + 3)
+g = Function(sin)
+
+plot([f, g, f+g, 3*g], −10, 10)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1127327"></a>The result of the last line is shown in this plot:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F11_Orland_UN01.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127328"></a>Our objects <code class="fm-code-in-text1">f</code> and <code class="fm-code-in-text1">g</code> behave like vectors, so we can add and scalar multiply them. Because they also behave like functions, we can plot them.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127363"></a><b class="fm-exercise-head">Exercise 6.11-Mini Project</b>: Testing equality of functions is difficult. Do your best to write a function to test whether two functions are equal.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127364"></a><b class="fm-exercise-head">Solution</b>: Because we’re usually interested in well-behaved, continuous functions, it might be enough to check that their values are close for a few random input values as shown here:</p>
+        <pre class="programlisting">def approx_equal_function(f,g):
+    results = []
+    for _ in range(0,10):
+        x = uniform(−10,10)
+        results.append(isclose(f(x),g(x)))
+    return all(results)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1127366"></a>Unfortunately, this can give us misleading results. The following returns <code class="fm-code-in-text1">True</code>, even though the functions cannot be equal to zero:</p>
+        <pre class="programlisting">approx_equal_function(lambda x: (x*x)/x, lambda x: x)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1127368"></a>It turns out that computing equality of functions is an <i class="fm-italics">undecidable</i> problem. That is, it has been proved there is no algorithm that can guarantee whether any two functions are equal.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127410"></a><b class="fm-exercise-head">Exercise 6.12-Mini Project</b>: Unit test your <code class="fm-code-in-text1">Function</code> class to demonstrate that<a id="marker-1127409"></a> functions satisfy the vector space properties.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127411"></a><b class="fm-exercise-head">Solution</b>: It’s difficult to test function equality, and it’s also difficult to generate random functions. Here, I used a <code class="fm-code-in-text1">Polynomial</code> class (that you’ll meet in the next<a id="marker-1127412"></a> section) to generate some random polynomial functions. Using <code class="fm-code-in-text1">approx_equal _function</code> from the previous mini-project, we can get the test to pass:</p>
+        <pre class="programlisting">def random_function():
+    degree = randint(0,5)
+    p = Polynomial(*[uniform(−10,10) for _ in range(0,degree)])
+    return Function(lambda x: <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>))
+
+for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_function(), random_function(), random_function()
+    test(Function.zero(), approx_equal_function, a,b,u,v,w)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127444"></a><b class="fm-exercise-head">Exercise 6.13-Mini Project</b>: Implement a class <code class="fm-code-in-text1">Function2(Vector)</code> that stores a function<a id="marker-1127443"></a> of <i class="fm-italics">two</i> variables like <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127446"></a><b class="fm-exercise-head">Solution</b>: The definition is not much different<a id="marker-1127445"></a> than the <code class="fm-code-in-text1">Function</code> class, but all functions are given two arguments:</p>
+        <pre class="programlisting">class Function(Vector):
+    def __init__(self, f):
+        self.function = f
+    def add(self, other):
+        return Function(lambda x,y: self.function(x,y) + other.function(x,y))
+    def scale(self, scalar):
+        return Function(lambda x,y: scalar * self.function(x,y))
+    @classmethod
+    def zero(cls):
+        return Function(lambda x,y: 0)
+    def __call__(self, *args):
+        return self.function(*args)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1127448"></a>For instance, the sum of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> and <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">x</i> − <i class="fm-in-times-italic1">y</i> +1 should be 2<i class="fm-in-times-italic1">x</i> + 1. We can confirm this:</p>
+        <pre class="programlisting">&gt;&gt;&gt; f = Function(lambda x,y:x+y)
+&gt;&gt;&gt; g = Function(lambda x,y: x-y+1)
+&gt;&gt;&gt; (f+g)(3,10)
+7</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127541"></a><b class="fm-exercise-head">Exercise 6.14</b>: What is the dimension of the vector space of 9<span class="fm-in-cambria">×</span>9 matrices?</p>
+
+        <ol class="calibre27">
+          <li class="fm-exercise-list-num">
+            <p class="list-s"><a id="pgfId-1127542"></a>9</p>
+          </li>
+
+          <li class="fm-exercise-list-num">
+            <p class="list-s"><a id="pgfId-1127543"></a>18</p>
+          </li>
+
+          <li class="fm-exercise-list-num">
+            <p class="list-s"><a id="pgfId-1127544"></a>27</p>
+          </li>
+
+          <li class="fm-exercise-list-num">
+            <p class="list-s"><a id="pgfId-1127545"></a>81</p>
+          </li>
+        </ol>
+
+        <p class="fm-sidebar"><a id="pgfId-1127546"></a><b class="fm-exercise-head">Solution</b>: A 9<span class="fm-in-cambria">×</span>9 matrix has 81 entries, so there are 81 independent numbers (or coordinates) that determine it. It, therefore, is an 81-dimensional vector space and answer <i class="fm-in-times-italic1">d</i> is correct.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127578"></a><b class="fm-exercise-head">Exercise 6.15-Mini Project</b>: Implement a <code class="fm-code-in-text1">Matrix</code> class inheriting from <code class="fm-code-in-text1">Vector</code> with abstract properties<a id="marker-1127579"></a> representing the number<a id="marker-1127580"></a> of rows and number of columns. You should not be able to instantiate a <code class="fm-code-in-text1">Matrix</code> class, but you could make a <code class="fm-code-in-text1">Matrix5_by_3</code> class by inheriting from <code class="fm-code-in-text1">Matrix</code> and explicitly specifying the number of rows and columns.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127582"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">class Matrix(Vector):
+    @abstractproperty
+    def rows(self):
+        pass
+    @abstractproperty
+    def columns(self):
+        pass
+    def __init__(self,entries):
+        self.entries = entries
+    def add(self,other):
+        return self.__class__(
+            tuple(
+                tuple(self.entries[i][j] + other.entries[i][j]
+                        for j in range(0,self.columns()))
+                for i in range(0,self.rows())))
+    def scale(self,scalar):
+        return self.__class__(
+            tuple(
+                tuple(scalar * e for e in row) 
+                for row in self.entries))
+    def __repr__(self):
+        return "%s%r" % (self.__class__.__qualname__, self.entries)
+    def zero(self):
+        return self.__class__(
+            tuple(
+                tuple(0 for i in range(0,self.columns())) 
+                for j in range(0,self.rows())))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127645"></a>We can now quickly implement any class representing a vector space of matrices of fixed size, for instance, 2<span class="fm-in-cambria">×</span>2:</p>
+        <pre class="programlisting">class Matrix2_by_2(Matrix):
+    def rows(self):
+        return 2
+    def columns(self):
+        return 2  </pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1127647"></a>Then we can compute with 2<span class="fm-in-cambria">×</span>2 matrices as vectors:</p>
+        <pre class="programlisting">&gt;&gt;&gt; 2 * Matrix2_by_2(((1,2),(3,4))) + Matrix2_by_2(((1,2),(3,4)))
+Matrix2_by_2((3, 6), (9, 12))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127677"></a><b class="fm-exercise-head">Exercise 6.16</b>: Unit test the <code class="fm-code-in-text1">Matrix5_by_3</code> class to demonstrate that it obeys the defining properties of a vector space.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127678"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def random_matrix(rows, columns):
+    return tuple(
+        tuple(uniform(−10,10) for j in range(0,columns))
+        for i in range(0,rows)
+    )
+
+def random_5_by_3():
+    return Matrix5_by_3(random_matrix(5,3))
+    
+def approx_equal_matrix_5_by_3(m1,m2):
+    return all([
+        isclose(m1.matrix[i][j],m2.matrix[i][j]) 
+        for j in range(0,3)
+        for i in range(0,5)
+    ])
+    
+for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_5_by_3(), random_5_by_3(), random_5_by_3()
+    test(Matrix5_by_3.zero(), approx_equal_matrix_5_by_3, a,b,u,v,w)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127718"></a><b class="fm-exercise-head">Exercise 6.17-Mini Project</b>: Write a <code class="fm-code-in-text1">LinearMap3d_to_5d</code> class inheriting<a id="marker-1127717"></a> from <code class="fm-code-in-text1">Vector</code> that uses a 5<span class="fm-in-cambria">×</span>3 matrix as<a id="marker-1127719"></a> its data but implements <code class="fm-code-in-text1">__call__</code> to act as a linear map from <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">3</sup> to <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">5</sup>. Show that it agrees with <code class="fm-code-in-text1">Matrix5_by_3</code> in its underlying computations and that it independently passes the defining properties of a vector space.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127757"></a><b class="fm-exercise-head">Exercise 6.18−Mini Project</b>: Write a Python function enabling you to multiply <code class="fm-code-in-text1">Matrix5_by_3</code> objects by <code class="fm-code-in-text1">Vec3</code> objects in the sense of matrix multiplication. Update<a id="marker-1127758"></a> your overloading of the <code class="fm-code-in-text1">*</code> operator for the vector and matrix classes so you can multiply vectors on their left by either scalars or matrices.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127795"></a><b class="fm-exercise-head">Exercise 6.19</b>: Convince yourself that the zero<a id="marker-1127794"></a> vector for the <code class="fm-code-in-text1">ImageVector</code> class doesn’t visibly alter any image when it is added.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127796"></a><b class="fm-exercise-head">Solution</b>: For any image of your choice, look at the result of <code class="fm-code-in-text1">ImageVector ("my_ image.jpg") + ImageVector.zero()</code>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127864"></a><b class="fm-exercise-head">Exercise 6.20</b>: Pick two images and display 10 different weighted averages of them. These will be points on a line segment connecting the images in 270,000-dimensional space!</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127865"></a><b class="fm-exercise-head">Solution</b>: I ran the following code with <i class="fm-in-times-italic1">s</i> = 0.1, 0.2, 0.3, ..., 0.9, 1.0:</p>
+        <pre class="programlisting">s * ImageVector("inside.JPG") + (1-s) * ImageVector("outside.JPG")</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1127867"></a>When you put your images side-by-side, you’ll get something like this:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F11_Orland_UN02.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1127872"></a>Several different weighted averages of two images</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128012"></a><b class="fm-exercise-head">Exercise 6.21</b>: Adapt the vector space unit tests to images and run them. What do your randomized unit tests look like as images?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128013"></a><b class="fm-exercise-head">Solution</b>: One way to generate random images is to put random red, green, and blue values at every pixel, for example,</p>
+        <pre class="programlisting">def random_image():
+    return ImageVector([(randint(0,255), randint(0,255), randint(0,255))
+                            for i in range(0,300 * 300)])</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <p class="calibre28"><br class="calibre29"/></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F11_Orland_UN03.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128110"></a>The result is a fuzzy mess, but that doesn’t matter to us. The unit tests compare each pixel. With an approximate equality test such as the following, <a id="marker-1133175"></a>we <a id="marker-1133176"></a>can run the tests:</p>
+        <pre class="programlisting">def approx_equal_image(i1,i2):
+    return all([isclose(c1,c2)
+        for p1,p2 in zip(i1.pixels,i2.pixels)
+        for c1,c2 in zip(p1,p2)])
+
+for i in range(0,100):
+    a,b = random_scalar(), random_scalar()
+    u,v,w = random_image(), random_image(), random_image()
+    test(ImageVector.zero(), approx_equal_image, a,b,u,v,w)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_18"><a id="pgfId-1128115"></a><a id="id_rd3qbo6xexzk"></a>6.3 Looking for smaller vector spaces</h2>
+
+  <p class="body"><a id="pgfId-1120689"></a>The<a id="marker-1133183"></a> vector space of 300<span class="fm-in-cambria">×</span>300 color images has a whopping 270,000 dimensions, meaning we need to list as many numbers to specify any image of that size. This isn’t a problematic amount of data on its own, but when we have larger images, a large quantity of images, or thousands of images chained together to make a movie, the data can add up.</p>
+
+  <p class="body"><a id="pgfId-1120690"></a>In this section, we look at how to start with a vector space and find smaller ones (having fewer dimensions) that retain most of the interesting data from the original space. With images, we can reduce the number of distinct pixels used in an image or convert it to black and white. The result may not be beautiful, but it can still be recognizable. For instance, the image on the right in figure 6.12 takes 900 numbers to specify, compared to the 270,000 numbers to specify the image on the left.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137450"></a>Figure 6.12 Converting from an image specified by 270,000 numbers (left) to another one specified by 900 numbers (right)</p>
+
+  <p class="body"><a id="pgfId-1120696"></a>Pictures that look like the one on the right live in a 900-dimensional <i class="fm-italics">subspace</i> of a 270,000-dimensional space. That means<a id="marker-1137440"></a> that they are still 270,000-dimensional image vectors, but they can be represented or stored with only 900 coordinates. This is a starting point<a id="marker-1137441"></a> for a study of <i class="fm-italics">compression</i>. We won’t go too deep into the best practices of compression, but we will take a close look at subspaces of vector spaces.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1120700"></a><a id="id_amym32x6lst"></a>6.3.1 Identifying subspaces</h3>
+
+  <p class="body"><a id="pgfId-1120701"></a>A <a id="marker-1133192"></a>vector <i class="fm-italics">subspace</i>, or subspace for short, is just what it sounds like: a vector space that exists inside another vector space. One example we’ve looked at a few times already is the 2D <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane within 3D space as the plane where <i class="fm-in-times-italic">z</i> = 0. To be specific, the subspace consists of vectors of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, 0). These vectors have three components, so they are veritable 3D vectors, but they form a subset that happens to be constrained to lie on a plane. For that reason, we say this is a 2D subspace of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup>.</p>
+
+  <p class="fm-callout"><a id="pgfId-1120702"></a><span class="fm-callout-head">NOTE</span> At the risk of being pedantic, the 2D vector space <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">2</sup>, which consists of the ordered pairs (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>), is not technically a subspace of 3D space <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">3</sup>. That’s because vectors of the form (<i class="fm-in-times-italic1">x</i>, y) are not 3D vectors. However, it has a one-to-one correspondence with the set of vectors (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, 0), and vector arithmetic looks the same whether or not the extra zero <i class="fm-in-times-italic1">z</i>-coordinate is present. For these reasons, I consider it okay to call <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">2</sup> a subspace of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">3</sup>.</p>
+
+  <p class="body"><a id="pgfId-1120703"></a>Not every subset of 3D vectors is a subspace. The plane where <i class="fm-in-times-italic">z</i> = 0 is special because the vectors (x, y, 0) form a self-contained vector space. There’s no way to build a linear combination of vectors in this plane that somehow “escapes” it; the third coordinate always remains zero. In math lingo, the precise way to say that a subspace<a id="marker-1120704"></a> is self-contained is to say it is <i class="fm-italics">closed</i> under linear combinations.</p>
+
+  <p class="body"><a id="pgfId-1120705"></a>To get the feel for what a vector subspace looks like in general, let’s search for subsets of vector spaces that are also subspaces (figure 6.13). What subsets of vectors in the plane can make a standalone vector space? Can we just draw any region in the plane and only take vectors that live within it?</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137500"></a>Figure 6.13 S is a subset of points (vectors) in the plane <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup>. Is S a subspace of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup>?</p>
+
+  <p class="body"><a id="pgfId-1120711"></a>The answer is no: the subset in figure 6.13 contains some vectors that lie on the x-axis and some that live on the y-axis. These can respectively be scaled to give us the standard basis vectors <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0) and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1). From these vectors, we can make linear combinations to get to any point in the plane, not only the ones in <i class="fm-in-times-italic">S</i>(figure 6.14).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137544"></a>Figure 6.14 Linear combinations of two vectors in <i class="fm-in-times-italic">S</i> give us an “escape route” from <i class="fm-in-times-italic">S</i>. It cannot be a subspace of the plane.</p>
+
+  <p class="body"><a id="pgfId-1120717"></a>Instead of drawing a random subspace, let’s mimic the example of the plane in 3D. There is no <i class="fm-in-times-italic">z</i>-coordinate, so let’s instead choose the points where <i class="fm-in-times-italic">y</i> = 0. This leaves us with the points on the x-axis, having the form (<i class="fm-in-times-italic">x</i>, 0). No matter how hard we try, we can’t find a linear combination of vectors of this form that have a non-zero <i class="fm-in-times-italic">y</i>-coordinate (figure 6.15).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137588"></a>Figure 6.15 Focusing on the line where y = 0. This is a vector space, containing all linear combinations of its points.</p>
+
+  <p class="body"><a id="pgfId-1120725"></a>This line, <i class="fm-in-times-italic">y</i> = 0, is a vector subspace of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup>. As we originally found a 2D subspace of 3D, we also have found a 1D subspace of 2D. Instead of a 3D <i class="fm-italics">space</i> or a 2D <i class="fm-italics">plane</i>, a 1D vector space like this is called a <i class="fm-italics">line</i>. In fact, we can identify this subspace as the real number line <span class="fm-in-cambria">ℝ</span>.</p>
+
+  <p class="body"><a id="pgfId-1120726"></a>The next step could be to set <i class="fm-in-times-italic">x</i> = 0 as well. Once we’ve set both <i class="fm-in-times-italic">x</i> = 0 and <i class="fm-in-times-italic">y</i> = 0 to zero, there’s only one point remaining: the zero vector. This is a vector subspace as well! No matter how you take linear combinations of the zero vector, the result is<a id="marker-1120727"></a> the zero vector. This is a <i class="fm-italics">zero-dimensional subspace</i> of the 1D line, the 2D plane, and the 3D space. Geometrically, a zero-dimensional subspace is a point, and that point has to be zero. If it were some other point, <i class="fm-in-times-italic">v</i> for instance, it would also contain 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">v</i> = 0 and an infinity of other different scalar multiples like 3 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">v</i> and <span class="fm-in-cambria">−</span>42 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">v</i>. Let’s run <a id="marker-1133207"></a>with this idea.</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1120729"></a><a id="id_m077ml8mp0a1"></a>6.3.2 Starting with a single vector</h3>
+
+  <p class="body"><a id="pgfId-1120730"></a>A <a id="marker-1133217"></a>vector subspace containing a non-zero vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> contains (at least) all of the scalar multiples of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Geometrically, the set of all scalar multiples of a non-zero vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> lie on a line through the origin as shown in figure 6.16.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1120735"></a>Figure 6.16 Two different vectors with dotted lines, showing where all of their scalar multiples will lie.</p>
+
+  <p class="body"><a id="pgfId-1120736"></a>Each of these lines through the origin is a vector space. There’s no way to escape any line like this by adding or scaling vectors that lie in it. This is true of lines through the origin in 3D as well: they are all of the linear combinations of a single 3D vector, and they form a vector space. This is the first example of a general way of building subspaces: picking a vector and seeing all of the linear combinations<a id="marker-1133227"></a> that must come with it.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1120738"></a><a id="id_8s2z9lbcuif5"></a>6.3.3 Spanning a bigger space</h3>
+
+  <p class="body"><a id="pgfId-1120739"></a>Given a set <a id="marker-1133237"></a>of one <a id="marker-1133242"></a>or more vectors, their <i class="fm-italics">span</i> is defined as the set of all linear combinations. The important part of the span is that it’s automatically a vector subspace. To rephrase what we just discovered, the span of a single vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a line through the origin. We denote a set of objects by including them in curly braces, so the set containing only <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is {<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>}, and the span of this set could be written span({<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>}).</p>
+
+  <p class="body"><a id="pgfId-1120740"></a>As soon as we include another vector <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, which is not parallel to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, the space gets bigger because we are no longer constrained to a single linear direction. The span of the set of two vectors {<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>} includes two lines, span({<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>}) and span({<i class="fm-in-times-italic"><b class="fm-bold">w</b></i>}), as well as linear combinations including both <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, which lie on neither line (figure 6.17).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137681"></a>Figure 6.17 The span of two non-parallel vectors. Each individual vector spans a line, but together they span more points, for instance, <i class="fm-in-times-italic">v</i> + <i class="fm-in-times-italic">w</i> lies on neither line.</p>
+
+  <p class="body"><a id="pgfId-1120746"></a>It might not be obvious, but the span of these two vectors is the entire plane. This is true of any pair of non-parallel vectors in the plane, but most strikingly for the standard basis vectors. Any point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) can be reached as the linear combination <i class="fm-in-times-italic">x</i> <span class="fm-in-cambria">·</span> (1, 0) + <i class="fm-in-times-italic">y</i> <span class="fm-in-cambria">·</span> (0, 1). The same is true for other pairs of non-parallel vectors like <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (1, 0) and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = (1, 1), but there’s a bit more arithmetic to see it.</p>
+
+  <p class="body"><a id="pgfId-1120747"></a>You can get any point like (4, 3) by taking the right linear combination of (1, 0) and (1, 1). The only way to get the <i class="fm-in-times-italic">y</i>-coordinate of 3 is to have three of the vector (1, 1). That’s (3, 3) instead of (4, 3), so you can correct the <i class="fm-in-times-italic">x</i>-coordinate by adding one unit of (1, 0). That gets us a linear combination 3 <span class="fm-in-cambria">·</span> (1, 1) + 1 <span class="fm-in-cambria">·</span> (1, 0), which takes us to the point (4, 3) as shown in figure 6.18.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F18_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137725"></a>Figure 6.18 Getting to an arbitrary point (4, 3) by a linear combination of (1, 0) and (1, 1)</p>
+
+  <p class="body"><a id="pgfId-1120753"></a>A single non-zero vector spans a line in 2D or 3D, and it turns out, two non-parallel vectors can span either the whole 2D plane or a plane passing through the origin in 3D space. A plane spanned by two 3D vectors could look like that shown in figure 6.19.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F19_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137769"></a>Figure 6.19 A plane spanned by two 3D vectors</p>
+
+  <p class="body"><a id="pgfId-1120759"></a>It’s slanted, so it doesn’t look like the plane where <i class="fm-in-times-italic">z</i> = 0, and it doesn’t contain any of the three standard basis vectors. But it’s still a plane and a vector subspace of 3D space. One vector spans a 1D space, and two non-parallel vectors span a 2D space. If we add a third non-parallel vector to the mix, do the three vectors span a 3D space? Figure 6.20 shows that clearly the answer is no.</p>
+
+  <p class="body"><a id="pgfId-1120765"></a></p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F20_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137820"></a>Figure 6.20 Three non-parallel vectors that only span a 2D space</p>
+
+  <p class="body"><a id="pgfId-1137814"></a> No pair of the vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> is parallel, but these vectors don’t span a 3D space. They all live in the 2D plane, so no linear combination of them can</p>
+
+  <p class="body"><a id="pgfId-1128903"></a>magically obtain a <i class="fm-in-times-italic">z</i>-coordinate. We need a better generalization of the concept of “non-parallel” vectors.</p>
+
+  <p class="body"><a id="pgfId-1120766"></a> If we want to add a vector to a set and span a higher dimensional space, the new vector needs to point in a new direction that isn’t included in the span of the existing ones. In the plane, three vectors always have some redundancy. For instance, as shown in figure 6.21, a linear combination of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> gives us <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F21_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137864"></a>Figure 6.21 A linear combination of <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">w</i> returns <i class="fm-in-times-italic">v</i>, so the span of <i class="fm-in-times-italic">u</i>, <i class="fm-in-times-italic">v</i>, and <i class="fm-in-times-italic">w</i> should be no bigger than the span of <i class="fm-in-times-italic">z</i> and w.</p>
+
+  <p class="body"><a id="pgfId-1120773"></a> The right generalization<a id="marker-1120772"></a> of “non-parallel” is <i class="fm-italics">linearly independent</i>. A collection of vectors is <i class="fm-italics">linearly dependent</i> if any of its<a id="marker-1120774"></a> members can be obtained as a linear combination of the others. Two parallel vectors are linearly dependent because they are scalar multiples of each other. Likewise, the set of three vectors {<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>} is linearly dependent because we can make <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> out of a linear combination of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>(or <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> out of a linear combination of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and so on). You should make sure to get a feel for this concept yourself. As one of the exercises at the end of this section, you can check that any of the three vectors (1, 0), (1, 1) and (−1, 1) can be written as a linear combination of the other two.</p>
+
+  <p class="body"><a id="pgfId-1120776"></a>By contrast, the set {<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>} is <i class="fm-italics">linearly independent</i> because the<a id="marker-1120775"></a> components are non-parallel and cannot be scalar multiples of one another. This means that <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> span a bigger space than either on its own. Similarly, the standard basis {<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> } for <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup> is a linearly independent set. None of these vectors can be built as a linear combination of the other two, and all three are required to span 3D space. We’re starting to get at the properties of a vector space or subspace that<a id="marker-1133252"></a> indicate its dimension.<a id="marker-1133959"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1120778"></a><a id="id_fdf06cessgk5"></a>6.3.4 Defining the word dimension</h3>
+
+  <p class="body"><a id="pgfId-1120779"></a>Here’s a motivational <a id="marker-1133267"></a>question: is the following set of 3D vectors linearly independent?</p>
+
+  <p class="fm-equation"><a id="pgfId-1120780"></a>{(1, 1, 1), (2, 0, <span class="fm-in-cambria">−</span>3), (0, 0, 1), (−1, −2, 0)}</p>
+
+  <p class="body"><a id="pgfId-1120781"></a>To answer this, you could draw these vectors in 3D or attempt to find a linear combination of three of them to get the fourth. But there’s an easier answer: only three vectors are needed to span all of 3D space, so any list of four 3D vectors has to have some redundancy.</p>
+
+  <p class="body"><a id="pgfId-1120782"></a>We know that a set with one or two 3D vectors will span a line or plane, respectively, rather than all of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup>. Three is the magic number of vectors that can both span a 3D space and still be linearly independent. That’s really <i class="fm-italics">why</i> we call it three-dimensional: there are three independent directions after all.</p>
+
+  <p class="body"><a id="pgfId-1120783"></a>A linearly independent set of vectors that spans a whole vector space like {<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> } for <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup> is called a <i class="fm-italics">basis</i>. Any basis for a space has the same number of vectors, and that number is its <i class="fm-italics">dimension</i>. For instance, we saw (1, 0) and (1, 1) are linearly independent<a id="marker-1120784"></a> and span the whole plane, so they are a basis for the vector space <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup>. Likewise (1, 0, 0) and (0, 1, 0) are linearly independent and span the plane where <i class="fm-in-times-italic">z</i> = 0 in <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup>. That makes them a basis for this 2D subspace, albeit not a basis for all of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup>.</p>
+
+  <p class="body"><a id="pgfId-1120786"></a>I have already used<a id="marker-1120785"></a> the word <i class="fm-italics">basis</i> in the context of the “standard basis” for <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup> and for <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">3</sup>. These are called “standard” because they are such natural choices. It takes no computation to decompose a coordinate vector in the standard basis; the coordinates <i class="fm-italics">are</i> the scalars in this decomposition. For instance, (3, 2) means the linear combination 3 <span class="fm-in-cambria">·</span> (1, 0) + 2 <span class="fm-in-cambria">·</span> (0, 1) or 3<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>.</p>
+
+  <p class="body"><a id="pgfId-1120787"></a>In general, deciding whether vectors are linearly independent requires some work. Even if you know that a vector is a linear combination of some other vectors, finding that linear combination requires doing some algebra. In the next chapter, we cover how to do that; it ends up being a ubiquitous computational problem in linear algebra. But before that let’s get in some more practice identifying <a id="marker-1133282"></a>subspaces and measuring their dimensions.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1120789"></a><a id="id_udga0yw5wbhu"></a>6.3.5 Finding subspaces of the vector space of functions</h3>
+
+  <p class="body"><a id="pgfId-1120790"></a>Mathematical functions<a id="marker-1133297"></a> from <span class="fm-in-cambria">ℝ</span> to <span class="fm-in-cambria">ℝ</span> contain an infinite amount of data, namely the output value when they are given any of infinitely many real numbers as inputs. That doesn’t mean that it takes infinite data to describe a function though. For instance, a linear function requires only two real numbers. They are the values of <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> in this general formula that you’ve probably seen:</p>
+
+  <p class="fm-equation"><a id="pgfId-1120791"></a><i class="fm-in-times-italic2">f</i>(<i class="fm-in-times-italic2">x</i>) = <i class="fm-in-times-italic2">ax</i> + <i class="fm-in-times-italic2">b</i></p>
+
+  <p class="body"><a id="pgfId-1120792"></a>where <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> can be any real number. This is much more tractable than the infinite-dimensional space of all functions. Any linear function can be specified by two real numbers, so it looks like the subspace of linear functions will be 2D.</p>
+
+  <p class="fm-callout"><a id="pgfId-1120793"></a><span class="fm-callout-head">CAUTION</span> I’ve used the word <i class="fm-italics">linear</i> in a lot of new contexts in the last few chapters. Here, I’m returning to a meaning you used in high school algebra: a <i class="fm-italics">linear function</i> is a function<a id="marker-1120794"></a> whose graph is a straight line. Unfortunately, functions of this form are not linear in the sense we spent all of chapter 4 discussing, and you can prove it yourself in an exercise. Because of this, I’ll try to be clear as to which sense of the word <i class="fm-italics">linear</i> I’m using at any point.</p>
+
+  <p class="body"><a id="pgfId-1120796"></a>We can quickly implement<a id="marker-1120795"></a> a <code class="fm-code-in-text">LinearFunction</code> class inheriting from <code class="fm-code-in-text">Vector</code>. Instead of holding<a id="marker-1120797"></a> a function as its underlying data, it can hold two numbers for the coefficients <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i>. We can add these functions by adding coefficients because</p>
+
+  <p class="fm-equation"><a id="pgfId-1120798"></a>(<i class="fm-in-times-italic2">ax</i> + <i class="fm-in-times-italic2">b</i>) + (<i class="fm-in-times-italic2">cx</i> + <i class="fm-in-times-italic2">d</i>) = (<i class="fm-in-times-italic2">ax</i> + <i class="fm-in-times-italic2">cx</i>) + (<i class="fm-in-times-italic2">b</i> + <i class="fm-in-times-italic2">d</i>) = (<i class="fm-in-times-italic2">a</i> + <i class="fm-in-times-italic2">c</i>)<i class="fm-in-times-italic2">x</i> + (<i class="fm-in-times-italic2">b</i> + <i class="fm-in-times-italic2">d</i>)</p>
+
+  <p class="body"><a id="pgfId-1120799"></a>And we can scale the function by multiplying both coefficients by the scalar: <i class="fm-in-times-italic">r</i>(<i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>) = <i class="fm-in-times-italic">rax</i> + <i class="fm-in-times-italic">rb</i>. Finally, it turns out the zero function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = 0 is linear. It’s the case where <i class="fm-in-times-italic">a</i> = <i class="fm-in-times-italic">b</i> = 0. Here’s the implementation:</p>
+  <pre class="programlisting">class LinearFunction(Vector):
+    def __init__(self,a,b):
+        self.a = a
+        self.b = b
+    def add(self,v):
+        return LinearFunction(self.a + v.a, self.b + v.b)
+    def scale(self,scalar):
+        return LinearFunction(scalar * self.a, scalar * self.b)
+    def __call__(self,x):
+        return self.a * <i class="fm-in-times-italic1">x</i> + self.b
+    @classmethod
+    def zero(cls):
+        return LinearFunction(0,0,0)</pre>
+
+  <p class="body"><a id="pgfId-1120801"></a>As figure 6.22 shows, the result is a linear function <code class="fm-code-in-text">plot([LinearFunction (−2,2)],<span class="fm-in-cambria1">−</span>5,5)</code> gives us the straight line graph of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = −2<i class="fm-in-times-italic">x</i> + 2.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F22_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137920"></a>Figure 6.22 The graph of <code class="fm-code-in-text">LinearFunction(−2,2)</code> representing <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = −2<i class="fm-in-times-italic">x</i> + 2</p>
+
+  <p class="body"><a id="pgfId-1120807"></a>We can prove to ourselves that linear functions form a vector subspace of dimension 2 by writing a basis. The basis vectors should both be functions, they should span the whole space of linear functions, and they should be linearly independent (not multiples of one another). Such a set is {<i class="fm-in-times-italic">x</i>, 1} or, more specifically, {<i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = 1}. Named this way, functions of the form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i> can be written as a linear combination <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">f</i> + <i class="fm-in-times-italic">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">g</i>.</p>
+
+  <p class="body"><a id="pgfId-1131128"></a>This is as close as we can get to a standard basis for linear functions; <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = 1 are clearly different functions, not scalar multiples of one another. By contrast, <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) = 4<i class="fm-in-times-italic">x</i> <i class="fm-italics">are</i> scalar multiples of one another and would not be a linearly independent pair. But {<i class="fm-in-times-italic">x</i>, 1} is not the only basis we could have chosen; {4 <i class="fm-in-times-italic">x</i> + 1, <i class="fm-in-times-italic">x</i> − 3} is also a basis.</p>
+
+  <p class="body"><a id="pgfId-1131130"></a>The same concept<a id="marker-1131129"></a> applies to <i class="fm-italics">quadratic functions</i> having the form <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">bx</i> + <i class="fm-in-times-italic">c</i>. These form a 3D subspace of the vector space of functions with one choice of basis being {<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, <i class="fm-in-times-italic">x</i>, 1}. Linear functions form a vector subspace of the space of quadratic functions where the <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> component is zero. Linear functions and quadratic functions are examples of <i class="fm-italics">polynomial functions</i>, which are linear combinations of powers of <i class="fm-in-times-italic">x</i> ; for example,</p>
+
+  <p class="fm-equation"><a id="pgfId-1120811"></a><i class="fm-in-times-italic2">f</i>(<i class="fm-in-times-italic2">x</i>) = <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">0</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> <i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup> + ... + <i class="fm-in-times-italic2">a<sub class="fm-subscript">n</sub></i> <i class="fm-in-times-italic2">x<sup class="fm-superscript">n</sup></i></p>
+
+  <p class="body"><a id="pgfId-1120812"></a>Linear and quadratic functions have <i class="fm-italics">degree</i> 1 and 2, respectively, because those are the highest powers of <i class="fm-in-times-italic">x</i> that appear in each. The polynomial written in the previous equation has degree <i class="fm-in-times-italic">n</i> and <i class="fm-in-times-italic">n</i> + 1 coefficients in total. In the exercises, you’ll see that the space of polynomials of <i class="fm-italics">any</i> degree forms another vector <a id="marker-1133307"></a>subspace of the space of functions.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1120814"></a><a id="id_bymua0ybc8m"></a>6.3.6 Subspaces of images</h3>
+
+  <p class="body"><a id="pgfId-1120815"></a>Because our <code class="fm-code-in-text">ImageVector</code> objects <a id="marker-1133317"></a>are <a id="marker-1133322"></a>represented by 270,000 numbers, we could follow the standard basis formula and construct a basis of 270,000 images, each with one of the 270,000 numbers equal to 1 and all others equal to 0. The listing shows what the first basis vector would look like.</p>
+
+  <p class="fm-code-listing-caption"><a id="pgfId-1129264"></a>Listing 6.4 Pseudocode that builds a first standard basis vector</p>
+  <pre class="programlisting">ImageVector([
+    (1,0,0), (0,0,0), (0,0,0), ..., (0,0,0),  <span class="fm-combinumeral">❶</span>
+    (0,0,0), (0,0,0), (0,0,0), ..., (0,0,0),  <span class="fm-combinumeral">❷</span>
+    ...                                       <span class="fm-combinumeral">❸</span>
+])</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1120821"></a><span class="fm-combinumeral">❶</span> Only the first pixel in the first row is non-zero: it has a red value of 1. All the other pixels have a value of (0,0,0).</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1129382"></a><span class="fm-combinumeral">❷</span> The second row consists of 300 black pixels, each with a value (0,0,0).</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1136269"></a><span class="fm-combinumeral">❸</span> I skipped the next 298 rows, but they are all identical to row 2; no pixels have any color values.</p>
+
+  <p class="body"><a id="pgfId-1129385"></a>This single vector spans a 1D subspace consisting of the images that are black except for a single, red pixel in the top left corner. Scalar multiples of this image could have brighter or dimmer red pixels at this location, but no other pixels can be illuminated. In order to show more pixels, we need more basis vectors.</p>
+
+  <p class="body"><a id="pgfId-1120822"></a>There’s not too much to be learned from writing out these 270,000 basis vectors. Let’s instead look for a small set of vectors that span an interesting subspace. Here’s a single <code class="fm-code-in-text">ImageVector</code> consisting of dark gray pixels at every position:</p>
+  <pre class="programlisting">gray = ImageVector([
+    (1,1,1), (1,1,1), (1,1,1), ..., (1,1,1),
+    (1,1,1), (1,1,1), (1,1,1), ..., (1,1,1),
+    ...
+])</pre>
+
+  <p class="body"><a id="pgfId-1120824"></a>More concisely, we could write this instead:</p>
+  <pre class="programlisting">gray = ImageVector([(1,1,1) for _ in range(0,300*300)])</pre>
+
+  <p class="body"><a id="pgfId-1120826"></a>One way to picture the subspace spanned by the single vector gray is to look at some vectors that belong to it. Figure 6.23 shows scalar multiples of gray.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F23_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1120831"></a>Figure 6.23 Some of the vectors in the 1D subspace of images spanned by the gray instance of <code class="fm-code-in-text">ImageVector</code>.</p>
+
+  <p class="body"><a id="pgfId-1120832"></a>This collection of images is “one-dimensional” in the colloquial sense. There’s only one thing changing about them, their brightness.</p>
+
+  <p class="body"><a id="pgfId-1120833"></a>Another way we can look at this subspace is by thinking about the pixel values. In this subspace, any image has the same value at each pixel. For any given pixel, there is a 3D space of color possibilities measured by red, green, and blue coordinates. Gray pixels form a 1D subspace of this, containing points with all coordinates <i class="fm-in-times-italic">s</i> <span class="fm-in-cambria">·</span> (1, 1, 1) for some scalar <i class="fm-in-times-italic">s</i>(figure 6.24).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F24_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137982"></a>Figure 6.24 Gray pixels of varying brightness on a line. The gray pixels form a 1D subspace of the 3D vector space of pixel values.</p>
+
+  <p class="body"><a id="pgfId-1120839"></a>Each of the images in the basis would be black, except for one pixel that would be a very dim red, green, or blue. Changing one pixel at a time doesn’t yield striking results, so let’s look for smaller and more interesting subspaces.</p>
+
+  <p class="body"><a id="pgfId-1120840"></a>There are many subspaces of images you can explore. You could look at solid color images of any color. These would be images of the form:</p>
+  <pre class="programlisting">ImageVector([
+    (r,g,b), (r,g,b), (r,g,b), ..., (r,g,b),
+    (r,g,b), (r,g,b), (r,g,b), ..., (r,g,b),
+    ...
+])</pre>
+
+  <p class="body"><a id="pgfId-1120842"></a>There are no constraints on the pixels themselves; the only constraint on a solid color image is that every pixel is the same. As a final example, you could consider a subspace consisting of low resolution, grayscale images like that shown in figure 6.25.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F25_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1138026"></a>Figure 6.25 A low resolution grayscale image. Each 10<span class="fm-in-cambria">×</span>10 block of pixels has the same value.</p>
+
+  <p class="body"><a id="pgfId-1120848"></a>Each 10<span class="fm-in-cambria">×</span>10 pixel block has a constant gray value across its pixels, making it look like a 30<span class="fm-in-cambria">×</span>30 grid. There are only 30 <span class="fm-in-cambria">·</span> 30 = 900 numbers defining this image, so images like this one define a 900-dimensional subspace of the 270,000 dimensional space of images. It’s a lot less data, but it’s still possible to create recognizable images.</p>
+
+  <p class="body"><a id="pgfId-1120849"></a>One way to make an image in this subspace is to start with any image and average all red, green, and blue values in each 10<span class="fm-in-cambria">×</span>10 pixel block. This average gives you the brightness <i class="fm-in-times-italic">b</i>, and you can set all pixels in the block to (<i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">b</i>) to build your new image. This turns out to be a linear map (figure 6.26), and you can implement it later as a mini-project.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F26_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1138070"></a>Figure 6.26 A linear map takes any image (left) and returns a new one (right) that lies in a 900-dimensional subspace.</p>
+
+  <p class="body"><a id="pgfId-1120855"></a>My dog, Melba, isn’t as photogenic in the second picture, but the picture is still recognizable. This is the example I mentioned at the beginning of the section, and the remarkable thing is that you can tell it’s the same picture with only 0.3% of the data. There’s clearly room for improvement, but the approach of mapping to a subspace is a starting point for more fruitful exploration. In chapter 13, we’ll see how<a id="marker-1133332"></a> to <a id="marker-1133337"></a>compress audio data in this way.</p>
+
+  <h3 class="fm-head1" id="heading_id_25"><a id="pgfId-1120857"></a><a id="id_twh9xqu3hxcp"></a>6.3.7 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1129543"></a><b class="fm-exercise-head">Exercise 6.22</b>: <a id="marker-1133347"></a>Give a geometric argument for why the following region <i class="fm-in-times-italic1">S</i> of the plane can’t be a vector subspace of the plane.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F26_Orland_UN04.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1129547"></a><b class="fm-exercise-head">Solution</b>: There are many linear combinations of points in this region that don’t end up in the region. More obviously, this region cannot be a vector space because it doesn’t include the zero vector. The zero vector is a scalar multiple of any vector (by the scalar zero), so it must be included in any vector space or subspace.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130020"></a><b class="fm-exercise-head">Exercise 6.23</b>: Show that the region of the plane where <i class="fm-in-times-italic1">x</i> = 0 forms a 1D vector space.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130021"></a><b class="fm-exercise-head">Solution</b>: These are the vectors that lie on the y-axis and have the form (0, <i class="fm-in-times-italic1">y</i>) for a real number <i class="fm-in-times-italic1">y</i>. Addition and scalar multiplication of vectors of the form (0, <i class="fm-in-times-italic1">y</i>) is the same as for real numbers; there just happens to be an extra 0 along for the ride. We can conclude that this is <span class="fm-in-cambria">ℝ</span> in disguise and, therefore, a 1D vector space. If you want to be more rigorous, you can check all of the vector space properties explicitly.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130044"></a><b class="fm-exercise-head">Exercise 6.24</b>: Show that three vectors (1, 0), (1, 1), and (−1, 1) are linearly dependent by writing each one as a linear combination of the other two.</p>
+
+        <p class="fm-equation"><a id="pgfId-1130045"></a><b class="fm-exercise-head1">Solution</b>:</p>
+
+        <p class="fm-equation"><a id="pgfId-1130046"></a>(1, 0) = <span class="fm-in-cambria">½</span> <span class="fm-in-cambria">·</span> (1, 1) − <span class="fm-in-cambria">½</span> <span class="fm-in-cambria">·</span> (−1, 1)</p>
+
+        <p class="fm-equation"><a id="pgfId-1130047"></a>(1, 1) = 2 <span class="fm-in-cambria">·</span> (1, 0) + (−1, 1)</p>
+
+        <p class="fm-equation"><a id="pgfId-1130048"></a>(−1, 1) = (1, 1) − 2 <span class="fm-in-cambria">·</span> (1, 0)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130077"></a><b class="fm-exercise-head">Exercise 6.25</b>: Show that you can get any vector (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) as a linear combination of (1, 0) and (1, 1).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130078"></a><b class="fm-exercise-head">Solution</b>: We know that (1, 0) can’t contribute to the <i class="fm-in-times-italic1">y</i>-coordinate, so we need <i class="fm-in-times-italic1">y</i> times (1, 1) as part of the linear combination. To make the algebra work, we need (<i class="fm-in-times-italic1">x</i> − <i class="fm-in-times-italic1">y</i>) units of (1, 0):</p>
+
+        <p class="fm-equation"><a id="pgfId-1130079"></a>(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>) = (<i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">y</i>) <span class="fm-in-cambria">·</span> (1, 0) + <i class="fm-in-times-italic2">y</i>(1, 1)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130104"></a><b class="fm-exercise-head">Exercise 6.26</b>: Given a single vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, explain why the set of all linear combinations of <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is the same as the set of all scalar multiples of <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130105"></a><b class="fm-exercise-head">Solution</b>: Linear combinations of a vector and itself reduce to scalar multiples according to one of the vector space laws. For instance, the linear combination <i class="fm-in-times-italic1">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic1">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is equal to (<i class="fm-in-times-italic1">a</i> + <i class="fm-in-times-italic1">b</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130131"></a><b class="fm-exercise-head">Exercise 6.27</b>: From a geometric perspective, explain why a line that <i class="fm-italics">doesn’t</i> pass through the origin is not a vector subspace (of the plane or of the 3D space).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130132"></a><b class="fm-exercise-head">Solution</b>: One simple reason this cannot be a subspace is that it doesn’t contain the origin (the zero vector). Another reason is that such a line will have two non-parallel vectors. Their span would be the whole plane, which is much bigger than the line.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130158"></a><b class="fm-exercise-head">Exercise 6.28</b>: Any two of {<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub> } will fail to span all of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript1">3</sup> and will instead span 2D subspaces of a 3D space. What are these subspaces?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130159"></a><b class="fm-exercise-head">Solution</b>: The span of the set {<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub> } consists of all linear combinations <i class="fm-in-times-italic1">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>, or <i class="fm-in-times-italic1">a</i> <span class="fm-in-cambria">·</span> (1, 0, 0) + <i class="fm-in-times-italic1">b</i> <span class="fm-in-cambria">·</span> (0, 1, 0) = (<i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, 0). Depending on the choice of <i class="fm-in-times-italic1">a</i> and <i class="fm-in-times-italic1">b</i>, this can be any point in the plane where <i class="fm-in-times-italic1">z</i> = 0, often called the <i class="fm-in-times-italic1">x</i>,<i class="fm-in-times-italic1">y</i> plane. By the same argument, the vectors {<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub> } span the plane where <i class="fm-in-times-italic1">x</i> = 0, called the <i class="fm-in-times-italic1">y</i>,<i class="fm-in-times-italic1">z</i> plane, and the vectors {<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub> } span the plane where <i class="fm-in-times-italic1">y</i> = 0, called the <i class="fm-in-times-italic1">x</i>,<i class="fm-in-times-italic1">z</i> plane.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130182"></a><b class="fm-exercise-head">Exercise 6.29</b>: Write the vector (−5, 4) as a linear combination of (0, 3) and (−2, 1).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130183"></a><b class="fm-exercise-head">Solution</b>: Only (−2, 1) can contribute to the <i class="fm-in-times-italic1">x</i>-coordinate, so we need to have 2.5 <span class="fm-in-cambria">·</span> (−2, 1) in the sum. That gets us to (−5, 2.5), so we need an additional 1.5 units on the <i class="fm-in-times-italic1">x</i>-coordinate or 0.5 <span class="fm-in-cambria">·</span> (0, 3). The linear combination is</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130184"></a>(−5, 4) = 0.5 <span class="fm-in-cambria">·</span> (0, 3) + 2.5 <span class="fm-in-cambria">·</span> (−2, 1)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130207"></a><b class="fm-exercise-head">Exercise 6.30−Mini Project</b>: Are (1, 2, 0), (5, 0, 5), and (2, <span class="fm-in-cambria">−</span>6, 5) linearly independent or linearly dependent vectors?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130208"></a><b class="fm-exercise-head">Solution</b>: It’s not easy to find, but there is a linear combination of the first two vectors that yields the third:</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130209"></a><span class="fm-in-cambria">−</span>3 <span class="fm-in-cambria">·</span> (1, 2, 0) + (5, 0, 5) = (2, <span class="fm-in-cambria">−</span>6, 5)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130210"></a>This means<a id="marker-1133367"></a> that <a id="marker-1133372"></a>the third vector is redundant, and the vectors <i class="fm-italics">are</i> linearly dependent. They only span a 2D subspace of 3D rather than all of 3D space.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130241"></a><b class="fm-exercise-head">Exercise 6.31</b>: Explain why the linear function <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">b</i> is not a linear map from the vector space <span class="fm-in-cambria">ℝ</span> to itself unless <i class="fm-in-times-italic1">b</i> = 0.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130242"></a><b class="fm-exercise-head">Solution</b>: We can turn directly to the definition: a linear map must preserve linear combinations. We see that <i class="fm-in-times-italic1">f</i> doesn’t preserve linear combinations of real numbers. For instance, <i class="fm-in-times-italic1">f</i>(1+1) = 2<i class="fm-in-times-italic1">a</i> + <i class="fm-in-times-italic1">b</i> while <i class="fm-in-times-italic1">f</i>(1) + <i class="fm-in-times-italic1">f</i>(1) = (<i class="fm-in-times-italic1">a</i> + <i class="fm-in-times-italic1">b</i>) + (<i class="fm-in-times-italic1">a</i> + <i class="fm-in-times-italic1">b</i>) = 2<i class="fm-in-times-italic1">a</i> + 2<i class="fm-in-times-italic1">b</i>. This won’t hold unless <i class="fm-in-times-italic1">b</i> = 0.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130243"></a>As an alternative explanation, we know that linear functions <span class="fm-in-cambria">ℝ</span>: <span class="fm-in-cambria">→</span> <span class="fm-in-cambria">ℝ</span> should be representable as 1-by−1 matrices. Matrix multiplication of a 1D column vector [<i class="fm-in-times-italic1">x</i> ] by a 1-by−1 matrix [ <i class="fm-in-times-italic1">a</i> ] gives you [ <i class="fm-in-times-italic1">ax</i> ]. This is an unusual case of matrix multiplication, but your implementation from chapter 5 confirms this result. If a function <span class="fm-in-cambria">ℝ</span>: <span class="fm-in-cambria">→</span> <span class="fm-in-cambria">ℝ</span> is going to be linear, it must agree with 1-by−1 matrix multiplication and, therefore, be multiplication by a scalar.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130267"></a><b class="fm-exercise-head">Exercise 6.32</b>: Rebuild the <code class="fm-code-in-text1">LinearFunction</code> class by inheriting<a id="marker-1130266"></a> from <code class="fm-code-in-text1">Vec2</code> and implementing the <code class="fm-code-in-text1">__call__</code> method.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130269"></a><b class="fm-exercise-head">Solution</b>: The data of a <code class="fm-code-in-text1">Vec2</code> are called <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">y</i> instead of <i class="fm-in-times-italic1">a</i> and <i class="fm-in-times-italic1">b</i> ; otherwise, the functionality<a id="marker-1130268"></a> is the same. All you need<a id="marker-1130270"></a> to do is implement <code class="fm-code-in-text1">__call__</code> :</p>
+        <pre class="programlisting">class LinearFunction(Vec2):
+    def __call__(self,input):
+        return self.x * input + self.y</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1132285"></a><b class="fm-exercise-head">Exercise 6.33</b>: Prove (algebraically!) that the linear functions of the form <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">b</i> make up a vector subspace of the vector space of all functions.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130301"></a><b class="fm-exercise-head">Solution</b>: To prove this, you need to be sure a linear combination of two linear functions is another linear function. If <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">b</i> and <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">cx</i> + <i class="fm-in-times-italic1">d</i>, then <i class="fm-in-times-italic1">r</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">f</i> + <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">g</i> returns</p>
+
+        <p class="fm-equation"><a id="pgfId-1130302"></a><i class="fm-in-times-italic2">r</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">f</i> + <i class="fm-in-times-italic2">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">g</i> = <i class="fm-in-times-italic2">r</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">ax</i> + <i class="fm-in-times-italic2">b</i>) + <i class="fm-in-times-italic2">s</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">cx</i> + <i class="fm-in-times-italic2">d</i>) = <i class="fm-in-times-italic2">rax</i> + <i class="fm-in-times-italic2">b</i> + <i class="fm-italics">scx</i> + <i class="fm-in-times-italic2">d</i> = (<i class="fm-in-times-italic2">ra</i> + <i class="fm-in-times-italic2">sc</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> + (<i class="fm-in-times-italic2">b</i> + <i class="fm-in-times-italic2">d</i>)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130303"></a>Because (<i class="fm-in-times-italic1">ra</i> + <i class="fm-in-times-italic1">sc</i>) and (<i class="fm-in-times-italic1">b</i> + <i class="fm-in-times-italic1">d</i>) are scalars, this has the form we want. We can conclude that linear functions are closed under linear combinations and, therefore, that they form a subspace.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130329"></a><b class="fm-exercise-head">Exercise 6.34</b>: Find a basis for the set of 3-by<span class="fm-in-cambria">−</span>3 matrices. What is the dimension of this vector space?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130333"></a><b class="fm-exercise-head">Solution</b>: Here’s a basis consisting of nine, 3-by<span class="fm-in-cambria">−</span>3 matrices:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH06_F26_Orland_UN04_EQ01.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130334"></a>They are linearly independent; each contributes a unique entry to any linear combination. They also span the space because any matrix can be constructed as a linear combination of these; the coefficient on any particular matrix decides one entry of the result. Because these nine vectors provide a basis for the space of 3-by<span class="fm-in-cambria">−</span>3 matrices, the space has nine dimensions.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130357"></a><b class="fm-exercise-head">Exercise 6.35−Mini Project</b>: Implement a class <code class="fm-code-in-text1">QuadraticFunction(Vector)</code> that represents<a id="marker-1130358"></a> the vector subspace of functions of the form <i class="fm-in-times-italic1">ax</i><sup class="fm-superscript1">2</sup> + <i class="fm-in-times-italic1">bx</i> + <i class="fm-in-times-italic1">c</i>. What is a basis for this subspace?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130360"></a><b class="fm-exercise-head">Solution</b>: The implementation<a id="marker-1130359"></a> looks a lot like <code class="fm-code-in-text1">LinearFunction</code>, except there are three coefficients instead of two, and the <code class="fm-code-in-text1">__call__</code> function has a square term:</p>
+        <pre class="programlisting">class QuadraticFunction(Vector):
+    def __init__(self,a,b,c):
+        self.a = a
+        self.b = b
+        self.<i class="fm-in-times-italic1">c</i> = c
+    def add(self,v):
+        return QuadraticFunction(self.a + v.a, 
+                                 self.b + v.b, 
+                                 self.c + v.c)
+    def scale(self,scalar):
+        return QuadraticFunction(scalar * self.a, 
+                                 scalar * self.b, 
+                                 scalar * self.c)
+    def __call__(self,x):
+        return self.a * <i class="fm-in-times-italic1">x</i> * <i class="fm-in-times-italic1">x</i> + self.b * <i class="fm-in-times-italic1">x</i> + self.c
+    @classmethod
+    def zero(cls):
+        return QuadraticFunction(0,0,0)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130412"></a>We can take note that <i class="fm-in-times-italic1">ax</i><sup class="fm-superscript1">2</sup> + <i class="fm-in-times-italic1">bx</i> + <i class="fm-in-times-italic1">c</i> looks like a linear combination of the set {<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>, <i class="fm-in-times-italic1">x</i>, 1}. Indeed, these three functions span the space, and none of these three can be written as a linear combination of the others. There’s no way to get a <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> term by adding together linear functions, for example. Therefore, this is a basis. Because there are three vectors, we can conclude that this is a 3D subspace of the space of functions.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1131385"></a><b class="fm-exercise-head">Exercise 6.36−Mini Project</b>: I claimed that {4 <i class="fm-in-times-italic1">x</i> + 1, <i class="fm-in-times-italic1">x</i> <span class="fm-in-cambria">−</span> 2} are a basis for the set of linear functions. Show that you can write −2<i class="fm-in-times-italic1">x</i> + 5 as a linear combination of these two functions.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130441"></a><b class="fm-exercise-head">Solution</b>: (1/9) <span class="fm-in-cambria">·</span> (4<i class="fm-in-times-italic1">x</i> + 1) − (22/9) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic1">x</i> <span class="fm-in-cambria">−</span> 2) = −2<i class="fm-in-times-italic1">x</i> + 5. If your algebra skills aren’t too rusty, you can figure this out by hand. Otherwise, don’t worry; we cover how to solve tricky problems like this in the next chapter.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130466"></a><b class="fm-exercise-head">Exercise 6.37-Mini Project</b>: The vector space of all polynomials is an infinite-dimensional subspace. Implement that vector space as a class and describe a basis (which must be an infinite set!).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130467"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">class Polynomial(Vector):
+    def __init__(self, *coefficients):
+        self.coefficients = coefficients
+    def __call__(self,x):
+        return sum(coefficient * <i class="fm-in-times-italic1">x</i> ** power 
+                   for (power,coefficient) 
+                   in enumerate(self.coefficients))
+    def add(self,p):
+        return Polynomial([a + b 
+                          for a,b 
+                          in zip(self.coefficients, 
+                                 p.coefficients)])
+    def scale(self,scalar):
+        return Polynomial([scalar * a  
+                           for a in self.coefficients])
+        return "$ %s $" % (" + ".join(monomials))
+    @classmethod
+    def zero(cls):
+        return Polynomial(0)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1130522"></a>A basis for the set of all polynomials is the infinite set {1, <i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>, <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">3</sup>, <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">4</sup>, ...}. Given all of the possible powers of <i class="fm-in-times-italic1">x</i> at your disposal, you can build any polynomial as a linear combination.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1130388"></a></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130601"></a><b class="fm-exercise-head">Exercise 6.38</b>: I showed you pseudocode for a basis vector for the 270,000 dimensional space of images. What would the second basis vector look like?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130602"></a><b class="fm-exercise-head">Solution</b>: The second basis vector could be given by putting a one in the next possible place. It would yield a dim green pixel in the very top left of the image:</p>
+        <pre class="programlisting">ImageVector([
+    (0,1,0), (0,0,0), (0,0,0), ..., (0,0,0),  <span class="fm-combinumeral">❶</span>
+    (0,0,0), (0,0,0), (0,0,0), ..., (0,0,0),  <span class="fm-combinumeral">❷</span>
+    ...
+])</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1136431"></a><span class="fm-combinumeral">❶</span> For the second basis vector, the 1 has moved to the second possible slot.</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1136452"></a><span class="fm-combinumeral">❷</span> All other rows remain empty</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130706"></a><b class="fm-exercise-head">Exercise 6.39</b>: Write a function <code class="fm-code-in-text1">solid_color(r,g,b)</code> that returns a solid color <code class="fm-code-in-text1">ImageVector</code> with the<a id="marker-1130707"></a> given red, green, and blue content at every pixel.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130708"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def solid_color(r,g,b):
+    return ImageVector([(r,g,b) for _ in range(0,300*300)])</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130733"></a><b class="fm-exercise-head">Exercise 6.40−Mini Project</b>: Write a linear map<a id="marker-1130732"></a> that generates an <code class="fm-code-in-text1">ImageVector</code> from a 30<span class="fm-in-cambria">×</span>30 grayscale image, implemented as a 30<span class="fm-in-cambria">×</span>30 matrix of brightness values. Then, implement the linear map that takes a 300<span class="fm-in-cambria">×</span>300 image to a 30<span class="fm-in-cambria">×</span>30 grayscale image by averaging the brightness (average of red, green, and blue) at each pixel.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130734"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">image_size = (300,300)
+total_pixels = image_size[0] * image_size[1]
+square_count = 30                                <span class="fm-combinumeral">❶</span>
+square_width = 10
+ 
+def ij(n):
+    return (n // image_size[0], n % image_size[1])
+ 
+def to_lowres_grayscale(img):                    <span class="fm-combinumeral">❷</span>
+ 
+    matrix = [
+        [0 for i in range(0,square_count)]
+        for j in range(0,square_count)
+    ]
+    for (n,p) in enumerate(img.pixels):
+        i,j = ij(n)
+        weight = 1.0 / (3 * square_width * square_width)
+        matrix[i // square_width][ j // square_width] += (sum(p) * weight)
+    return matrix
+def from_lowres_grayscale(matrix):            <span class="fm-combinumeral">❸</span>
+    def lowres(pixels, ij):
+        i,j = ij
+        return pixels[i // square_width][ j // square_width]
+    def make_highres(limg):
+        pixels = list(matrix)
+        triple = lambda x: (x,x,x)
+        return ImageVector([triple(lowres(matrix, ij(n))) for n in range(0,total_pixels)])
+    return make_highres(matrix)</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1136544"></a><span class="fm-combinumeral">❶</span> Indicates that we’re breaking the picture into a 30<span class="fm-in-cambria">×</span>30 grid</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1136565"></a><span class="fm-combinumeral">❷</span> The function takes an ImageVector and returns an array of 30 arrays of 30 values each, giving grayscale values square by square.</p>
+
+        <p class="fm-code-annotation"><span class="fm-combinumeral">❸</span> The second function takes a 30<span class="fm-in-cambria">×</span>30 matrix and returns an image built from 10<span class="fm-in-cambria">×</span>10 pixel blocks, having a brightness given by the matrix values.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130922"></a>Calling <code class="fm-code-in-text1">from_lowres_grayscale(to_lowres_grayscale(img))</code> transforms the image <code class="fm-code-in-text1">img</code> in the way I showed in the chapter.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_26"><a id="pgfId-1121025"></a><a id="id_ozvxo1rxc6h7"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121026"></a>A vector space is a generalization of the 2D plane and 3D space: a collection of objects that can be added and multiplied by scalars. These addition and scalar multiplication operations must behave in certain ways (listed in section 6.1.5) to mimic the more familiar operations in 2D and 3D.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121027"></a>You can generalize in Python by pulling common features of different data types into an abstract base class and inheriting from it.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121028"></a>You can overload arithmetic operators in Python so that vector math looks the same in code, regardless of what kind of vectors you’re using.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121029"></a>Addition and scalar multiplication need to behave in certain ways to match your intuition, and you can verify these behaviors by writing unit tests involving random vectors.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121030"></a>Real-world objects like used cars can be described by several numbers (coordinates) and, therefore, treated as vectors. This lets us think about abstract concepts like a “weighted average of two cars.”</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121031"></a>Functions can be thought of as vectors. You add or multiply them by adding or multiplying the expressions that define them.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121032"></a>Matrices can be thought of as vectors. The entries of an <i class="fm-in-times-italic">m</i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic">n</i> matrix can be thought of as coordinates of an (<i class="fm-in-times-italic">m</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">n</i>)-dimensional vector. Adding or scalar multiplying matrices has the same effect as adding or scalar multiplying the linear functions they define.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121033"></a>Images of a fixed height and width make up a vector space. They are defined by a red, green, and blue (RGB) value at each pixel, so the number of coordinates and, therefore, the dimension of the space is defined by three times the number of pixels.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121034"></a>A subspace of a vector space is a subset of the vectors in a vector space, which is a vector space on its own. That is, linear combinations of vectors in the subspace stay in the subspace.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121035"></a>For any line through the origin in 2D or 3D, the set vectors that lie on it form a 1D subspace. For any plane through the origin in 3D, the vectors that lie on it form a 2D subspace.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121036"></a>The span of a set of vectors is the collection of all linear combinations of the vectors. It is guaranteed to be a subspace of whatever space the vectors live in.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121037"></a>A set of vectors is linearly <i class="fm-italics">independent</i> if you can’t make any one of them as a linear combination of the others. Otherwise, the set is linearly <i class="fm-italics">dependent</i>. A set of linearly independent vectors that span a vector space (or subspace) is called a <i class="fm-italics">basis</i> for that space. For a given space, any basis will have the same number of vectors. That number defines the dimension of the space.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1121038"></a>When you can think of your data as living in a vector space, subspaces often consist of data with similar properties. For instance, the subset of image vectors that are solid colors forms a subspace.</p>
+    </li>
+  </ul>
+  <hr class="calibre30"/>
+
+  <div class="calibre29">
+    <div class="calibre29">
+      <p class="fm-footnote"><span class="footnotenumber">1.</span> <a id="pgfId-1120402"></a>That is, as long as you can guarantee your vector space has only finitely many dimensions! There is a vector space called <span class="fm-in-cambria">ℝ</span>∞, but it is not the only infinitely dimensional vector space.</p>
+    </div>
+  </div>
+</body>
+</html>

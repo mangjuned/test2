@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Part 1</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1079531"></a><a id="pgfId-1079552"></a><a id="id_vkac9x82ali"></a>Part 1. Vectors and graphics</h1>
+  </div>
+
+  <p class="body"><a id="pgfId-1079553"></a><span class="fm-part-initial-cap">I</span>n the first part of this book, we dig into the branch of math called <i class="fm-italics">linear algebra</i>. At a very high level, linear algebra is the branch of math dealing with computations on multi-dimensional data. The concept of “dimension” is a geometric one; you probably intuitively know what I mean when I say “a square is 2-dimensional” while “a cube is 3-dimensional.” Among other things, linear algebra lets us turn geometric ideas about dimension into things we can compute concretely.</p>
+
+  <p class="body"><a id="pgfId-1079554"></a>The most basic concept in linear algebra is that of a <i class="fm-italics">vector</i>, which you can think of as a data point in some multi-dimensional space. For instance, you’ve probably heard of the 2-dimensional (2D) coordinate plane in high school geometry and algebra. As we’ll cover in chapter 2, vectors in 2D correspond to points in the plane, which can be labeled by ordered pairs of numbers of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). In chapter 3, we’ll consider 3-dimensional (3D) space, whose vectors (points) can be labeled by triples of numbers in the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>). In both cases, we see we can use collections of vectors to define geometric shapes, which can, in turn, be converted into interesting graphics.</p>
+
+  <p class="body"><a id="pgfId-1079555"></a>Another key concept in linear algebra is that of a <i class="fm-italics">linear transformation</i>, which we introduce in chapter 4. A linear transformation is a kind of function that takes a vector as input and returns a vector as output, while preserving the geometry (in a special sense) of the vectors involved. For instance, if a collection of vectors (points) lie on a straight line in 2D, after applying a linear transformation, they will still lie on a straight line. In chapter 5, we introduce <i class="fm-italics">matrices</i>, which are rectangular arrays of numbers that can represent linear transformations. Our culminating application of linear transformations is to apply them sequentially over time to graphics in a Python program, resulting in some animated graphics in 3D.</p>
+
+  <p class="body"><a id="pgfId-1079556"></a>While we can only picture vectors and linear transformations in 2D and 3D, it’s possible to define vectors with any number of dimensions. In <i class="fm-italics">n</i> dimensions, a vector can be identified as an ordered <i class="fm-italics">n</i> -tuple of numbers of the form (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, ..., <i class="fm-in-times-italic">x<sub class="fm-subscript1">n</sub></i>). In chapter 6, we reverse-engineer the concepts of 2D and 3D space to define the general concept of a <i class="fm-italics">vector space</i> and to define the concept of <i class="fm-italics">dimension</i> more concretely. In particular, we’ll see that digital images made of pixels can be thought of as vectors in a high-dimensional vector space and that we can do image manipulation with linear transformations.</p>
+
+  <p class="body"><a id="pgfId-1079557"></a>Finally, in chapter 7, we look at the most ubiquitous computational tool in linear algebra: solving <i class="fm-italics">systems of linear equations</i>. As you may remember from high school algebra, the solution to two linear equations in two variables like <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> tell us where two lines meet in the plane. In general, linear equations tell us where lines, planes, or higher-dimensional generalizations intersect in a vector space. Being able to automatically solve this problem in Python, we’ll use it to build a first version of a video game engine.</p>
+</body>
+</html>

@@ -1,0 +1,1392 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>10</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1132322"></a><a id="pgfId-1132383"></a>10 <a id="id_4cwx06g7tma4"></a>Working with symbolic expressions</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1133809"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1133810"></a>Modeling algebraic expressions as data structures</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1133811"></a>Writing code to analyze, transform, or evaluate algebraic expressions</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1146895"></a>Finding the derivative of a function by manipulating the expression that defines it</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1146896"></a>Writing a Python function to compute derivative formulas</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1146879"></a>Using the SymPy library to compute integral formulas</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1132390"></a>If you followed all<a id="marker-1148210"></a> of the code examples and did all the exercises in chapter 8 and chapter 9, you already have a solid grasp of the two most important concepts in calculus: the derivative and the integral. First, you learned how to approximate the derivative of a function at a point by taking slopes of smaller and smaller secant lines. You then learned how to approximate an integral by estimating the area under a graph with skinny rectangles. Lastly, you learned how to do calculus with vectors by simply doing the relevant calculus operations in each coordinate.</p>
+
+  <p class="body"><a id="pgfId-1132391"></a>It might seem like an audacious claim, but I really do hope to have given you the most important concepts you’d learn in a year-long college calculus class in just a few chapters of this book. Here’s the catch: because we’re working in Python, I’m skipping the most laborious piece of a traditional calculus course, which is doing a lot of formula manipulation by hand. This kind of work enables you to take the formula for a function like <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> and figure out an <i class="fm-italics">exact</i> formula for its derivative, <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>). In this case, there’s a simple answer, <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, as shown in figure 10.1.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150493"></a>Figure 10.1 The derivative of the function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> has an exact formula, namely <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 3x2.</p>
+
+  <p class="body"><a id="pgfId-1139709"></a>There are infinitely many formulas you might want to know the derivative of, and you can’t memorize derivatives for all of them, so what you end up doing in a calculus class is learning a small set of rules and how to systematically apply them to transform a function into its derivative. By and large, this isn’t that useful of a skill for a programmer. If you want to know the exact formula for a derivative, you can use a specialized tool called a <i class="fm-italics">computer algebra system</i> to compute it for you.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1132399"></a><a id="id_j9kqnrh71v37"></a>10.1 Finding an exact derivative with a computer algebra system</h2>
+
+  <p class="body"><a id="pgfId-1132400"></a>One <a id="marker-1148215"></a>of the <a id="marker-1148220"></a>most popular computer algebra systems is called <i class="fm-italics">Mathematica</i>, and you can<a id="marker-1132401"></a> use its engine for free online at a website called Wolfram Alpha (<span class="fm-hyperlink"><a href="http://www.wolframalpha.com">wolframalpha.com</a></span>). In my experience, if you want an exact formula for a derivative for a program you’re writing, the best approach is to consult Wolfram Alpha. For instance, when we build a neural network in chapter 16, it will be useful to know the derivative of the function</p>
+
+  <p class="calibre28"><img alt="" class="calibre1" src="../Images/CH10_F01_Orland_EQ01.png"/></p>
+
+  <p class="body"><a id="pgfId-1135347"></a>To find a formula for the derivative of this function, you can simply go to <span class="fm-hyperlink"><a href="http://www.wolframalpha.com">wolframalpha.com</a></span> and enter the formula in the input box (figure 10.2). Mathematica has its own syntax for mathematical formulas, but Wolfram Alpha is impressively forgiving and understands most simple formulas that you enter (even in Python syntax!).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150542"></a>Figure 10.2 Entering a function in the input box at wolframalpha.com</p>
+
+  <p class="body"><a id="pgfId-1132416"></a>When you press Enter, the Mathematica engine powering Wolfram Alpha computes a number of facts about this function, including its derivative. If you scroll down, you’ll see a formula for the derivative of the function (figure 10.3).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1132421"></a>Figure 10.3 Wolfram Alpha reports a formula for the derivative of the function.</p>
+
+  <p class="body"><a id="pgfId-1132422"></a>For our function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), its instantaneous rate of change at any value of <i class="fm-in-times-italic">x</i> is given by</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F03_Orland_EQ02.png"/></p>
+
+  <p class="body"><a id="pgfId-1132428"></a>If you understand the concept of a “derivative” and of an “instantaneous rate of change,” learning to punch formulas into Wolfram Alpha is a more important skill than any other single skill you’ll learn in a calculus class. I don’t mean to be cynical; there’s plenty to learn about the behavior of specific functions by taking their derivatives by hand. It’s just that in your life as a professional software developer, you’ll probably never need to figure out the formula for a derivative or integral when you have a free tool like Wolfram Alpha available.</p>
+
+  <p class="body"><a id="pgfId-1132429"></a>That said, your inner nerd may be asking, “How does Wolfram Alpha do it?” It’s one thing to find a crude estimate of a derivative by taking approximate slopes of the graph at various points, but it’s another to produce an exact formula. Wolfram Alpha successfully interprets the formula you type in, transforms it with some algebraic manipulations, and outputs a new formula. This kind of approach, where you work with formulas themselves instead<a id="marker-1132430"></a> of numbers, is called <i class="fm-italics">symbolic programming</i>.</p>
+
+  <p class="body"><a id="pgfId-1132431"></a>The pragmatist in me wants to tell you to “just use Wolfram Alpha,” while the math enthusiast in me wants to teach you how to take derivatives and integrals by hand, so in this chapter I’m going to split the difference. We do some symbolic programming in Python to manipulate algebraic formulas directly and, ultimately, figure out the formulas for their derivatives. This gets you acquainted with the process of finding derivative formulas, while still letting the computer do <a id="marker-1148235"></a>most of the <a id="marker-1148240"></a>work for you.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1132433"></a><a id="id_arape0247t72"></a>10.1.1 Doing symbolic algebra in Python</h3>
+
+  <p class="body"><a id="pgfId-1132434"></a>Let me <a id="marker-1148225"></a>start by <a id="marker-1148230"></a>showing you how we’ll represent and manipulate formulas in Python. Say we have a mathematical function like</p>
+
+  <p class="fm-equation"><a id="pgfId-1132435"></a><i class="fm-in-times-italic2">f</i>(<i class="fm-in-times-italic2">x</i>) = (3<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic2">x</i>) <span class="fm-in-times2">sin</span>(<i class="fm-in-times-italic2">x</i>)</p>
+
+  <p class="body"><a id="pgfId-1132437"></a>The usual way to represent it in Python is as follows:</p>
+  <pre class="programlisting">from math import sin
+def f(x):
+    return (3*x**2 + <i class="fm-in-times-italic1">x</i>) * <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>)</pre>
+
+  <p class="body"><a id="pgfId-1132440"></a>While this Python code makes it easy to evaluate the formula, it doesn’t give us a way to compute facts <i class="fm-italics">about</i> the formula. For instance, we could ask</p>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet">
+      <p class="list"><a id="pgfId-1132441"></a>Does the formula depend on the variable <i class="fm-in-times-italic">x</i> ?</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132443"></a>Does it contain a trigonometric function?</p>
+    </li>
+
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-1132444"></a>Does it involve the operation of division?</p>
+    </li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1132446"></a>We can look at these questions and quickly decide that the answers are yes, yes, and no. There’s no simple, reliable way to write a Python program to answer these questions for us. For instance, it’s difficult, if not impossible, to write a function <code class="fm-code-in-text">contains_division(f)</code> that takes the function <i class="fm-in-times-italic">f</i> and returns true if it uses the operation of division in its definition.</p>
+
+  <p class="body"><a id="pgfId-1132448"></a>Here’s where this would come in handy. In order to invoke an algebraic rule, you need to know what operations are being applied and in what order. For instance, the function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) is a product of <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) with a sum, and there’s a well-known algebraic process for expanding a product of a sum as visualized in figure 10.4.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150605"></a>Figure 10.4 Because (3x2+x) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) is a product of a sum, it can be expanded.</p>
+
+  <p class="body"><a id="pgfId-1132454"></a>Our strategy is to model algebraic expressions as data structures rather than translating them directly to Python code, and then they’re more amenable to manipulation. Once we can manipulate functions symbolically, we can automate the rules of calculus.</p>
+
+  <p class="body"><a id="pgfId-1132455"></a>Most functions expressed by simple formulas also have simple formulas for their derivatives. For instance, the derivative of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> is 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, meaning at any value of x, the derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> is given by 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>. By the time we’re done in this chapter, you’ll be able to write a Python function that takes an algebraic expression and gives you an expression for its derivative. Our data structure for an algebraic formula will be able to represent variables, numbers, sums, differences, products, quotients, powers, and special functions like sine and cosine. If you think about it, we can represent a huge variety of different formulas with that handful of building blocks, and our derivative will work on all of them (figure 10.5).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150673"></a>Figure 10.5 A goal is to write a derivative function in Python that takes an expression for a function and returns an expression for its derivative.</p>
+
+  <p class="body"><a id="pgfId-1132461"></a>We’ll get started by modeling expressions as data structures instead of functions in Python code. Then, to warm up, we can do some simple computations with the data structures to do things like plugging in numbers for variables or expanding products of sums. After that, I’ll teach you some of the rules for taking derivatives of formulas, and we’ll write our own derivative function and perform them automatically on <a id="marker-1148263"></a>our symbolic <a id="marker-1148268"></a>data structures.</p>
+
+  <h2 class="fm-head" id="heading_id_5"><a id="pgfId-1132463"></a><a id="id_u3dh5rlysqeu"></a>10.2 Modeling algebraic expressions</h2>
+
+  <p class="body"><a id="pgfId-1132464"></a>Let’s<a id="marker-1148273"></a> focus on the function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) for a bit and see how we can break it down into pieces. This is a good example function because it contains a lot of different building blocks: a variable <i class="fm-in-times-italic">x</i>, as well as numbers, addition, multiplication, a power, and a specially named function, <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). Once we have a strategy for breaking this function down into conceptual pieces, we can translate it into a Python data structure. This data structure is a <i class="fm-italics">symbolic</i> representation of the function as opposed to a string representation like <code class="fm-code-in-text">"(3*x**2</code> <code class="fm-code-in-text">+</code> <code class="fm-code-in-text">x)</code> <code class="fm-code-in-text">*</code> <code class="fm-code-in-text"><span class="fm-in-times2">sin</span>(<i class="fm-in-times-italic2">x</i>)"</code>.</p>
+
+  <p class="body"><a id="pgfId-1132465"></a>A first observation is that <i class="fm-in-times-italic">f</i> is an arbitrary name for this function. For instance, the right-hand side of this equation expands the same way regardless of what we call it. Because of this, we can focus only on the expression that defines the function, which in this case is (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). This is called an expression in contrast to an equation, which must contain an equals sign (=). An <i class="fm-italics">expression</i> is a collection of mathematical symbols (numbers, letters, operations, and so on) combined in some valid ways. Our first goal, therefore, is to model these symbols and the valid means of composing this expression in Python.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1132467"></a><a id="id_71qv7pqun4bd"></a>10.2.1 Breaking an expression into pieces</h3>
+
+  <p class="body"><a id="pgfId-1132468"></a>We <a id="marker-1148278"></a>can start to model algebraic expressions by breaking them up into smaller expressions. There is only one meaningful way to break up the expression (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). Namely, it’s the product of (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) and <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) as shown in figure 10.6.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150712"></a>Figure 10.6 A meaningful way to break up an algebraic expression into two smaller expressions</p>
+
+  <p class="body"><a id="pgfId-1132474"></a>By contrast, we can’t split this expression around the plus sign. We could make sense of the expressions on either side of the plus sign if we tried, but the result is not equivalent to the original expression (figure 10.7).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150756"></a>Figure 10.7 It doesn’t make sense to split the expression up around the plus sign because the original expression is not the sum of 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> and <i class="fm-in-times-italic">x</i> <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>).</p>
+
+  <p class="body"><a id="pgfId-1132480"></a>If we look at the expression 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>, it can be broken up into a sum: 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> and <i class="fm-in-times-italic">x</i>. Likewise, the conventional order of operations tells us that 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is the product of 3 and <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, not 3<i class="fm-in-times-italic">x</i> raised to the power of 2.</p>
+
+  <p class="body"><a id="pgfId-1132481"></a>In this chapter, we’ll think of operations like multiplication and addition as ways to take two (or more) algebraic expressions and stick them together side by side to make a new, bigger algebraic expression. Likewise, operators are valid places to break up an existing algebraic expression into smaller ones.</p>
+
+  <p class="body"><a id="pgfId-1132482"></a>In the terminology of functional programming, functions combining smaller objects into bigger ones like<a id="marker-1132483"></a> this are often called <i class="fm-italics">combinators</i>. Here are some of the combinators implied in our expression:</p>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet2">
+      <p class="list"><a id="pgfId-1132484"></a>3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is the <i class="fm-italics">product</i> of the expressions 3 and <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132485"></a><i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is a <i class="fm-italics">power:</i> one expression <i class="fm-in-times-italic">x</i> raised to the power of another expression 2.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132487"></a>The expression <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) is a <i class="fm-italics">function application</i>. Given the expression<a id="marker-1132486"></a> sin and the expression <i class="fm-in-times-italic">x</i>, we can build a new expression <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>).</p>
+    </li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1132488"></a>A variable <i class="fm-in-times-italic">x</i>, a number 2, or a function named sin can’t be broken down further. To distinguish these from combinators, we call them <i class="fm-italics">elements</i>. The lesson here is that while (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) is just a bunch of symbols printed on this page, the symbols are combined in certain ways to convey some mathematical meaning. To bring this concept home, we can visualize how this expression is built <a id="marker-1148283"></a>from its underlying elements.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1132490"></a><a id="id_xvvdyghe3owx"></a>10.2.2 Building an expression tree</h3>
+
+  <p class="body"><a id="pgfId-1132491"></a>The <a id="marker-1148288"></a>elements 3, <i class="fm-in-times-italic">x</i>, 2, and <a id="marker-1148293"></a>sin, along with the combinators of adding, multiplying, raising to a power, and applying a function are sufficient to rebuild the whole of the expression (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). Let’s go through the steps and draw the structure we’ll end up building. One of the first constructions we can put together is <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, which combines <i class="fm-in-times-italic">x</i> and 2 with the power combinator (figure 10.8).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150807"></a>Figure 10.8 Combining <i class="fm-in-times-italic">x</i> and 2 with the power combinator to represent the bigger expression x2</p>
+
+  <p class="body"><a id="pgfId-1136153"></a>A good next step is to combine <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> with the number 3 via the product combinator to get the expression 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> (figure 10.9).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150851"></a>Figure 10.9 Combining the number 3 with a power to model the product 3x2</p>
+
+  <p class="body"><a id="pgfId-1136160"></a>This construction is two layers deep: one expression that inputs to the product combinator is itself a combinator. As we add more of the terms of the expression, it gets even deeper. The next step is adding the element <i class="fm-in-times-italic">x</i> to 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> using the sum combinator (figure 10.10), which represents the operation of addition.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150896"></a>Figure 10.10 Combining the expression 3x2 with the element <i class="fm-in-times-italic">x</i> and the sum combinator to get 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i></p>
+
+  <p class="body"><a id="pgfId-1136250"></a> Finally, we need to use the function application combinator to apply sin to <i class="fm-in-times-italic">x</i> and then the product combinator to combine <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) with what we’ve built thus far (figure 10.11).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1150941"></a>Figure 10.11 A completed picture showing how to build (3x2 + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) from elements and combinators</p>
+
+  <p class="body"><a id="pgfId-1132515"></a>You may recognize the structure we’ve built as a <i class="fm-italics">tree</i>. The root of the tree is the product combinator with two branches coming out of it: <code class="fm-code-in-text">Sum</code> and <code class="fm-code-in-text">Apply</code>. Each combinator appearing further down the tree adds additional branches, until you reach the elements that are leaves and have no branches. Any algebraic expression built with numbers, variables, and named functions as elements and operations that are combinators correspond to a distinctive tree that reveals its structure. The next thing we can do is to <a id="marker-1148298"></a>build the<a id="marker-1148303"></a> same tree in Python.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1132517"></a><a id="id_sblcj7gtzrk9"></a>10.2.3 Translating the expression tree to Python</h3>
+
+  <p class="body"><a id="pgfId-1132518"></a>When <a id="marker-1148308"></a>we’ve <a id="marker-1148313"></a>built <a id="marker-1148318"></a>this tree in Python, we’ll have achieved our goal of representing the expression as a data structure. I’ll use Python classes covered in appendix B to represent each kind of element and each combinator. As we go, we’ll revise these classes to give them more and more functionality. You can follow the walk-through Jupyter notebook for chapter 10 if you want to follow the text, or you can skip to a more complete implementation<a id="marker-1132519"></a> in the Python script file expressions.py.</p>
+
+  <p class="body"><a id="pgfId-1132520"></a>In our implementation, we model combinators as containers that hold all of their inputs. For instance, a power <i class="fm-in-times-italic">x</i> to the 2, or <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, has two pieces of data: the <i class="fm-italics">base</i> <i class="fm-in-times-italic">x</i> and the power 2. Here’s a Python class that’s designed to represent a power expression:</p>
+  <pre class="programlisting">class Power():
+    def __init__(self,base,exponent):
+        self.base = base
+        self.exponent = exponent</pre>
+
+  <p class="body"><a id="pgfId-1132522"></a>We could then write <code class="fm-code-in-text">Power("x",2)</code> to represent the expression <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>. But rather than using raw strings and numbers, I’ll create special classes to represent numbers and variables. For example,</p>
+  <pre class="programlisting">class Number():
+    def __init__(self,number):
+        self.number = number
+
+class Variable():
+    def __init__(self,symbol):
+        self.symbol = symbol</pre>
+
+  <p class="body"><a id="pgfId-1132524"></a>This might seem like unnecessary overhead, but it will be useful to be able to distinguish <code class="fm-code-in-text">Variable("x")</code>, which means the letter <i class="fm-in-times-italic">x</i> considered as a variable from the string <code class="fm-code-in-text">"x"</code>, which is merely a string. Using these three classes, we can model the expression <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> as</p>
+  <pre class="programlisting">Power(Variable("x"),Number(2))</pre>
+
+  <p class="body"><a id="pgfId-1132526"></a>Each of our combinators can be implemented as an appropriately named class that stores the data of whatever expressions it combines. For instance, a product combinator can be a class that stores two expressions that are meant to be multiplied together:</p>
+  <pre class="programlisting">class Product():
+    def __init__(self, exp1, exp2):
+        self.exp1 = exp1
+        self.exp2 = exp2</pre>
+
+  <p class="body"><a id="pgfId-1132528"></a>The product 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> can be expressed using this combinator:</p>
+  <pre class="programlisting">Product(Number(3),Power(Variable("x"),Number(2)))</pre>
+
+  <p class="body"><a id="pgfId-1132530"></a>After introducing the rest of the classes we need, we can model the original expression as well as an infinite list of other possibilities. (Note that we allow any number of input expressions for the <code class="fm-code-in-text">Sum</code> combinator, and we could have done this for the Product combinator as well. I restricted the Product combinator to two inputs to keep our code simpler when we start calculating derivatives in section 10.3.)</p>
+  <pre class="programlisting">class Sum():
+    def __init__(self, *exps):            <span class="fm-combinumeral">❶</span>
+        self.exps = exps
+
+class Function():                         <span class="fm-combinumeral">❷</span>
+    def __init__(self,name):
+        self.name = name
+
+class Apply():                            <span class="fm-combinumeral">❸</span>
+    def __init__(self,function,argument):
+        self.function = function
+        self.argument = argument
+
+f_expression = Product(&gt;                  <span class="fm-combinumeral">❹</span>
+               Sum(
+                   Product(
+                       Number(3),
+                       Power(
+                           Variable("x"),
+                           Number(2))), 
+                   Variable("x")), 
+               Apply(
+                   Function("sin"),
+                   Variable("x")))</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1148958"></a><span class="fm-combinumeral">❶</span> Allows a Sum of any number of terms so we can add two or more expressions together</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1148975"></a><span class="fm-combinumeral">❷</span> Stores a string that is the function’s name (like “sin”)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1148992"></a><span class="fm-combinumeral">❸</span> Stores a function and the argument it is applied to</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149009"></a><span class="fm-combinumeral">❹</span> I use extra whitespace to make the structure of the expression clearer to see.</p>
+
+  <p class="body"><a id="pgfId-1132536"></a>This is a faithful representation of the original expression (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). By that I mean, we could look at this Python object and see that it describes the algebraic expression and not a different one. For another expression like</p>
+  <pre class="programlisting">Apply(Function("cos"),Sum(Power(Variable("x"),Number("3")), Number(−5)))</pre>
+
+  <p class="body"><a id="pgfId-1132539"></a>we can read it carefully and see that it represents a different expression: <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> + <span class="fm-in-cambria">−</span>5). In the exercises that follow, you can practice translating some algebraic expressions to Python and vice versa. You’ll see it can be tedious to type out the whole representation of an expression. The good news is that once you get it encoded in Python, the manual work is over. In the next section, we see how to write Python functions<a id="marker-1148323"></a> to automatically <a id="marker-1148328"></a>work <a id="marker-1148333"></a>with our expressions.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1132541"></a><a id="id_2x4qzk6b334j"></a>10.2.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136763"></a><b class="fm-exercise-head">Exercise 10.1</b>: You <a id="marker-1148338"></a>may have met the natural logarithm, a special mathematical function written <span class="fm-in-times1">ln</span>(<i class="fm-in-times-italic1">x</i>). Draw the expression <span class="fm-in-times1">ln</span>(<i class="fm-italics">yz</i>) as a tree built from the elements and combinators described in the previous section.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1136764"></a><b class="fm-exercise-head">Solution</b>: The outermost combinator is an Apply. The function being applied is ln, the natural logarithm, and the argument is <i class="fm-italics">yz</i>. In turn, <i class="fm-italics">yz</i> is a power with base <i class="fm-in-times-italic1">y</i> and exponent <i class="fm-in-times-italic1">z</i>. The result looks like this:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F11_Orland_UN01.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136782"></a><b class="fm-exercise-head">Exercise 10.2</b>: Translate the expression from the previous exercise to Python code, given that the natural logarithm is calculated by the Python function <code class="fm-code-in-text1">math.log</code>. Write it both as a Python function and as a data structure built from elements and combinators.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136640"></a><b class="fm-exercise-head">Solution</b>: You can think of <span class="fm-in-times1">ln</span>(<i class="fm-italics">yz</i>) as a function of two variables <i class="fm-in-times-italic1">y</i> and <i class="fm-in-times-italic1">z</i>. It translates directly to Python, where ln is called <code class="fm-code-in-text1">log</code> :</p>
+        <pre class="programlisting">from math import log
+def <i class="fm-in-times-italic1">f</i>(y,z):
+    return log(y**z)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1136642"></a>The expression tree is built like this:</p>
+        <pre class="programlisting">Apply(Function("ln"), Power(Variable("y"), Variable("z")))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136672"></a><b class="fm-exercise-head">Exercise 10.3</b>: What is the expression represented by <code class="fm-code-in-text1">Product(Number(3), Sum(Variable("y"),Variable("z")))</code> ?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1136673"></a><b class="fm-exercise-head">Solution</b>: This expression represents 3 <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic1">y</i> + <i class="fm-in-times-italic1">z</i>). Notice that the parentheses are necessary because of the order of operations.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136701"></a><b class="fm-exercise-head">Exercise 10.4</b>: Implement a <code class="fm-code-in-text1">Quotient</code> combinator<a id="marker-1136700"></a> representing one expression divided by another. How do you represent the following expression?</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F11_Orland_UN01_EQ04.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1136708"></a><b class="fm-exercise-head">Solution</b>: A <code class="fm-code-in-text1">Quotient</code> combinator needs to store<a id="marker-1136707"></a> two expressions: the top expression is called the <i class="fm-italics">numerator</i> and the bottom<a id="marker-1136709"></a> is called the <i class="fm-italics">denominator</i> :</p>
+        <pre class="programlisting">class Quotient():
+    def __init__(self,numerator,denominator):
+        self.numerator = numerator
+        self.denominator = denominator</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1136711"></a>The sample expression is the quotient of the sum <i class="fm-in-times-italic1">a</i> + <i class="fm-in-times-italic1">b</i> with the number 2:</p>
+        <pre class="programlisting">Quotient(Sum(Variable("a"),Variable("b")),Number(2))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136814"></a><b class="fm-exercise-head">Exercise 10.5</b>: Implement a <code class="fm-code-in-text1">Difference</code> combinator representing one expression subtracted from another. How can you represent the expression <i class="fm-in-times-italic1">b</i><sup class="fm-superscript1">2</sup> − 4 <i class="fm-italics">ac</i> ?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1136834"></a><b class="fm-exercise-head">Solution</b>: The <code class="fm-code-in-text1">Difference</code> combinator<a id="marker-1136833"></a> needs to store two expressions, and it represents the second subtracted from the first:</p>
+        <pre class="programlisting">class Difference():
+    def __init__(self,exp1,exp2):
+        self.exp1 = exp1
+        self.exp2 = exp2</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1136880"></a>The expression <i class="fm-in-times-italic1">b</i><sup class="fm-superscript1">2</sup> − 4 <i class="fm-italics">ac</i> is the difference of the expressions <i class="fm-in-times-italic1">b</i><sup class="fm-superscript1">2</sup> and 4 <i class="fm-italics">ac</i> and is represented as follows:</p>
+        <pre class="programlisting">Difference(
+    Power(Variable('b'),Number(2)),
+    Product(Number(4),Product(Variable('a'), Variable('c'))))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136922"></a><b class="fm-exercise-head">Exercise 10.6</b>: Implement a <code class="fm-code-in-text1">Negative</code> combinator<a id="marker-1136921"></a> representing the negation of an expression. For example, the negation of <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + <i class="fm-in-times-italic1">y</i> is −(<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + <i class="fm-in-times-italic1">y</i>). Represent the latter expression in code using your new combinator.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1136923"></a><b class="fm-exercise-head">Solution</b>: The <code class="fm-code-in-text1">Negative</code> combinator is a class that holds one expression:</p>
+        <pre class="programlisting">class Negative():
+    def __init__(self,exp):
+        self.exp = exp</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1136925"></a>To negate <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + <i class="fm-in-times-italic1">y</i>, we pass it to the <code class="fm-code-in-text1">Negative</code> constructor:</p>
+        <pre class="programlisting">Negative(Sum(Power(Variable("x"),Number(2)),Variable("y")))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1136964"></a><b class="fm-exercise-head">Exercise 10.7</b>: Add a function called <code class="fm-code-in-text1">Sqrt</code> that represents a square root and use it to encode the following formula:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F11_Orland_UN01_EQ05.png"/><br class="calibre15"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1136970"></a><b class="fm-exercise-head">Solution</b>: To save some typing, we can name our variables and square root function up front:</p>
+        <pre class="programlisting">A = Variable('a')
+B = Variable('b')
+C = Variable('c')
+Sqrt = Function('sqrt')</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1136972"></a>Then it’s just a matter of translating the algebraic expression into the appropriate structure of elements and combinators. At the highest level, you can see this is a quotient of a sum (on top) and a product (on the bottom):</p>
+        <pre class="programlisting">Quotient(
+    Sum(
+        Negative(B),
+        Apply(
+            Sqrt, 
+            Difference(
+                Power(B,Number(2)),
+                Product(Number(4), Product(A,C))))),
+    Product(Number(2), A))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1137046"></a><b class="fm-exercise-head">Exercise 10.8−Mini Project</b>: Create an abstract base class<a id="marker-1137045"></a> called <code class="fm-code-in-text1">Expression</code> and make all of the elements<a id="marker-1137047"></a> and combinators<a id="marker-1137048"></a> inherit<a id="marker-1137049"></a> from it. For instance, <code class="fm-code-in-text1">class Variable()</code> would become <code class="fm-code-in-text1">class Variable(Expression)</code>. Then overload the Python<a id="marker-1137050"></a> arithmetic operations <code class="fm-code-in-text1">+</code>, -, <code class="fm-code-in-text1">*</code>, and <code class="fm-code-in-text1">/</code> so that they produce <code class="fm-code-in-text1">Expression</code> objects. For instance, the code <code class="fm-code-in-text1">2*Variable("x")+3</code> should yield <code class="fm-code-in-text1"><a class="calibre10" href="https://www.codecogs.com/eqnedit.php?latex=%5Cint%20%5C%3Cspan%20class=">cos(x)%20%5C%2C%20dx%250"&gt;</a>Sum(Product(Number(2),Variable("x")),Number(3))</code>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1137052"></a><b class="fm-exercise-head">Solution</b>: See the file expressions.py in <a id="marker-1148343"></a>the source <a id="marker-1148348"></a>code for this chapter.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_10"><a id="pgfId-1132616"></a><a id="id_tf5kxrcumwep"></a>10.3 Putting a symbolic expression to work</h2>
+
+  <p class="body"><a id="pgfId-1132618"></a>For the function we’ve studied so far, <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>), we wrote a Python function that computes it:</p>
+  <pre class="programlisting">def f(x):
+    return (3*x**2 + x)*<span class="fm-in-times1">sin</span>(x)</pre>
+
+  <p class="body"><a id="pgfId-1132622"></a>As an entity in Python, this function is only good for one thing: returning an output value for a given input value <i class="fm-in-times-italic">x</i>. The value <i class="fm-in-times-italic">f</i> in Python does not make it particularly easy to programmatically answer the questions we asked at the beginning of the chapter: whether <i class="fm-in-times-italic">f</i> depends on its input, whether <i class="fm-in-times-italic">f</i> contains a trigonometric function, or what the body of <i class="fm-in-times-italic">f</i> would look like if it were expanded algebraically. In this section, we see that once we translate the expression into a Python data structure built from elements and combinators, we can answer all of these questions and more!</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1132626"></a>10.3.1 <a id="id_w68tixqkablp"></a>Finding all the variables in an expression</h3>
+
+  <p class="body"><a id="pgfId-1132627"></a>Let’s <a id="marker-1148358"></a>write a function that takes an expression and returns a list of distinct variables that appear in it. For instance, <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">z</i>) = 2<i class="fm-in-times-italic">z</i> + 3 is defined using the input variable <i class="fm-in-times-italic">z</i>, while the definition of <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = 7 contains no variables. We can write a Python function, <code class="fm-code-in-text">distinct_variables</code>, that takes an expression (meaning any of our elements or combinators) and returns a Python set containing the variables.</p>
+
+  <p class="body"><a id="pgfId-1132628"></a>If our expression is an element, like <i class="fm-in-times-italic">z</i> or 7, the answer is clear. An expression that is just a variable contains one distinct variable, while an expression that is just a number contains no variables at all. We expect our function to behave accordingly:</p>
+  <pre class="programlisting">&gt;&gt;&gt; distinct_variables(Variable("z"))
+{'z'}
+&gt;&gt;&gt; distinct_variables(Number(3))
+set()</pre>
+
+  <p class="body"><a id="pgfId-1132630"></a>The situation is more complicated when the expression is built from some combinators like <i class="fm-in-times-italic">y</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">z</i> + <i class="fm-in-times-italic">x<sup class="fm-superscript2">z</sup></i> . It’s easy for a human to read all the variables, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>, and <i class="fm-in-times-italic">x</i>, but how do we extract these from the expression in Python? This is actually a Sum combinator representing the sum of <i class="fm-in-times-italic">y</i> <span class="fm-in-cambria">·</span> <i class="fm-italics">z</i> and <i class="fm-in-times-italic">x<sup class="fm-superscript2">z</sup></i> . The first expression in the sum contains <i class="fm-in-times-italic">y</i> and <i class="fm-in-times-italic">z</i>, while the second has <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">z</i>. The sum then contains all of the variables in these two expressions.</p>
+
+  <p class="body"><a id="pgfId-1132631"></a>This suggests we should use a recursive solution: the <code class="fm-code-in-text">distinct_variables</code> for a combinator are the collected <code class="fm-code-in-text">distinct_variables</code> for each of the expressions it contains. The end of the line has the variables and numbers, which obviously contain either one or zero variables. To implement the <code class="fm-code-in-text">distinct_variables</code> function, we need to handle the case of every element and combinator that make up a valid expression:</p>
+  <pre class="programlisting">def distinct_variables(exp):
+    if isinstance(exp, Variable):
+        return set(exp.symbol)
+    elif isinstance(exp, Number):
+        return set()
+    elif isinstance(exp, Sum):
+        return set().union(*[distinct_variables(exp) for exp in exp.exps])
+    elif isinstance(exp, Product):
+        return distinct_variables(exp.exp1).union(distinct_variables(exp.exp2))
+    elif isinstance(exp, Power):
+        return distinct_variables(exp.base).union(distinct_variables(exp.exponent))
+    elif isinstance(exp, Apply):
+        return distinct_variables(exp.argument)
+    else:
+        raise TypeError("Not a valid expression.")</pre>
+
+  <p class="body"><a id="pgfId-1132635"></a>This code looks hairy, but it is just a long if/else statement with one line for each possible element or combinator. Arguably, it would be better coding style to add a <code class="fm-code-in-text">distinct_variables</code> method to each element and combinator<a id="marker-1132636"></a> class, but that makes it harder to see the logic in a single code listing. As expected, our <code class="fm-code-in-text">f_expression</code> contains only the variable <i class="fm-in-times-italic">x</i> :</p>
+  <pre class="programlisting">&gt;&gt;&gt; distinct_variables(f_expression)
+{'x'}</pre>
+
+  <p class="body"><a id="pgfId-1132639"></a>If you’re familiar with the tree data structure, you’ll recognize this as a recursive traversal of the expression tree. By the time this function completes, it has called <code class="fm-code-in-text">distinct_variables</code> on every expression contained in the target expression, which are all of the nodes in the tree. That ensures that we see every variable and that we get the correct answers that we expect. In the exercises at the end of this section, you can use a similar approach to find all of the numbers or all of the <a id="marker-1148363"></a>functions.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1132641"></a><a id="id_sq51fu3mjrl9"></a>10.3.2 Evaluating an expression</h3>
+
+  <p class="body"><a id="pgfId-1132643"></a>Now, <a id="marker-1148368"></a>we’ve got two representations of the same mathematical function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i> ). One is the Python function <code class="fm-code-in-text">f</code>, which is good for evaluating the function at a given input value of <i class="fm-in-times-italic">x</i>. The new one is this tree data structure that describes the structure of the expression defining <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>). It turns out the latter representation has the best of both worlds; we can use it to evaluate <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) as well, with only a little more work.</p>
+
+  <p class="body"><a id="pgfId-1132644"></a>Mechanically, evaluating a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) at, say, <i class="fm-in-times-italic">x</i> = 5 means plugging in the value of 5 for <i class="fm-in-times-italic">x</i> everywhere and then doing the arithmetic to find the result. If the expression were just <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i>, plugging in <i class="fm-in-times-italic">x</i> = 5 would tell us <i class="fm-in-times-italic">f</i>(5) = 5. Another simple example would be <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = 7, where plugging in 5 in place of <i class="fm-in-times-italic">x</i> has no effect; there are no appearances of <i class="fm-in-times-italic">x</i> on the right-hand side, so the result of <i class="fm-in-times-italic">g</i>(5) is just 7.</p>
+
+  <p class="body"><a id="pgfId-1132645"></a>The code to evaluate an expression in Python is similar to the code we just wrote to find all variables. Instead of looking at the set of variables that appear in each subexpression, we need to evaluate each subexpression, then the combinators tell us how to combine these results to get the value of the whole expression.</p>
+
+  <p class="body"><a id="pgfId-1132646"></a>The starting data we need is what values to plug-in and which variables these replace. An expression with two different variables like <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = 2<i class="fm-in-times-italic">xy</i><sup class="fm-superscript">3</sup> will need two values to get a result; for instance, <i class="fm-in-times-italic">x</i> = 3 and <i class="fm-in-times-italic">y</i> = 2. In computer science terminology, these are called <i class="fm-italics">variable bindings</i>. With these, we can evaluate<a id="marker-1132647"></a> the subexpression <i class="fm-in-times-italic">y</i><sup class="fm-superscript">3</sup> as (2)<sup class="fm-superscript">3</sup>, which equals 8. Another subexpression is 2<i class="fm-in-times-italic">x</i>, which evaluates to 2 <span class="fm-in-cambria">·</span> (3) = 6. These two are combined with the Product combinator, so the value of the whole expression is the product of 6 and 8, or 48.</p>
+
+  <p class="body"><a id="pgfId-1132648"></a>As we translate this procedure into Python code, I’m going to show you a slightly different style than in the previous example. Rather than having a separate evaluate function, we can add an <code class="fm-code-in-text">evaluate</code> method to each class representing<a id="marker-1132649"></a> an expression. To enforce this, we can create<a id="marker-1132650"></a> an abstract <code class="fm-code-in-text">Expression</code> base class with an abstract <code class="fm-code-in-text">evaluate</code> method and have each kind of expression inherit from it. If you need a review of abstract base classes in Python, take a moment to review the work we did with<a id="marker-1132651"></a> the <code class="fm-code-in-text">Vector</code> class in chapter 6 or the overview in appendix B. Here’s an <code class="fm-code-in-text">Expression</code> base class, complete with an <code class="fm-code-in-text">evaluate</code> method:</p>
+  <pre class="programlisting">from abc import ABC, abstractmethod
+
+class Expression(ABC):
+    @abstractmethod
+    def evaluate(self, **bindings):
+        pass</pre>
+
+  <p class="body"><a id="pgfId-1132653"></a>Because an expression can contain more than one variable, I set it up so you can pass in the variable bindings as keyword arguments. For instance, the bindings <code class="fm-code-in-text">{"x":3,"y":2}</code> mean substitute 3 for <i class="fm-in-times-italic">x</i> and 2 for <i class="fm-in-times-italic">y</i>. This gives us some nice syntactic sugar when evaluating an expression. If <i class="fm-in-times-italic">z</i> represents the expression 2<i class="fm-in-times-italic">xy</i><sup class="fm-superscript">3</sup>, then once we’re done, we’ll be able to execute the following:</p>
+  <pre class="programlisting">&gt;&gt;&gt; z.evaluate(x=3,y=2)
+48</pre>
+
+  <p class="body"><a id="pgfId-1132655"></a>So far, we’ve only an abstract class. Now we need to have all of our expression classes inherit from <code class="fm-code-in-text">Expression</code>. For example, a <code class="fm-code-in-text">Number</code> instance is a valid expression as a number on its own, like 7. Regardless of the variable bindings provided, a number evaluates to itself:</p>
+  <pre class="programlisting">class Number(Expression):
+    def __init__(self,number):
+        self.number = number
+    def evaluate(self, **bindings):
+        return self.number</pre>
+
+  <p class="body"><a id="pgfId-1132657"></a>For instance, evaluating <code class="fm-code-in-text">Number(7).evaluate(x=3,y=6,q=−15)</code>, or any other evaluation for that matter, returns the underlying number 7.</p>
+
+  <p class="body"><a id="pgfId-1132658"></a>Handling variables is also simple. If we’re looking at the expression <code class="fm-code-in-text">Variable("x")</code>, we only need to consult the bindings and see what number the variable <i class="fm-in-times-italic">x</i> is set to. When we’re done, we should be able to run <code class="fm-code-in-text">Variable("x").evaluate(x=5)</code> and get 5 as a result. If we can’t find a binding for <i class="fm-in-times-italic">x</i>, then we can’t complete<a id="marker-1132659"></a> the evaluation, and we need to raise an exception. Here’s the updated definition of the <code class="fm-code-in-text">Variable</code> class:</p>
+  <pre class="programlisting">class Variable(Expression):
+    def __init__(self,symbol):
+        self.symbol = symbol
+    def evaluate(self, **bindings):
+        try:
+            return bindings[self.symbol]
+        except:
+            raise KeyError("Variable '{}' is not bound.".format(self.symbol))</pre>
+
+  <p class="body"><a id="pgfId-1132661"></a>With these elements handled, we need to turn our attention to the combinators. (Note that we won’t consider a <code class="fm-code-in-text">Function</code> object an <code class="fm-code-in-text">Expression</code> on its own because a function like sine is not a standalone expression. It can only be evaluated when it’s given an argument in the context of an <code class="fm-code-in-text">Apply</code> combinator.) For a combinator like <code class="fm-code-in-text">Product</code>, the rule to evaluate it is simple: evaluate both expressions contained in the product and then multiply the results together. No substitution needs to be performed in the product, but we’ll pass the bindings along to both subexpressions in case either contains a <code class="fm-code-in-text">Variable</code> :</p>
+  <pre class="programlisting">class Product(Expression):
+    def __init__(self, exp1, exp2):
+        self.exp1 = exp1
+        self.exp2 = exp2
+    def evaluate(self, **bindings):
+        return self.exp1.evaluate(**bindings) * self.exp2.evaluate(**bindings)</pre>
+
+  <p class="body"><a id="pgfId-1132663"></a>With these three classes updated with evaluate methods, we can now evaluate any expression built from variables, numbers, and products. For instance,</p>
+  <pre class="programlisting">&gt;&gt;&gt; Product(Variable("x"), Variable("y")).evaluate(x=2,y=5)
+10</pre>
+
+  <p class="body"><a id="pgfId-1132666"></a>Similarly, we can<a id="marker-1132665"></a> add an <code class="fm-code-in-text">evaluate</code> method to the <code class="fm-code-in-text">Sum</code>, <code class="fm-code-in-text">Power</code>, <code class="fm-code-in-text">Difference</code>, or <code class="fm-code-in-text">Quotient</code> combinators (as well as any other combinators you may have created as exercises). Once we evaluate their subexpressions, the name of the combinator tells us which operation we can use to get the overall result.</p>
+
+  <p class="body"><a id="pgfId-1132667"></a>The <code class="fm-code-in-text">Apply</code> combinator works a bit differently, so it deserves some special attention. We need to dynamically look at a function name like sin or sqrt and figure out how to compute its value. There are a few possible ways to do this, but I chose keeping a dictionary of known functions<a id="marker-1132668"></a> as data on the <code class="fm-code-in-text">Apply</code> class. As a first pass, we can make our evaluator aware of three named functions:</p>
+  <pre class="programlisting">_function_bindings = {
+    "sin": math.sin,
+    "cos": math.cos,
+    "ln": math.log
+}
+class Apply(Expression):
+    def __init__(self,function,argument):
+        self.function = function
+        self.argument = argument
+    def evaluate(self, **bindings):
+        return _function_bindings[self.function.name](self.argument.evaluate(**bindings))</pre>
+
+  <p class="body"><a id="pgfId-1132672"></a>You can practice writing the rest of the evaluate methods yourself or find them in the source code for this book. Once you get all of them fully implemented, you’ll be able to evaluate our <code class="fm-code-in-text">f_expression</code> from section 10.1.3:</p>
+  <pre class="programlisting">&gt;&gt;&gt;  f_expression.evaluate(x=5)
+<span class="fm-in-cambria">−</span>76.71394197305108</pre>
+
+  <p class="body"><a id="pgfId-1132674"></a>The result here isn’t important, only the fact that it’s the same as what the ordinary Python function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) gives us:</p>
+  <pre class="programlisting">&gt;&gt;&gt; xf(5)
+<span class="fm-in-cambria">−</span>76.71394197305108</pre>
+
+  <p class="body"><a id="pgfId-1132676"></a>Equipped with the evaluate function, our <code class="fm-code-in-text">Expression</code> objects can do the same work as their corresponding ordinary Python <a id="marker-1148373"></a>functions.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1132678"></a><a id="id_ml7q9hdf4vk5"></a>10.3.3 Expanding an expression</h3>
+
+  <p class="body"><a id="pgfId-1132679"></a>There <a id="marker-1148378"></a>are many other things we can do with our expression data structures. In the exercises, you can try your hand at building a few more Python functions that manipulate expressions in different ways. I’ll show you one more example for now, which I mentioned at the beginning of this chapter: expanding an expression. What I mean by this is taking any product or power of sums and carrying it out.</p>
+
+  <p class="body"><a id="pgfId-1132681"></a>The relevant rule of algebra<a id="marker-1132680"></a> is the <i class="fm-italics">distributive</i> <i class="fm-italics">property</i> of sums and products. This rule says that a product of the form (<i class="fm-in-times-italic">a</i> + <i class="fm-in-times-italic">b</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">c</i> is equal to <i class="fm-italics">ac</i> + <i class="fm-italics">bc</i> and, similarly, that <i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">y</i> <i class="fm-italics">+</i> <i class="fm-in-times-italic">z</i>) = <i class="fm-in-times-italic">xy</i> + <i class="fm-in-times-italic">xz</i>. For instance, our expression (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) is equal to 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) + <i class="fm-in-times-italic">x</i> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>), which is called the expanded form of the first product. You can use this rule several times to expand more complicated expressions, for instance:</p>
+
+  <p class="fm-equation">(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)<sup class="fm-superscript">3</sup> = (<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)</p>
+
+  <p class="fm-equation">             = <i class="fm-in-times-italic2">x</i>(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>) + <i class="fm-in-times-italic2">y</i>(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)</p>
+
+  <p class="fm-equation">             = <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup>(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>) + <i class="fm-in-times-italic2">x</i><i class="fm-in-times-italic2">y</i>(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>) + <i class="fm-in-times-italic2">y</i><i class="fm-in-times-italic2">x</i>(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>) + <i class="fm-in-times-italic2">y</i><sup class="fm-superscript">2</sup>(<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i>)</p>
+
+  <p class="fm-equation">             = <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">3</sup> + <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">y</i> + <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">y</i> + <i class="fm-in-times-italic2">x</i><i class="fm-in-times-italic2">y</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic2">y</i><i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic2">y</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i><sup class="fm-superscript">3</sup></p>
+
+  <p class="fm-equation">             = <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">3</sup> + 3<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">y</i> + 3<i class="fm-in-times-italic2">y</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i><sup class="fm-superscript">3</sup></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-18.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1132701"></a>As you can see, expanding a short expression like (<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">y</i>)<sup class="fm-superscript">3</sup> can be a lot of writing. In addition to expanding this expression, I also simplified the result a bit, rewriting some products that would have looked like <i class="fm-in-times-italic">xyx</i> or <i class="fm-in-times-italic">xxy</i> as <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic">y</i>, for instance. This is possible because order does not matter in multiplication. Then I further simplified<a id="marker-1132702"></a> by <i class="fm-italics">combining</i> like terms, noting that there were three summed copies each of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic">y</i> and <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic">x</i> and grouping those together into 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic">y</i> and 3<i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic">x</i>. In the following example, we only look at how to do the expanding; you can implement the simplification as an exercise.</p>
+
+  <p class="body"><a id="pgfId-1132705"></a>We can start by adding<a id="marker-1132703"></a> an abstract <code class="fm-code-in-text">expand</code> method to<a id="marker-1132704"></a> the <code class="fm-code-in-text">Expression</code> base class:</p>
+  <pre class="programlisting">class Expression(ABC):
+    ...
+    @abstractmethod
+    def expand(self):
+        pass</pre>
+
+  <p class="body"><a id="pgfId-1132707"></a>If an expression is a variable or number, it is already expanded. For these cases, the <code class="fm-code-in-text">expand</code> method returns the object itself. For instance,</p>
+  <pre class="programlisting">class Number(Expression):
+    ...
+    def expand(self):
+        return self</pre>
+
+  <p class="body"><a id="pgfId-1132709"></a>Sums are already considered to be expanded expressions, but the individual terms of a sum cannot be expanded. For example, 5 + <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">y</i>) is a sum in which the first term 5 is fully expanded, but the second term <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">y</i>) is not. To expand a sum, we need to expand each of the terms and sum them:</p>
+  <pre class="programlisting">class Sum(Expression):
+    ...
+    def expand(self):
+        return Sum(*[exp.expand() for exp in self.exps])</pre>
+
+  <p class="body"><a id="pgfId-1132711"></a>The same procedure works for function application. We can’t expand the <code class="fm-code-in-text">Apply</code> function itself, but we can expand its arguments. This would expand an expression like <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">y</i> + <i class="fm-in-times-italic">z</i>)) to <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">xy</i> + <i class="fm-in-times-italic">xz</i>):</p>
+  <pre class="programlisting">class Apply(Expression):
+    ...
+    def expand(self):
+        return Apply(self.function, self.argument.expand())</pre>
+
+  <p class="body"><a id="pgfId-1132713"></a>The real work comes when we expand products or powers, where the structure of the expression changes completely. As an example, <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic">b</i> + <i class="fm-in-times-italic">c</i>) is a product of a variable with a sum of two variables, while its expanded form is <i class="fm-italics">ab</i> + <i class="fm-italics">ac</i>, the sum of two products of two variables each. To implement the distributive law, we have to handle three cases: the first term of the product might be a sum, the second term might be a sum, or neither of them might be sums. In the latter case, no expanding is necessary:</p>
+  <pre class="programlisting">class Product(Expression):
+    ...
+    def expand(self):
+        expanded1 = self.exp1.expand()                 <span class="fm-combinumeral">❶</span>
+        expanded2 = self.exp2.expand()
+        if isinstance(expanded1, Sum):                 <span class="fm-combinumeral">❷</span>
+            return Sum(*[Product(e,expanded2).expand() 
+                         for e in expanded1.exps])
+        elif isinstance(expanded2, Sum):               <span class="fm-combinumeral">❸</span>
+            return Sum(*[Product(expanded1,e) 
+                         for e in expanded2.exps])
+        else:
+            return Product(expanded1,expanded2)        <span class="fm-combinumeral">❹</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1132722"></a><span class="fm-combinumeral">❶</span> Expands both terms of the product</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149299"></a><span class="fm-combinumeral">❷</span> If the first term of the product is a Sum, it takes the product with each of its terms multiplied by the second term of the product, then calls expand on the result in case the second term of the product is also a Sum.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149316"></a><span class="fm-combinumeral">❸</span> If the second term of the product is a Sum, it multiplies each of its terms by the first term of the product.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149333"></a><span class="fm-combinumeral">❹</span> Otherwise, neither term is a Sum, and the distributive property doesn’t need to be invoked.</p>
+
+  <p class="body"><a id="pgfId-1138432"></a>With all of these methods<a id="marker-1132721"></a> implemented, we can test the <code class="fm-code-in-text">expand</code> function. With an appropriate<a id="marker-1132723"></a> implementation of <code class="fm-code-in-text">__repr__</code>(see the exercises), we can see a string representation of the results clearly in Jupyter or in an interactive Python session. It correctly expands (<i class="fm-in-times-italic">a</i> + <i class="fm-in-times-italic">b</i>) (<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">y</i>) to <i class="fm-in-times-italic">ax</i> + <i class="fm-italics">ay</i> + <i class="fm-in-times-italic">bx</i> + <i class="fm-in-times-italic">by</i> :</p>
+  <pre class="programlisting">Y = Variable('y')
+Z = Variable('z')
+A = Variable('a')
+B = Variable('b')
+&gt;&gt;&gt; Product(Sum(A,B),Sum(Y,Z))
+Product(Sum(Variable("a"),Variable("b")),Sum(Variable("x"),Variable("y")))
+&gt;&gt;&gt; Product(Sum(A,B),Sum(Y,Z)).expand()
+Sum(Sum(Product(Variable("a"),Variable("y")),Product(Variable("a"),
+Variable("z"))),Sum(Product(Variable("b"),Variable("y")),
+Product(Variable("b"),Variable("z"))))</pre>
+
+  <p class="body"><a id="pgfId-1132729"></a>And our expression, (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>), expands correctly to 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) + <i class="fm-in-times-italic">x</i> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>):</p>
+  <pre class="programlisting">&gt;&gt;&gt; f_expression.expand()
+Sum(Product(Product(3,Power(Variable("x"),2)),Apply(Function("sin"),Variable("x"))),Product(Variable("x"),Apply(Function("sin"),Variable("x"))))</pre>
+
+  <p class="body"><a id="pgfId-1132732"></a>At this point, we’ve written some Python functions that really do algebra for us, not just<a id="marker-1132731"></a> arithmetic. There are a lot of exciting applications of this type of programming (called <i class="fm-italics">symbolic programming</i>, or more specifically, <i class="fm-italics">computer algebra</i>), and we can’t afford to cover all of<a id="marker-1132733"></a> them in this book. You should try your hand at a few of the following exercises and then we move on to our most important example: finding the formulas for <a id="marker-1148388"></a>derivatives.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1138665"></a><a id="id_mumrujkq5s9u"></a>10.3.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1138657"></a><b class="fm-exercise-head">Exercise 10.9</b>: <a id="marker-1148393"></a>Write a function <code class="fm-code-in-text1">contains(expression,</code> <code class="fm-code-in-text1">variable)</code> that checks whether the given expression contains any occurrence of the specified variable.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1138658"></a><b class="fm-exercise-head">Solution</b>: You could easily check whether the variable appears in the result of <code class="fm-code-in-text1">distinct_variables</code>, but here’s the implementation from scratch:</p>
+        <pre class="programlisting">def contains(exp, var):
+    if isinstance(exp, Variable):
+        return exp.symbol == var.symbol
+    elif isinstance(exp, Number):
+        return False
+    elif isinstance(exp, Sum):
+        return any([contains(e,var) for e in exp.exps])
+    elif isinstance(exp, Product):
+        return contains(exp.exp1,var) or contains(exp.exp2,var)
+    elif isinstance(exp, Power):
+        return contains(exp.base, var) or contains(exp.exponent, var)
+    elif isinstance(exp, Apply):
+        return contains(exp.argument, var)
+    else:
+        raise TypeError("Not a valid expression.")</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1138662"></a><b class="fm-exercise-head">Exercise 10.10</b>: Write a <code class="fm-code-in-text1">distinct_functions</code> function that takes an expression as an argument and returns the distinct, named functions (like sin or ln) that appear in the expression.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1138663"></a><b class="fm-exercise-head">Solution</b>: The implementation looks a lot like the <code class="fm-code-in-text1">distinct_variables</code> function from section 10.3.1:</p>
+        <pre class="programlisting">def distinct_functions(exp):
+    if isinstance(exp, Variable):
+        return set()
+    elif isinstance(exp, Number):
+        return set()
+    elif isinstance(exp, Sum):
+        return set().union(*[distinct_functions(exp) for exp in exp.exps])
+    elif isinstance(exp, Product):
+        return distinct_functions(exp.exp1).union(distinct_functions(exp.exp2))
+    elif isinstance(exp, Power):
+        return distinct_functions(exp.base).union(distinct_functions(exp.exponent))
+    elif isinstance(exp, Apply):
+        return set([exp.function.name]).union(distinct_functions(exp.argument))
+    else:
+        raise TypeError("Not a valid expression.")</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1138668"></a><b class="fm-exercise-head">Exercise 10.11</b>: Write a function <code class="fm-code-in-text1">contains_sum</code> that takes an expression and returns <code class="fm-code-in-text1">True</code> if it contains a <code class="fm-code-in-text1">Sum</code>, and <code class="fm-code-in-text1">False</code> otherwise.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1138669"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def contains_sum(exp):
+    if isinstance(exp, Variable):
+        return False
+    elif isinstance(exp, Number):
+        return False
+    elif isinstance(exp, Sum):
+        return True
+    elif isinstance(exp, Product):
+        return contains_sum(exp.exp1) or contains_sum(exp.exp2)
+    elif isinstance(exp, Power):
+        return contains_sum(exp.base) or contains_sum(exp.exponent)
+    elif isinstance(exp, Apply):
+        return contains_sum(exp.argument)
+    else:
+        raise TypeError("Not a valid expression.")</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1138673"></a><b class="fm-exercise-head">Exercise 10.12-Mini Project</b>: Write a <code class="fm-code-in-text1">__repr__</code> method on the <code class="fm-code-in-text1">Expression</code> classes so that they appear legibly<a id="marker-1138674"></a> in an interactive session.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1138676"></a><b class="fm-exercise-head">Solution</b>: See the walk-through notebook<a id="marker-1138675"></a> for chapter 10 or see appendix B for a discussion of <code class="fm-code-in-text1">__repr__</code> and other special methods on Python classes.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1138724"></a><b class="fm-exercise-head">Exercise 10.13-Mini Project</b>: If you know how to encode equations<a id="marker-1138723"></a> using the LaTeX language, write a <code class="fm-code-in-text1">_repr_latex_</code> method on the <code class="fm-code-in-text1">Expression</code> classes that returns LaTeX code representing the given expression. You should see nicely typeset renderings of your expressions in Jupyter after adding the method:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F11_Orland_UN02.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1138729"></a>Adding a <code class="fm-code-in-text1">_repr_latex_</code> method causes Jupyter to render equations nicely in the REPL.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1138730"></a><b class="fm-exercise-head">Solution</b>: See the walk-through notebook for chapter 10.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1138776"></a><b class="fm-exercise-head">Exercise 10.14-Mini Project</b>: Write a method to generate the Python code representing an expression. Use the Python <code class="fm-code-in-text1">eval</code> function to turn this into an executable Python function. Compare the result with the evaluate method. For instance, <code class="fm-code-in-text1">Power(Variable("x"),Number(2))</code> represents the expression <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>. This should produce the Python code <code class="fm-code-in-text1">x**2</code>. Then use Python’s <code class="fm-code-in-text1">eval</code> function to execute this code and show how it matches the result of the evaluate method.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1138777"></a><b class="fm-exercise-head">Solution</b>: See the walk-through notebook for implementation. When complete, you can<a id="marker-1148798"></a> run the following:</p>
+        <pre class="programlisting">&gt;&gt;&gt; Power(Variable("x"),Number(2))._python_expr()
+'(<i class="fm-in-times-italic1">x</i>) ** (2)'
+&gt;&gt;&gt; Power(Variable("x"),Number(2)).python_function(x=3)
+9<a id="marker-1148423"></a></pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_15"><a id="pgfId-1132773"></a><a id="id_5hiuacqaygcf"></a>10.4 Finding the derivative of a function</h2>
+
+  <p class="body"><a id="pgfId-1132774"></a>It <a id="marker-1148403"></a>might not <a id="marker-1148408"></a>seem <a id="marker-1148413"></a>obvious, but there is often a clean algebraic formula for the derivative of a function. For instance, if <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup>, then its derivative <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>), which measures the instantaneous rate of change in <i class="fm-in-times-italic">f</i> at any point <i class="fm-in-times-italic">x</i>, is given by <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>. If you know a formula like this, you can get an exact result such as <i class="fm-in-times-italic">f</i>'(2) = 12 without the numerical issues associated with using small secant lines.</p>
+
+  <p class="body"><a id="pgfId-1132775"></a>If you took calculus in high school or college, chances are you spent a lot of time learning and practicing how to find formulas for derivatives. It’s a straightforward task that doesn’t require much creativity, and it can be tedious. That’s why we’ll briefly spend time covering the rules and then focus on having Python do the rest of the work for us.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1132777"></a><a id="id_zd5hyj2cmsqq"></a>10.4.1 Derivatives of powers</h3>
+
+  <p class="body"><a id="pgfId-1132778"></a>Without <a id="marker-1148418"></a>knowing any calculus, you can find the derivative of a linear function of the form <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">mx</i> + <i class="fm-in-times-italic">b</i>. The slope of any secant on this line, no matter how small, is the same as the slope of the line <i class="fm-in-times-italic">m</i> ; therefore, <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) doesn’t depend on <i class="fm-in-times-italic">x</i>. Specifically, we can say <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">m</i>. This makes sense: a linear function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) changes at a constant rate with respect to its input <i class="fm-in-times-italic">x</i>, so its derivative is a constant function. Also, the constant <i class="fm-in-times-italic">b</i> has no effect on the slope of the line, so it doesn’t appear in the derivative (figure 10.12).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1151096"></a>Figure 10.12 The derivative of a linear function is a constant function.</p>
+
+  <p class="body"><a id="pgfId-1132784"></a> It turns out the derivative of a quadratic function is a linear function. For instance, <i class="fm-in-times-italic">q</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> has derivative <i class="fm-in-times-italic">q</i>'(<i class="fm-in-times-italic">x</i>) = 2<i class="fm-in-times-italic">x</i>. This also makes sense if you plot the graph of <i class="fm-in-times-italic">q</i>(<i class="fm-in-times-italic">x</i>). The slope of <i class="fm-in-times-italic">q</i>(<i class="fm-in-times-italic">x</i>) starts negative, increases, and eventually becomes positive after <i class="fm-in-times-italic">x</i> = 0. The function <i class="fm-in-times-italic">q</i>'(<i class="fm-in-times-italic">x</i>) = 2<i class="fm-in-times-italic">x</i> agrees with this qualitative description.</p>
+
+  <p class="body"><a id="pgfId-1132785"></a>As another example, I showed you that <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> has derivative 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>. All of these facts are special cases of a general rule: when you take the derivative of a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), which is a power of <i class="fm-in-times-italic">x</i>, you get back a function that is <i class="fm-italics">one lower</i> power. Specifically, figure 10.13 shows the derivative of a function of the form <i class="fm-italics">axn</i> is <i class="fm-in-times-italic">nax<sup class="fm-superscript2">n</sup></i> <sup class="fm-superscript">−1</sup>.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1151145"></a>Figure 10.13 A general rule for derivatives of powers: taking the derivative of a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), a power of x, returns a function that is one power lower.</p>
+
+  <p class="body"><a id="pgfId-1132791"></a>Let’s break this down for a specific example. If <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = 5<i class="fm-in-times-italic">x</i><sup class="fm-superscript">4</sup>, then this has the form <i class="fm-italics">axn</i> with <i class="fm-in-times-italic">a</i> = 5 and <i class="fm-in-times-italic">n</i> = 4. The derivative is <i class="fm-in-times-italic">nax<sup class="fm-superscript2">n</sup></i> <sup class="fm-superscript">−1</sup>, which becomes 4 <span class="fm-in-cambria">·</span> 5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i><sup class="fm-superscript">4−1</sup> = 20<i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup>. Like any other derivative we’ve covered in this chapter, you can double-check this by plotting it alongside the result from our numerical derivative function from chapter 9. The graphs should coincide exactly.</p>
+
+  <p class="body"><a id="pgfId-1132792"></a>A linear function like <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) is a power of <i class="fm-in-times-italic">x</i> : <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">mx</i><sup class="fm-superscript">1</sup>. The power rule applies here as well: <i class="fm-in-times-italic">mx</i><sup class="fm-superscript">1</sup> has a derivative 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">mx</i><sup class="fm-superscript">0</sup> because <i class="fm-in-times-italic">x</i><sup class="fm-superscript">0</sup> = 1. By geometric considerations, adding a constant <i class="fm-in-times-italic">b</i> does not change the derivative; it moves the graph up and down, but <a id="marker-1148876"></a>it doesn’t <a id="marker-1148877"></a>change the slope.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1132794"></a><a id="id_awdwcbsod4x2"></a>10.4.2 Derivatives of transformed functions</h3>
+
+  <p class="body"><a id="pgfId-1132795"></a>Adding a <a id="marker-1148890"></a>constant to a <a id="marker-1148891"></a>function never changes its derivative. For instance, the derivative of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">100</sup> is 100<i class="fm-in-times-italic">x</i><sup class="fm-superscript">99</sup>, and the derivative of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">100</sup> − <i class="fm-in-cambria2">π</i> is also 100<i class="fm-in-times-italic">x</i><sup class="fm-superscript">99</sup>. But some modifications of a function <i class="fm-italics">do</i> change the derivative. For example, if you put a negative sign in front of a function, the graph flips upside down and so does the graph of any secant line. If the slope of the secant line is <i class="fm-in-times-italic">m</i> before the flip, it is <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic">m</i> after; the change in <i class="fm-in-times-italic">x</i> is the same as before, but the change in <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) is now in the opposite direction (figure 10.14).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1132800"></a>Figure 10.14 For any secant line on <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), the secant line on the same <i class="fm-in-times-italic">x</i> interval of -<i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) has the opposite slope.</p>
+
+  <p class="body"><a id="pgfId-1132801"></a>Because derivatives are determined by the slopes of secant lines, the derivative of a negative function -<i class="fm-in-times-italic">f</i>(−<i class="fm-in-times-italic">x</i>) is equal to the negative derivative -<i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>). This agrees with the formula we’ve already seen: if <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-cambria">−</span>5<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> then <i class="fm-in-times-italic">a</i> = <span class="fm-in-cambria">−</span>5 and <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = −10<i class="fm-in-times-italic">x</i>(as compared to 5<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, which has the derivative +10<i class="fm-in-times-italic">x</i>). Another way to put this is that if you multiply a function by −1, then its derivative is multiplied by −1 as well.</p>
+
+  <p class="body"><a id="pgfId-1132802"></a>The same turns out to be true for any constant. If you multiply <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) by 4 to get 4<i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), figure 10.15 shows that this new function is four times steeper at every point and, therefore, its derivative is 4<i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1132807"></a>Figure 10.15 Multiplying a function by 4 makes every secant line four times steeper.</p>
+
+  <p class="body"><a id="pgfId-1132808"></a>This agrees with the power rule for derivatives I showed you. Knowing the derivative of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is 2<i class="fm-in-times-italic">x</i>, you also know that the derivative of 10<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is 20<i class="fm-in-times-italic">x</i>, the derivative of <span class="fm-in-cambria">−</span>3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is <span class="fm-in-cambria">−</span>6<i class="fm-in-times-italic">x</i>, and so on. We haven’t covered it yet, but if I tell you the derivative of <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) is <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>), you’ll know right away that the derivative of 1.5 <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) is 1.5 <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>).</p>
+
+  <p class="body"><a id="pgfId-1132809"></a>A final transformation that’s important is adding two functions together. If you look at the graph of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) + <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) for any pair of functions <i class="fm-in-times-italic">f</i> and <i class="fm-in-times-italic">g</i> in figure 10.16, the vertical change for any secant line is the sum of the vertical changes in <i class="fm-in-times-italic">f</i> and <i class="fm-in-times-italic">g</i> on that interval.</p>
+
+  <p class="body"><a id="pgfId-1132815"></a>When we’re working with formulas, we can take the derivative of each term in a sum independently. If we know that the derivative of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is 2<i class="fm-in-times-italic">x</i>, and the derivative of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> is 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, then the derivative of <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> is 2<i class="fm-in-times-italic">x</i> + 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>. This rule gives a more precise reason why the derivative of <i class="fm-in-times-italic">mx</i> + <i class="fm-in-times-italic">b</i> is <i class="fm-in-times-italic">m</i> ; the derivatives of the terms are <i class="fm-in-times-italic">m</i> and 0, respectively, so<a id="marker-1148448"></a> the <a id="marker-1148453"></a>derivative of the whole formula is <i class="fm-in-times-italic">m</i> + 0 = <i class="fm-in-times-italic">m</i>.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1139012"></a><a id="id_j2wbr5vcwqgn"></a>Figure 10.16 The vertical change in <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) on some <i class="fm-in-times-italic">x</i> interval is the sum of the vertical change in <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) and in <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) on that interval.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1132817"></a>10.4.3 Derivatives of some special functions</h3>
+
+  <p class="body"><a id="pgfId-1134824"></a>There <a id="marker-1148458"></a>are <a id="marker-1148463"></a>plenty of functions that can’t be written in the form <i class="fm-italics">axn</i> or even as a sum of terms of this form. For example, trigonometric functions, exponential functions, and logarithms all need to be covered separately. In a calculus class, you learn how to figure out the derivatives of these functions from scratch, but that’s beyond the scope of this book. My goal is to show you how to take derivatives so that when you meet them in the wild, you’ll be able to solve the problem at hand. To that end, I give you a quick list of some other important derivative rules (table 10.1).</p>
+
+  <p class="fm-table-caption"><a id="pgfId-1139145"></a>Table 10.1 Some basic derivatives <i class="calibre20">(continued)</i></p>
+
+  <table border="1" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1134842"></a>Function name</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1139200"></a>Formula</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1134844"></a>Derivative</p>
+      </th>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134846"></a>Sine</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139202"></a><span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>)</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134848"></a><span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>)</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134850"></a>Cosine</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139204"></a><span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>)</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134852"></a>−<span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>)</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134854"></a>Exponential</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139206"></a><i class="fm-in-times-italic1">e</i><sup class="fm-superscript1"><i class="fm-in-times-italic2">x</i></sup></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134856"></a><i class="fm-in-times-italic1">e</i><sup class="fm-superscript1"><i class="fm-in-times-italic2">x</i></sup></p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139297"></a>Exponential (any base)</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139208"></a><i class="fm-in-times-italic1">a</i><sup class="fm-superscript1"><i class="fm-in-times-italic2">x</i></sup></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134860"></a><span class="fm-in-times1">ln</span>(<i class="fm-in-times-italic1">a</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">a</i><sup class="fm-superscript1"><i class="fm-in-times-italic2">x</i></sup></p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139314"></a>Natural logarithm</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139316"></a><span class="fm-in-times1">ln</span>(<i class="fm-in-times-italic1">x</i>)</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139318"></a>1/<i class="fm-in-times-italic1">x</i></p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134862"></a>Logarithm (any base)</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1139210"></a><span class="fm-in-times1">log</span><sub class="fm-subscript2"><i class="fm-in-times-italic2">a</i></sub> <i class="fm-in-times-italic1">x</i></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1134864"></a>1/<span class="fm-in-times1">ln</span>(<i class="fm-in-times-italic1">a</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">x</i></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1132872"></a>You can use this table along with the previous rules to figure out more complicated derivatives. For instance, let <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = 6<i class="fm-in-times-italic">x</i> + 2 <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) + 5 <i class="fm-italics">ex</i>. The derivative of the first term is 6, by the power rule from section 10.4.1. The second term contains <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>), whose derivative is <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>), and the factor of two doubles the result, giving us 2 <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>). Finally, <i class="fm-italics">ex</i> is its own derivative (a very special case!), so the derivative of 5 <i class="fm-italics">ex</i> is 5 <i class="fm-italics">ex</i>. All together the derivative is <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 6 + 2 <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>) + 5 <i class="fm-italics">ex</i>.</p>
+
+  <p class="body"><a id="pgfId-1132873"></a>You have to be careful to <i class="fm-italics">only</i> use the rules we’ve covered so far: the power law (section 10.4.1), the rules in the table 10.1, and the rules for sums and scalar multiples. If your function is <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">sin</span>(<span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>)), you might be tempted to write <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">cos</span>(<span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>)), substituting in the derivative for sine in both of its appearances. But this is not correct! Nor can you infer that the derivative of the product <i class="fm-italics">ex</i> <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>) is <span class="fm-in-cambria">−</span> <i class="fm-italics">ex</i> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). When functions are combined in other ways than addition and subtraction, we need new rules <a id="marker-1148468"></a>to take their<a id="marker-1148473"></a> derivatives.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1132875"></a><a id="id_yz05v4xdpd16"></a>10.4.4 Derivatives of products and compositions</h3>
+
+  <p class="body"><a id="pgfId-1132876"></a>Let’s<a id="marker-1148478"></a> look<a id="marker-1148483"></a> at a product like <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). This function can be written as a product of two other functions: <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>), where <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> and <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). As I just warned you, <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) is <i class="fm-italics">not</i> equal to <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">h</i>'(<i class="fm-in-times-italic">x</i>) here. Fortunately, there’s another formula that is true, and<a id="marker-1132877"></a> it’s called the <i class="fm-italics">product rule</i> for derivatives.</p>
+
+  <p class="fm-callout"><a id="pgfId-1146552"></a><span class="fm-callout-head">The product rule</span> If <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) can be written as the product of two other functions <i class="fm-in-times-italic1">g</i> and <i class="fm-in-times-italic1">h</i> as in <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>), then the derivative of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) is given by:</p>
+
+  <p class="fm-callout"><a id="pgfId-1146556"></a><i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">g</i>'(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>) + <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">h</i>'(<i class="fm-in-times-italic1">x</i>)</p>
+
+  <p class="body"><a id="pgfId-1132880"></a>Let’s practice applying this rule to <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>). In this case, <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> and <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>), so <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">x</i>) = 2<i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">h</i>'(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>) as I showed you previously. Plugging these into the product rule formula <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) + <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">h</i>'(<i class="fm-in-times-italic">x</i>), we get <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 2<i class="fm-in-times-italic">x</i> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) + <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>). That’s all there is to it!</p>
+
+  <p class="body"><a id="pgfId-1132881"></a>You can see that this product rule is compatible with the power rule from section 10.4.1. If you rewrite <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> as the product of <i class="fm-in-times-italic">x</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i>, the product rule tells you its derivative is 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">x</i> <span class="fm-in-cambria">·</span> 1 = 2<i class="fm-in-times-italic">x</i>.</p>
+
+  <p class="body"><a id="pgfId-1145332"></a>Another important rule tells us how to take derivatives of composed functions like <span class="fm-in-times">ln</span>(<span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>)). This function has the form <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>)), where <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">ln</span>(<i class="fm-in-times-italic">x</i>) and <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>). We can’t just plug in the derivatives where we see the functions, getting −1/<span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>); the answer is a bit more complicated. The formula for the derivative of a function of the form <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>)) is called the <i class="fm-italics">chain rule</i>.</p>
+
+  <p class="fm-callout"><a id="pgfId-1147493"></a><span class="fm-callout-head">The chain rule</span> If <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>)is a composition of two functions, meaning it can be written in the form <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>)) for some functions <i class="fm-in-times-italic1">g</i> and <i class="fm-in-times-italic1">h</i>, then the derivative of <i class="fm-italics">f</i> is given by:</p>
+
+  <p class="fm-callout"><a id="pgfId-1147494"></a><i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">h</i>'(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">g</i>'(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>))</p>
+
+  <p class="body"><a id="pgfId-1146545"></a>In our case, <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">x</i>) = 1/<i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">h</i>'(<i class="fm-in-times-italic">x</i>) = −<span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) both read from table 10.1. Then plugging into the chain rule formula, we get the result:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_EQ11.png"/></p>
+
+  <p class="body"><a id="pgfId-1146549"></a>You might remember that <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>)/<span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>) = tan(<i class="fm-in-times-italic">x</i>), so we could write even more concisely that the derivative of <span class="fm-in-times">ln</span>(<span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>)) = tan(<i class="fm-in-times-italic">x</i>). I’ll give you a few more opportunities to practice the product and chain rule in the exercises, and you can also turn to any calculus book for abundant examples of calculating derivatives. You don’t need to take my word for these derivative rules; you should get a result that looks the same if you find a formula for the derivative or if you use the derivative function from chapter 9. In the next section, I’ll show you how to turn the rules for <a id="marker-1148488"></a>derivatives <a id="marker-1148493"></a>into code.</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1132892"></a><a id="id_ewsfqh33v727"></a>10.4.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1140699"></a><b class="fm-exercise-head">Exercise 10.15</b>: Show<a id="marker-1148498"></a> that <a id="marker-1148503"></a>the derivative of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">5</sup> is indeed <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) = 5<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">4</sup> by plotting the numerical derivative (using the derivative function from chapter 8) alongside the symbolic derivative <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) = 5<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">4</sup>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1140700"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>):
+    return x**5
+plot_function(derivative(p), 0, 1)
+plot_function(lambda x: 5*x**4, 0, 1)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1140705"></a>The two graphs overlap exactly.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_UN03.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1140706"></a>The graph of 5x4 and the (numerical) derivative of x5</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1140918"></a><b class="fm-exercise-head">Exercise 10.16-Mini Project</b>: Let’s think again of the functions of one variable as a vector space as we did in chapter 6. Explain why the rules for taking derivatives mean the derivative is a linear transformation of this vector space. (To be specific, you have to restrict your attention to the functions that have derivatives everywhere.)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1140919"></a><b class="fm-exercise-head">Solution</b>: Thinking of functions <i class="fm-in-times-italic1">f</i> and <i class="fm-in-times-italic1">g</i> as vectors, we can add and multiply them by scalars. Remember that (<i class="fm-in-times-italic1">f</i> + <i class="fm-in-times-italic1">g</i>)(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) + <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>) and (<i class="fm-in-times-italic1">c</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">f</i> )(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">c</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>). A <i class="fm-italics">linear transformation</i> is one that preserves<a id="marker-1140920"></a> vector sums and scalar multiples.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1140921"></a>If we write the derivative as a function <i class="fm-in-times-italic1">D</i>, we can think of it as taking a function as an input and returning its derivative as an output. For instance, <i class="fm-italics">Df</i> = <i class="fm-in-times-italic1">f</i>'. The derivative of a sum of two functions is the sum of the derivatives</p>
+
+        <p class="fm-equation"><a id="pgfId-1140922"></a><i class="fm-in-times-italic2">D</i>(<i class="fm-in-times-italic2">f</i> + <i class="fm-in-times-italic2">g</i>) = <i class="fm-italics">Df</i> + <i class="fm-italics">Dg</i></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1140923"></a>The derivative of a function multiplied by a number <i class="fm-in-times-italic1">c</i> is <i class="fm-in-times-italic1">c</i> times the derivative of the original function:</p>
+
+        <p class="fm-equation"><a id="pgfId-1140924"></a><i class="fm-in-times-italic2">D</i>(<i class="fm-in-times-italic2">c</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">f</i> ) = <i class="fm-in-times-italic2">c</i> <span class="fm-in-cambria">·</span> <i class="fm-italics">Df</i></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1140925"></a>These two rules mean that <i class="fm-in-times-italic1">D</i> is a linear transformation. Note, in particular, that the derivative of a linear combination of functions is the same linear combination of their derivatives:</p>
+
+        <p class="fm-equation"><a id="pgfId-1140926"></a><i class="fm-in-times-italic2">D</i>(<i class="fm-in-times-italic2">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">f</i> + <i class="fm-in-times-italic2">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">g</i>) = <i class="fm-in-times-italic2">a</i> <span class="fm-in-cambria">·</span> <i class="fm-italics">Df</i> + <i class="fm-in-times-italic2">b</i> <span class="fm-in-cambria">·</span> <i class="fm-italics">Dg</i></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141035"></a><b class="fm-exercise-head">Exercise 10.17-Mini Project</b>: Find a formula for the derivative of a quotient: <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) / <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141039"></a><b class="fm-exercise-head">Hint</b>: Use the fact that</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_UN03_EQ12.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144214"></a>The power law holds for negative exponents; for instance, <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">−1</sup> has the derivative − <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">−2</sup> = −1/<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141044"></a><b class="fm-exercise-head">Solution</b>: The derivative of <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>)<sup class="fm-superscript1">−1</sup> is <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>)<sup class="fm-superscript1">−2</sup> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">g</i>'(<i class="fm-in-times-italic1">x</i>) by the chain rule or</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_UN03_EQ13.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1132914"></a>  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141179"></a>With this information, the derivative of the quotient <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>)/ <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>) is equal to the derivative of the product <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>)/ <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>)<sup class="fm-superscript1">−1</sup>, which is given by the product rule:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_UN03_EQ14.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141183"></a>Multiplying the first term by <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>)/ <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>) gives both terms the same denominator, so we can add them:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_UN03_EQ15.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141229"></a><b class="fm-exercise-head">Exercise 10.18</b>: What is the derivative of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <span class="fm-in-times1">ln</span>(<i class="fm-in-times-italic1">x</i>)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141230"></a><b class="fm-exercise-head">Solution</b>: There are two products here, and fortunately, we can take the product rule in any order and get the same result. The derivative of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) is <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> −<span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) + <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) = <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>)<sup class="fm-superscript1">2</sup> − <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>)<sup class="fm-superscript1">2</sup>. The derivative of <span class="fm-in-times1">ln</span>(<i class="fm-in-times-italic1">x</i>) is 1/<i class="fm-in-times-italic1">x</i>, so the product rule tells us that the derivative of the whole product is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_UN03_EQ16.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141258"></a><b class="fm-exercise-head">Exercise 10.19</b>: Assume we know the derivatives of three functions <i class="fm-in-times-italic1">f</i> , <i class="fm-in-times-italic1">g</i>, and <i class="fm-in-times-italic1">h</i>, which are written <i class="fm-in-times-italic1">f</i>', <i class="fm-in-times-italic1">g</i> ', and <i class="fm-in-times-italic1">h</i> '. What is the derivative of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>))) with respect to <i class="fm-in-times-italic1">x</i> ?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141259"></a><b class="fm-exercise-head">Solution</b>: We need to apply the chain rule twice here. One term is <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>))), but we need to multiply it by the derivative of <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>)). That derivative is <i class="fm-in-times-italic1">g</i>'(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>)) times the derivative of the inside function <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>). <a id="marker-1148508"></a>Because <a id="marker-1148513"></a>the <a id="marker-1148518"></a>derivative <a id="marker-1148523"></a>of <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>)) <a id="marker-1148528"></a>is <i class="fm-in-times-italic1">h</i>'(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">g</i>'(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>)), the derivative of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>))) is <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">g</i>'(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>)) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>))).</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_21"><a id="pgfId-1132952"></a><a id="id_e600jucu41yz"></a>10.5 Taking derivatives automatically</h2>
+
+  <p class="body"><a id="pgfId-1132953"></a>Even<a id="marker-1148533"></a> though <a id="marker-1148538"></a>I taught <a id="marker-1148543"></a>you only a few rules for taking derivatives, you’re now prepared to handle any of an infinite collection of possible functions. As long as a function is built from sums, products, powers, compositions, trigonometric functions, and exponential functions, you are equipped to figure out its derivative using the chain rule, product rule, and so on.</p>
+
+  <p class="body"><a id="pgfId-1132954"></a>This parallels the approach we used to build algebraic expressions in Python. Even though there are infinitely many possibilities, they are all formed from the same set of building blocks and a handful of predefined ways to assemble them together. To take derivatives automatically, we need to match each case of a representable expression, be it an element or combinator, with the appropriate rule for taking its derivative. The end result is a Python function that takes one expression and returns a new expression representing its derivative.</p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1132956"></a><a id="id_ids39i4n3u83"></a>10.5.1 Implementing a derivative method for expressions</h3>
+
+  <p class="body"><a id="pgfId-1132958"></a>Once <a id="marker-1148548"></a>again, <a id="marker-1148553"></a>we can implement the derivative function as a method<a id="marker-1132957"></a> on each of the <code class="fm-code-in-text">Expression</code> classes. To enforce that they all have this method, we can add an abstract method to the abstract base class:</p>
+  <pre class="programlisting">class Expression(ABC):
+    ...
+    @abstractmethod
+    def derivative(self,var):
+        pass</pre>
+
+  <p class="body"><a id="pgfId-1132960"></a>The method needs to take a parameter, <code class="fm-code-in-text">var</code>, indicating which variable we’re taking a derivative with respect to. For instance, <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">y</i>) = <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup> would need a derivative taken with respect to <i class="fm-in-times-italic">y</i>. As a trickier example, we’ve worked with expressions<a id="marker-1132961"></a> like <i class="fm-in-times-italic">axn</i>, where <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">n</i> represent constants and only <i class="fm-in-times-italic">x</i> is the variable. From this perspective, the derivative is <i class="fm-in-times-italic">nax<sup class="fm-superscript2">n</sup></i> <sup class="fm-superscript">−1</sup>. However, if we think of this instead as a function of <i class="fm-in-times-italic">a</i>, as in <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">a</i>) = <i class="fm-in-times-italic">ax<sup class="fm-superscript2">n</sup></i>, the derivative is <i class="fm-in-times-italic">x<sup class="fm-superscript2">n</sup></i> <sup class="fm-superscript">−1</sup>, a constant to a constant power. We get yet another result if we consider it a function of <i class="fm-in-times-italic">n</i> : if <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">n</i>) = <i class="fm-in-times-italic">axn</i>, then <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">n</i>) = <i class="fm-in-times-italic">a</i> <span class="fm-in-times">ln</span>(<i class="fm-in-times-italic">n</i>) <i class="fm-in-times-italic">x<sup class="fm-superscript2">n</sup></i> . To avoid confusion, we’ll consider all expressions as functions of the variable <i class="fm-in-times-italic">x</i> in the following discussion.</p>
+
+  <p class="body"><a id="pgfId-1132962"></a>As usual, our easiest examples are the elements: <code class="fm-code-in-text">Number</code> and <code class="fm-code-in-text">Variable</code> objects. For <code class="fm-code-in-text">Number</code>, the derivative is always the expression 0, regardless of the variable passed in:</p>
+  <pre class="programlisting">class Number(Expression):
+    ...
+    def derivative(self,var):
+        return Number(0)</pre>
+
+  <p class="body"><a id="pgfId-1132964"></a>If we’re taking the derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i>, the result is <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 1, which is the slope of the line. Taking the derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">c</i> should give us 0 as <i class="fm-in-times-italic">c</i> represents a constant here, rather than the argument of the function <i class="fm-in-times-italic">f</i> . For that reason, the derivative of a variable is 1 only if it’s the variable we’re taking the derivative with respect to; otherwise, the derivative is 0:</p>
+  <pre class="programlisting">class Variable(Expression):
+    ...
+    def derivative(self, var):
+        if self.symbol == var.symbol:
+            return Number(1)
+        else:
+            return Number(0)</pre>
+
+  <p class="body"><a id="pgfId-1132966"></a>The easiest combinator to take derivatives of is Sum; the derivative of a <code class="fm-code-in-text">Sum</code> function is just the sum of the derivatives of its terms:</p>
+  <pre class="programlisting">class Sum(Expression):
+    ...
+    def derivative(self, var):
+        return Sum(*[exp.derivative(var) for exp in self.exps])</pre>
+
+  <p class="body"><a id="pgfId-1132969"></a>With these methods implemented, we can do some basic examples. For instance, the expression <code class="fm-code-in-text">Sum(Variable("x"),Variable("c"),Number(1))</code> represents <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">c</i> + 1, and thinking of that as a function of <i class="fm-in-times-italic">x</i>, we can take its derivative with respect to <i class="fm-in-times-italic">x</i> :</p>
+  <pre class="programlisting">&gt;&gt;&gt; Sum(Variable("x"),Variable("c"),Number(1)).derivative(Variable("x"))
+Sum(Number(1),Number(0),Number(0))</pre>
+
+  <p class="body"><a id="pgfId-1132971"></a>This correctly reports the derivative of <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">c</i> + 1 with respect to <i class="fm-in-times-italic">x</i> as 1 + 0 + 0, which is equal to 1. This is a clunky way to report the result, but at least we got it right.</p>
+
+  <p class="body"><a id="pgfId-1132972"></a>I encourage you to do the mini-project for writing a simplify method that gets rid of extraneous terms, like added zeros. We could add some logic to simplify expressions as we compute the derivatives, but it’s better to separate our concerns and focus on getting the derivative right for now. Keeping that in mind, let’s cover <a id="marker-1148558"></a>the rest of the <a id="marker-1148563"></a>combinators.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1132974"></a><a id="id_jub3rp9pgjlq"></a>10.5.2 Implementing the product rule and chain rule</h3>
+
+  <p class="body"><a id="pgfId-1132975"></a>The <a id="marker-1148568"></a>product<a id="marker-1148573"></a> rule <a id="marker-1148578"></a>turns <a id="marker-1148583"></a>out <a id="marker-1148588"></a>to be <a id="marker-1148593"></a>the easiest of the remaining combinators to implement. Given the two expressions that make up a product, the derivative of the product is defined in terms of those expressions and their derivatives. Remember, if the product is <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>), the derivative is <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) + <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">h</i>'(<i class="fm-in-times-italic">x</i>). That translates to the following code, which returns the result as the sum of two products:</p>
+  <pre class="programlisting">class Product(Expression):
+    ...
+    def derivative(self,var):
+        return Sum(
+            Product(self.exp1.derivative(var), self.exp2),
+            Product(self.exp1, self.exp2.derivative(var)))</pre>
+
+  <p class="body"><a id="pgfId-1132977"></a>Again, this gives us correct (albeit unsimplified) results. For instance, the derivative of <i class="fm-in-times-italic">cx</i> with respect to <i class="fm-in-times-italic">x</i> is</p>
+  <pre class="programlisting">&gt;&gt;&gt; Product(Variable("c"),Variable("x")).derivative(Variable("x"))
+Sum(Product(Number(0),Variable("x")),Product(Variable("c"),Number(1)))</pre>
+
+  <p class="body"><a id="pgfId-1132979"></a>That result represents 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">c</i> <span class="fm-in-cambria">·</span> 1, which is, of course, <i class="fm-in-times-italic">c</i>.</p>
+
+  <p class="body"><a id="pgfId-1132980"></a>Now we’ve got the <code class="fm-code-in-text">Sum</code> and <code class="fm-code-in-text">Product</code> combinators handled, so let’s look at <code class="fm-code-in-text">Apply</code>. To handle a function application like <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>), we need to encode both the derivative of the sine function <i class="fm-italics">and</i> the use of the chain rule because of the <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> inside the parentheses.</p>
+
+  <p class="body"><a id="pgfId-1132981"></a>First, let’s encode the derivatives of some of the special functions in terms of a placeholder variable unlikely to be confused with any we use in practice. The derivatives are stored as a dictionary mapping from function names to expressions giving their derivatives:</p>
+  <pre class="programlisting">_var = Variable('placeholder variable')                       <span class="fm-combinumeral">❶</span>
+
+_derivatives = {
+    "sin": Apply(Function("cos"), _var),                      <span class="fm-combinumeral">❷</span>
+    "cos": Product(Number(−1), Apply(Function("sin"), _var)),
+    "ln": Quotient(Number(1), _var)
+}</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149548"></a><span class="fm-combinumeral">❶</span> Creates a placeholder variable designed so that it’s not confused with any symbol (like <i class="fm-in-times-italic1">x</i> or y) that we might actually use</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149569"></a><span class="fm-combinumeral">❷</span> Records that the derivative of sine is cosine, with cosine expressed as an expression using the placeholder variable</p>
+
+  <p class="body"><a id="pgfId-1132987"></a>The next step<a id="marker-1132985"></a> is to add the <code class="fm-code-in-text">derivative</code> method to the <code class="fm-code-in-text">Apply</code> class, looking up<a id="marker-1132986"></a> the correct derivative from the <code class="fm-code-in-text">_derivatives</code> dictionary and appropriately applying the chain rule. Remember that the derivative of <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>)) is <i class="fm-in-times-italic">h</i>'(<i class="fm-in-times-italic">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>)). If, for example, we’re looking at <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>), then <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) and <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>. We first go to the dictionary to get the derivative of sin, which we get back as cos with a placeholder value. We need to plug in <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> for the placeholder to get the <i class="fm-in-times-italic">g</i>'(<i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>)) term from the chain rule. This requires a substitute function, which replaces all instances of a variable with an expression (a mini-project from earlier in the chapter). If you didn’t do that mini-project, you can see the implementation in the source code. The derivative method for <code class="fm-code-in-text">Apply</code> looks like this:</p>
+  <pre class="programlisting">class Apply(Expression):
+    ...
+    def derivative(self, var):
+        return Product(
+                self.argument.derivative(var),                    <span class="fm-combinumeral">❶</span>
+                _derivatives[self.function.name].substitute(_var, self.argument))                                                   <span class="fm-combinumeral">❷</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1132991"></a><span class="fm-combinumeral">❶</span> Returns h'(<i class="fm-in-times-italic1">x</i>) in h'(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> g'(h(<i class="fm-in-times-italic1">x</i>)) of the chain rule formula</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149600"></a><span class="fm-combinumeral">❷</span> This is the g'(h(<i class="fm-in-times-italic1">x</i>)) of the chain rule formula, where the _derivatives dictionary looks up g' and h(<i class="fm-in-times-italic1">x</i>) is substituted in.</p>
+
+  <p class="body"><a id="pgfId-1141472"></a>For <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>), for example, we have</p>
+  <pre class="programlisting">&gt;&gt;&gt; Apply(Function("sin"),Power(Variable("x"),Number(2))).derivative(<i class="fm-in-times-italic1">x</i>)
+Product(Product(Number(2),Power(Variable("x"),Number(1))),Apply(Function("cos"),Power(Variable("x"),Number(2))))</pre>
+
+  <p class="body"><a id="pgfId-1132993"></a>Literally, <a id="marker-1148598"></a>that <a id="marker-1148603"></a>result <a id="marker-1148608"></a>translates<a id="marker-1148613"></a> to (2<i class="fm-in-times-italic">x</i><sup class="fm-superscript">1</sup>) <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>), which <a id="marker-1148618"></a>is a <a id="marker-1148623"></a>correct application of the chain rule.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1132995"></a><a id="id_37gfncwu0lrc"></a>10.5.3 Implementing the power rule</h3>
+
+  <p class="body"><a id="pgfId-1132996"></a>The <a id="marker-1148628"></a>last kind <a id="marker-1148633"></a>of expression <a id="marker-1148638"></a>we need to handle is the Power combinator. There are actually three derivative rules we<a id="marker-1132997"></a> need to include in the <code class="fm-code-in-text">derivative</code> method for the <code class="fm-code-in-text">Power</code> class. The first is the<a id="marker-1132998"></a> rule I called the power rule, which tells us that <i class="fm-in-times-italic">x<sup class="fm-superscript2">n</sup></i> has derivative <i class="fm-in-times-italic">nx<sup class="fm-superscript2">n</sup></i> <sup class="fm-superscript">−1</sup>, when <i class="fm-in-times-italic">n</i> is a constant. The second is the derivative of the function <i class="fm-in-times-italic">ax</i>, where the base, <i class="fm-in-times-italic">a</i>, is assumed to be constant while the exponent changes. This function has the derivative <span class="fm-in-times">ln</span>(<i class="fm-in-times-italic">a</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">a<sup class="fm-superscript2">x</sup></i> with respect to <i class="fm-in-times-italic">x</i>.</p>
+
+  <p class="body"><a id="pgfId-1132999"></a>Finally, we need to handle the chain rule here because there could be an expression involved in either the base or the exponent, like <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>)<sup class="fm-superscript">8</sup> or 15<sup class="fm-superscript"><span class="fm-in-times2">cos</span>(<i class="fm-in-times-italic2">x</i>)</sup>. There’s yet another case where <i class="fm-italics">both</i> the base and the exponent are variables like <i class="fm-in-times-italic">n<sup class="fm-superscript2">x</sup></i> or <span class="fm-in-times">ln</span>(<i class="fm-in-times-italic">x</i>)<sup class="fm-superscript"><span class="fm-in-times2">sin</span>(<i class="fm-in-times-italic2">x</i>)</sup>. In all my years taking derivatives, I’ve never seen a real application where this case comes up, so I’ll skip it and raise an exception instead.</p>
+
+  <p class="body"><a id="pgfId-1133000"></a>Because <i class="fm-in-times-italic">x<sup class="fm-superscript2">n</sup></i> , <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>)<sup class="fm-superscript">n</sup>, <i class="fm-in-times-italic">a<sup class="fm-superscript2">x</sup></i> , and <i class="fm-in-times-italic">a</i><sup class="fm-superscript"><i class="fm-in-times-italic2">g</i>(<i class="fm-in-times-italic2">x</i>)</sup> are all represented in Python in the form <code class="fm-code-in-text">Power(expression1,</code> <code class="fm-code-in-text">expression2)</code>, we have to do some checks to find out what rule to use. If the exponent is a number, we use the <i class="fm-in-times-italic">x<sup class="fm-superscript2">n</sup></i> rule, but if the base is a number, we use the <i class="fm-in-times-italic">a<sup class="fm-superscript2">x</sup></i> rule. In both cases, I use the chain rule by default. After all, <i class="fm-in-times-italic">x<sup class="fm-superscript2">n</sup></i> is a special case of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>)<sup class="fm-superscript"><i class="fm-in-times-italic2">n</i></sup>, where <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i>. Here’s what the code looks like:</p>
+  <pre class="programlisting">class Power(Expression):
+    ...
+    def derivative(self,var):
+        if isinstance(self.exponent, Number):                            <span class="fm-combinumeral">❶</span>
+            power_rule = Product(
+                    Number(self.exponent.number), 
+                    Power(self.base, Number(self.exponent.number − 1)))
+            return Product(self.base.derivative(var),power_rule)         <span class="fm-combinumeral">❷</span>
+        elif isinstance(self.base, Number):                              <span class="fm-combinumeral">❸</span>
+            exponential_rule = Product(
+                Apply(Function("ln"),
+                Number(self.base.number)
+            ), 
+            self)
+            return Product(
+                self.exponent.derivative(var), 
+                exponential_rule)                                        <span class="fm-combinumeral">❹</span>
+        else:
+            raise Exception(
+            "can't take derivative of power {}".format(
+            self.display()))</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149869"></a><span class="fm-combinumeral">❶</span> If the exponent is a number, uses the power rule</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149890"></a><span class="fm-combinumeral">❷</span> The derivative of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>)<sup class="fm-in-superscript-italic">n</sup> is <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">nf</i>(<i class="fm-in-times-italic1">x</i>)<sup class="fm-superscript1">n−1</sup>, so here we multiply the factor of <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) according to the chain rule.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149907"></a><span class="fm-combinumeral">❸</span> Checks if the base is a number; if so, we use the exponential rule.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1149924"></a><span class="fm-combinumeral">❹</span> Multiplies in a factor of <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) if we’re trying to take the derivative of <i class="fm-in-times-italic1">a</i><sup class="fm-superscript1"><i class="fm-in-times-italic2">f</i>(<i class="fm-in-times-italic2">x</i>)</sup>, again according to the chain rule</p>
+
+  <p class="body"><a id="pgfId-1133014"></a>In the final case, where neither the base or the exponent is a number, we raise an error. With that final combinator implemented, you have a complete derivative calculator! It can handle (nearly) any expression built out of your elements and combinators. If you test it on our original expression, (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>), you’ll get back the verbose, but correct, result of:</p>
+
+  <p class="fm-equation">0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup> + 3 <span class="fm-in-cambria">·</span> 1 <span class="fm-in-cambria">·</span> 2 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">1</sup> + 1 <span class="fm-in-cambria">·</span> <span class="fm-in-times2">sin</span>(<i class="fm-in-times-italic2">x</i>) + (<i class="fm-in-times-italic2">e</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic2">x</i>) <span class="fm-in-cambria">·</span> 1 <span class="fm-in-cambria">·</span> <span class="fm-in-times2">cos</span>(<i class="fm-in-times-italic2">x</i>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-34.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1133019"></a>This reduces to (6<i class="fm-in-times-italic">x</i> + 1) <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) + (3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i>) <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>) and shows a correct use of the product and the power rules. Coming into this chapter, you knew how to use Python to do arithmetic, then you learned how to have Python do algebra as well. Now, you can really say, you’re doing calculus in Python too! In the final section, I’ll tell you a bit about taking integrals symbolically in Python, <a id="marker-1148643"></a>using <a id="marker-1148648"></a>an off-the-shelf <a id="marker-1148653"></a>Python library called SymPy.</p>
+
+  <h3 class="fm-head1" id="heading_id_25"><a id="pgfId-1133021"></a><a id="id_2nxq51y0457u"></a>10.5.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141704"></a><b class="fm-exercise-head">Exercise 10.20</b>: Our<a id="marker-1148658"></a> code <a id="marker-1148663"></a>already handles the case where one expression making up a product is constant, meaning a product of the form <i class="fm-in-times-italic1">c</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) or <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">c</i> for some expression <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>). Either way, the derivative is <i class="fm-in-times-italic1">c</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>). You don’t need the second term of the product rule, which is <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) <span class="fm-in-cambria">·</span> 0 = 0. Update the code taking the derivative of a product to handle this case directly, rather than expanding the product rule and including a zero term.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141706"></a><b class="fm-exercise-head">Solution</b>: We could check whether either expression in a product<a id="marker-1141705"></a> is an instance of the <code class="fm-code-in-text1">Number</code> class. The more general approach is to see whether either term of the product contains the variable we’re taking the derivative with respect to. For instance, the derivative of (3 + <span class="fm-in-times1">sin</span>(5<sup class="fm-superscript1"><i class="calibre32">a</i></sup>)) <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) with respect to <i class="fm-in-times-italic1">x</i> doesn’t require the product rule because the first term contains no appearance of <i class="fm-in-times-italic1">x</i>. Therefore, its derivative (with respect to <i class="fm-in-times-italic1">x</i>) is 0. We can use the <code class="fm-code-in-text1">contains(expression, variable)</code> function from a previous exercise to do the check for us:</p>
+        <pre class="programlisting">class Product(Expression):
+    ...
+    def derivative(self,var):
+        if not contains(self.exp1, var):                         <span class="fm-combinumeral">❶</span>
+            return Product(self.exp1, self.exp2.derivative(var))
+        elif not contains(self.exp2, var):                       <span class="fm-combinumeral">❷</span>
+            return Product(self.exp1.derivative(var), self.exp2)
+        else:                                                    <span class="fm-combinumeral">❸</span>
+            return Sum(
+                Product(self.exp1.derivative(var), self.exp2),
+                Product(self.exp1, self.exp2.derivative(var)))</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1150241"></a><span class="fm-combinumeral">❶</span> If the first expression has no dependence on the variable, returns the first expression times the derivative of the second</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1150206"></a><span class="fm-combinumeral">❷</span> Otherwise, if the second expression has no dependence on the variable, returns the derivative of the first expression times the unmodified second expression</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1150286"></a><span class="fm-combinumeral">❸</span> Otherwise, uses the general form of the product rule</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141873"></a><b class="fm-exercise-head">Exercise 10.21</b>: Add the square root function to the dictionary of known functions and take its derivative automatically.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1147692"></a><b class="fm-exercise-head">Hint</b>: The square root of <i class="fm-in-times-italic1">x</i> is equal to <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">1/2</sup>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141899"></a><b class="fm-exercise-head">Solution</b>: Using <a id="marker-1148668"></a>the <a id="marker-1148673"></a>power <a id="marker-1148678"></a>law, the <a id="marker-1148683"></a>derivative of <a id="marker-1148688"></a>the square root of <i class="fm-in-times-italic1">x</i> with respect to <i class="fm-in-times-italic1">x</i> is <span class="fm-in-cambria">½</span> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">−1/2</sup>, which can also be written as:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH10_F16_Orland_UN03_EQ18.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141971"></a>We can encode that derivative formula as an expression like so:</p>
+        <pre class="programlisting">_function_bindings = {
+    ...
+    "sqrt": math.sqrt
+}
+
+_derivatives = {
+    ...
+    "sqrt": Quotient(Number(1), Product(Number(2), Apply(Function("sqrt"), _var)))
+}</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_26"><a id="pgfId-1133042"></a><a id="id_b117yhlus11d"></a>10.6 Integrating functions symbolically</h2>
+
+  <p class="body"><a id="pgfId-1133043"></a>The <a id="marker-1148693"></a>other calculus <a id="marker-1148698"></a>operation we learned about in the last two chapters is integration. While a derivative takes a function and returns a function describing its rate of change, an integral does the opposite−it reconstructs a function from its rate of change.</p>
+
+  <h3 class="fm-head1" id="heading_id_27"><a id="pgfId-1133045"></a><a id="id_5trtg4ipe3cx"></a>10.6.1 Integrals as antiderivatives</h3>
+
+  <p class="body"><a id="pgfId-1133046"></a>For<a id="marker-1148703"></a> instance, <a id="marker-1148708"></a>when <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, the <a id="marker-1148713"></a>derivative tells us that the instantaneous rate of change in <i class="fm-in-times-italic">y</i> with respect to <i class="fm-in-times-italic">x</i> is 2<i class="fm-in-times-italic">x</i>. If we started with 2<i class="fm-in-times-italic">x</i>, the indefinite integral answers the question: what function of <i class="fm-in-times-italic">x</i> has an instantaneous rate of change equal to 2<i class="fm-in-times-italic">x</i> ? For this reason, indefinite integrals are also referred to as <i class="fm-italics">antiderivatives.</i></p>
+
+  <p class="body"><a id="pgfId-1133047"></a>One possible answer for the indefinite integral of 2<i class="fm-in-times-italic">x</i> with respect to <i class="fm-in-times-italic">x</i> is <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, but other possibilities are <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> − 6 or <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-cambria2">π</i>. Because the derivative is 0 for any constant term, the indefinite integral doesn’t have a unique result. Remember, even if you know what a car’s speedometer reads for the entire trip, it won’t tell you where the car started or ended its journey. For that reason, we say that <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is <i class="calibre20">an</i> antiderivative of 2<i class="fm-in-times-italic">x</i>, but not <i class="fm-italics">the</i> antiderivative.</p>
+
+  <p class="body"><a id="pgfId-1133048"></a>If we want to talk about <i class="fm-italics">the</i> antiderivative or <i class="fm-italics">the</i> indefinite integral, we have to add an unspecified constant, writing something like <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-italics">C</i>. The <i class="fm-italics">C</i> is called the constant of integration, and it has some infamy in calculus classes; it seems like a technicality, but it’s important, and most teachers deduct points if students forget this.</p>
+
+  <p class="body"><a id="pgfId-1142017"></a>Some integrals are obvious if you’ve practiced enough derivatives. For instance, the integral of <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>) with respect to <i class="fm-in-times-italic">x</i> is written</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">∫</span> <span class="fm-in-times2">cos</span>(<i class="fm-in-times-italic2">x</i>)<i class="fm-in-times-italic2">dx</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-36.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1142012"></a>And the result is <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) + <i class="fm-italics">C</i> because for any constant <i class="fm-italics">C</i>, the derivative of <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) + <i class="fm-italics">C</i> is <span class="fm-in-times">cos</span>(<i class="fm-in-times-italic">x</i>). If you’ve got the power rule fresh in your head, you might be able to solve the integral:</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">∫</span> 3<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">dx</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-37.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1133059"></a>The expression 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> is what you get if you apply the power rule to <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup>, so the integral is</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">∫</span> 3<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">dx</i> = <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">3</sup> + <i class="fm-in-times-italic2">C</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-38.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1133064"></a>There are some harder integrals like</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">∫</span> tan(<i class="fm-in-times-italic2">x</i>)<i class="fm-in-times-italic2">dx</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-39.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1133069"></a>which don’t have obvious solutions. You need to invoke more than one derivative rule in reverse to find the answer. A lot of time in calculus courses is dedicated to figuring out tricky integrals like this. What makes the situation worse is that some integrals are <i class="fm-italics">impossible</i>. Famously, the function</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">f</i>(<i class="fm-in-times-italic2">x</i>) = <i class="fm-in-times-italic2">e</i><sup class="fm-superscript"><i class="fm-in-times-italic2">x</i><sup class="fm-superscript3">2</sup></sup></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-40.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1133074"></a>is one where it’s not possible to find a formula for its indefinite integral (at least without making up a new function to represent it). Rather than torture you with a bunch of rules for integration, let me show you how to use a pre-built library with an <code class="fm-code-in-text">integrate</code> function so Python <a id="marker-1148718"></a>can <a id="marker-1148723"></a>handle<a id="marker-1148728"></a> integrals for you.</p>
+
+  <h3 class="fm-head1" id="heading_id_28"><a id="pgfId-1133076"></a><a id="id_fxagw94pf2tl"></a>10.6.2 Introducing the SymPy library</h3>
+
+  <p class="body"><a id="pgfId-1133077"></a>The<a id="marker-1148733"></a> SymPy <a id="marker-1148738"></a>(<i class="fm-italics">Sym</i> bolic <i class="fm-italics">Py</i> thon) <a id="marker-1148743"></a>library is an open source Python library for symbolic math. It has its own expression data structures, much like the ones we built, along with overloaded operators, making them look like ordinary Python code. Here you can<a id="marker-1133078"></a> see some SymPy code that looks like what we’ve been writing:</p>
+  <pre class="programlisting">&gt;&gt;&gt; from sympy import *
+&gt;&gt;&gt; from sympy.core.core import *
+&gt;&gt;&gt; Mul(Symbol('y'),Add(3,Symbol('x')))
+y*(x + 3)</pre>
+
+  <p class="body"><a id="pgfId-1133082"></a>The <code class="fm-code-in-text">Mul</code>, <code class="fm-code-in-text">Symbol</code>, and <code class="fm-code-in-text">Add</code> constructors replace<a id="marker-1133081"></a> our <code class="fm-code-in-text">Product</code>, <code class="fm-code-in-text">Variable</code>, and <code class="fm-code-in-text">Sum</code> constructors, but have<a id="marker-1133083"></a> similar results. SymPy also<a id="marker-1133084"></a> encourages you to use shorthand; for instance,</p>
+  <pre class="programlisting">&gt;&gt;&gt; y = Symbol('y')
+&gt;&gt;&gt; xx = Symbol('x')
+&gt;&gt;&gt; y*(3+x)
+y*(x + 3)</pre>
+
+  <p class="body"><a id="pgfId-1133087"></a>creates an equivalent expression data structure. You can<a id="marker-1133086"></a> see that it’s a data structure by our ability to substitute and take derivatives:</p>
+  <pre class="programlisting">&gt;&gt;&gt; y*(3+x).subs(x,1)
+4*y
+&gt;&gt;&gt; (x**2).diff(<i class="fm-in-times-italic1">x</i>)
+2*x</pre>
+
+  <p class="body"><a id="pgfId-1133089"></a>To be sure, SymPy is a much more robust library than the one we’ve built in this chapter. As you can see, the expressions are automatically simplified.</p>
+
+  <p class="body"><a id="pgfId-1133090"></a>The reason I’m introducing SymPy is to show you its powerful symbolic integration function. You can find the integral of an expression like 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> like this:</p>
+  <pre class="programlisting">&gt;&gt;&gt; (3*x**2).integrate(<i class="fm-in-times-italic1">x</i>)
+x**3</pre>
+
+  <p class="body"><a id="pgfId-1133092"></a>That tells us that</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">∫</span> 3<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">dx</i> = <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">3</sup> + <i class="fm-in-times-italic2">C</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-41.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1133097"></a>In the next few chapters, <a id="marker-1148748"></a>we’ll <a id="marker-1148753"></a>continue putting <a id="marker-1148758"></a>derivatives and integrals to work.</p>
+
+  <h3 class="fm-head1" id="heading_id_29"><a id="pgfId-1142359"></a><a id="id_3evn34horn1b"></a>10.6.3 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1142390"></a><b class="fm-exercise-head">Exercise 10.22</b>: What <a id="marker-1148763"></a>is the<a id="marker-1148768"></a> integral of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = 0? Confirm your answer with SymPy, remembering that SymPy does not automatically include a constant of integration.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1142391"></a><b class="fm-exercise-head">Solution</b>: Another way of asking this question is what function has a derivative zero? Any constant valued function has a zero slope everywhere, so it has a derivative zero. The integral is</p>
+
+        <p class="fm-equation"><span class="fm-in-cambria">∫</span> <i class="fm-in-times-italic2">f</i>(<i class="fm-in-times-italic2">x</i>)<i class="fm-in-times-italic2">dx</i> = <span class="fm-in-cambria">∫</span> <i class="fm-in-times-italic2">dx</i> = <i class="fm-in-times-italic2">C</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-42.gif" ALT=""></P>-->
+
+        <p class="fm-sidebar"><a id="pgfId-1142395"></a>In SymPy, the code <code class="fm-code-in-text1">Integer(0)</code> gives you the number 0 as an expression, so the integral with respect to a variable <i class="fm-in-times-italic1">x</i> is</p>
+        <pre class="programlisting">&gt;&gt;&gt; Integer(0).integrate(<i class="fm-in-times-italic1">x</i>)
+0</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1142397"></a>Zero, as a function, is one antiderivative of zero. Adding a constant of integration, we get 0 + <i class="fm-italics">C</i> or just <i class="fm-italics">C</i>, matching what we came up with. Any constant function is an antiderivative of the constant, zero function.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1142426"></a><b class="fm-exercise-head">Exercise 10.23</b>: What is the integral of <i class="fm-in-times-italic1">x</i> <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1142427"></a><b class="fm-exercise-head">Hint</b>: Look at the <a id="marker-1148773"></a>derivative <a id="marker-1148778"></a>of <i class="fm-in-times-italic1">x</i> <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>). <a id="marker-1148783"></a>Confirm your <a id="marker-1148788"></a>answer with SymPy.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1142482"></a><b class="fm-exercise-head">Solution</b>: Let’s start with the hint−the derivative of <i class="fm-in-times-italic1">x</i> <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) is <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) + <i class="fm-in-times-italic1">x</i> <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) by the product rule. That’s almost what we want, but for an extra <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) term. If we had a −<span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) term appearing in the derivative, it would cancel this extra <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) out, and the derivative of <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) is −<span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>). That is, the derivative of <i class="fm-in-times-italic1">x</i> <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) + <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) is <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) + <i class="fm-in-times-italic1">x</i> <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>) − <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">x</i> <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>). This was the result we are looking for, so the integral is</p>
+
+        <p class="fm-equation"><span class="fm-in-cambria">∫</span> <i class="fm-in-times-italic2">x</i> <span class="fm-in-times2">cos</span>(<i class="fm-in-times-italic2">x</i>)<i class="fm-in-times-italic2">dx</i> = <i class="fm-in-times-italic2">x</i> <span class="fm-in-times2">sin</span>(<i class="fm-in-times-italic2">x</i>) + <span class="fm-in-times2">cos</span>(<i class="fm-in-times-italic2">x</i>) + <i class="fm-in-times-italic2">C</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-43.gif" ALT=""></P>-->
+
+        <p class="fm-sidebar"><a id="pgfId-1142486"></a>Our answer checks out in SymPy:</p>
+        <pre class="programlisting">&gt;&gt;&gt; (x*<span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>)).integrate(<i class="fm-in-times-italic1">x</i>)
+x*<span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) + <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1142488"></a>This approach of reverse engineering the derivative as one term of a product is called <i class="fm-italics">integration by parts</i> and is a favorite trick of calculus teachers everywhere.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1142535"></a><b class="fm-exercise-head">Exercise 10.24</b>: What is the integral of <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> ? Confirm your answer with SymPy.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1142536"></a><b class="fm-exercise-head">Solution</b>: If <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> then <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) probably contains <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">3</sup> because the power law reduces powers by one. The derivative of <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">3</sup> is 3<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>, so we want a function that gives us a third of that result. What we want is <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">3</sup>/3, which has derivative <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>. In other words,</p>
+
+        <p class="fm-equation"><span class="fm-in-cambria">∫</span> <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup><i class="fm-in-times-italic2">dx</i> = <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">3</sup>/3 + <i class="fm-in-times-italic2">C</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-10-44.gif" ALT=""></P>-->
+
+        <p class="fm-sidebar"><a id="pgfId-1142540"></a>SymPy confirms this:</p>
+        <pre class="programlisting">&gt;&gt;&gt; (x**2).integrate(x)
+x**3/3</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_30"><a id="pgfId-1133134"></a><a id="id_r68ji2hm0tss"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1133135"></a>Modeling algebraic expressions as data structures rather than as strings of code lets you write programs to answer more questions about the expressions.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1133136"></a>The natural way to model an algebraic expression in code is as a <i class="fm-italics">tree</i>. The nodes of the tree can be divided into elements (variables and numbers) that are standalone expressions, and combinators (sums, products, and so on) that contain two or more expressions as subtrees.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1133137"></a>By recursively traversing an expression tree, you can answer questions about it, such as what variables it contains. You can also evaluate or simplify the expression, or translate it to another language.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1133138"></a>If you know the expression defining a function, there are a handful of rules you can apply to transform it into the expression for the derivative of the function. Among these are the product rule and the chain rule, which tell you how to take derivatives of products of expressions and compositions of functions, respectively.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1133139"></a>If you program the derivative rule corresponding to each combinator in your Python expression tree, you get a Python function that automatically finds expressions for derivatives.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1133140"></a>SymPy is a robust Python library for working with algebraic expressions in Python code. It has built-in simplification, substitution, and derivative functions. It also has a symbolic integration function that tells you the formula for the indefinite integral <a id="marker-1148793"></a>of a function.</p>
+    </li>
+  </ul>
+</body>
+</html>

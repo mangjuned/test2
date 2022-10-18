@@ -1,0 +1,646 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>11</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1132322"></a><a id="marker-1157937"></a><a id="pgfId-1146383"></a>11 <a id="id_4cwx06g7tma4"></a>Simulating force fields</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1148308"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1148309"></a>Modeling forces like gravity using scalar and vector fields</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1148310"></a>Calculating force vectors using the gradient</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1148311"></a>Taking the gradient of a function in Python</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1148312"></a>Adding gravitational force to the asteroid game</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1148313"></a>Calculating gradients and working with vector fields in higher dimensions</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1146390"></a>There has just been a catastrophic event in the universe of our asteroid game: a black hole has appeared in the center of the screen! As a result of this new object in our game, shown in figure 11.1, the spaceship and all of the asteroids will feel a “gravitational pull” toward the middle of the screen. This makes the game even more challenging, and it gives us a new mathematical challenge as well−understanding <i class="fm-italics">force fields</i>.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1159884"></a>Figure 11.1 Oh no, a black hole!</p>
+
+  <p class="body"><a id="pgfId-1146396"></a>Gravity is a familiar example of a force that acts at a distance, meaning that you don’t have to be touching an object to feel its gravitational pull. For instance, when you’re flying on an airplane, you can still walk around normally because, even at</p>
+
+  <p class="body"><a id="pgfId-1148544"></a>30,000 feet, the Earth is pulling you downward. Magnetism and static electricity are other familiar forces that act at a distance. In physics, we picture sources of these kinds of forces, like magnets or statically charged balloons, as generating an invisible force field around themselves. Anywhere in the Earth’s gravitational force field, called its gravitational field, an object will feel a pull toward the Earth.</p>
+
+  <p class="body"><a id="pgfId-1146397"></a>Our central coding challenge for this chapter is adding a gravitational field to the asteroid game, and once we’re done with that, we’ll cover the math in more generality. Namely, force fields are modeled with mathematical functions called vector fields. Vector fields often arise as outputs from a calculus operation<a id="marker-1146398"></a> called the <i class="fm-italics">gradient</i>, which is a key tool in the machine learning examples we cover in part 3.</p>
+
+  <p class="body"><a id="pgfId-1146399"></a>The math and code in this chapter aren’t particularly hard, but there are a lot of new concepts to get familiar with. For that reason, I want to show you the story arc for the chapter before we dig in in earnest.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1146401"></a><a id="id_uy9yowymhc51"></a>11.1 Modeling gravity with a vector field</h2>
+
+  <p class="body"><a id="pgfId-1146402"></a>A <i class="fm-italics">vector field</i> is an assignment of a vector at every point in space. A <i class="fm-italics">gravitational field</i> is a vector<a id="marker-1146403"></a> field telling us how strongly gravity pulls and in what direction from any given point. You can visualize a vector field by picking a bunch of points and drawing the vector assigned to each point as an arrow starting from that point. For instance, the gravitational field caused by the black hole in our asteroid game might look like figure 11.2.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1159933"></a>Figure 11.2 Picturing the gravitational field created by the black hole in our asteroid game</p>
+
+  <p class="body"><a id="pgfId-1146410"></a>Figure 11.2 agrees with our intuition about gravity; all the arrows around the black hole point toward it, so that any object placed in this region feels pulled toward the black hole. Closer to the black hole, it’s gravitational pull is stronger, so the arrows are longer.</p>
+
+  <p class="body"><a id="pgfId-1146411"></a>The first thing we do in this chapter is to model gravitational fields as functions, taking a point in space to tell us the magnitude and direction of the force an object would feel at that point. In Python, a 2D vector field is a function that takes a 2D vector representing a point and returns a 2D vector that is the force at that point.</p>
+
+  <p class="body"><a id="pgfId-1146412"></a>Once we build that function, we use it to add a gravitational field to our asteroid game. It will tell us what gravitational forces are felt by the spaceship and the asteroids, depending on their locations and, therefore, what their rate and direction of acceleration should be. Once we implement the acceleration, we’ll see the objects in the asteroid game accelerate <a id="uqROarvI8r9gDmMwTItGOiG"></a>toward the <a id="uncVy3EktVbHneElL4YbSQ8"></a>black hole.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1146414"></a><a id="id_73kyb3iwjhf7"></a>11.1.1 Modeling gravity with a potential energy function</h3>
+
+  <p class="body"><a id="pgfId-1146415"></a>After modeling the gravitational field, we’ll look at a second, equivalent mental model for force at a distance, called <i class="fm-italics">potential energy</i>. You can think of potential energy as stored energy, ready to be converted into motion. For instance, a bow and arrow have no potential energy to begin with, but when you stretch the bow it gains potential energy. When the bow is released, this energy is converted into motion (figure 11.3).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1159985"></a>Figure 11.3 On the left, the bow has no potential energy. On the right, it has a lot of potential energy, ready to be spent to put the arrow in motion.</p>
+
+  <p class="body"><a id="pgfId-1146421"></a>You can picture pulling a spaceship away from the black hole as pulling back an imaginary bow and arrow. The further you pull the spaceship from the black hole, the more potential energy it has, and the faster it ends up going after it is released. We’ll model potential energy as another Python function, taking the 2D position vector of an object in the game world and returning a number measuring its potential energy at that point. An assignment of a number (instead of a vector) to every point in space<a id="marker-1146422"></a> is called a <i class="fm-italics">scalar field</i>.</p>
+
+  <p class="body"><a id="pgfId-1146423"></a>With a potential energy function, we’ll use several Matplotlib visualizations to see what it looks like. One important example is called a <i class="fm-italics">heatmap</i>, which uses darker and brighter colors to show how the value of a scalar field changes over a 2D space (figure 11.4).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160029"></a>Figure 11.4 A heatmap of potential energy, using brighter colors to represent higher potential energy values</p>
+
+  <p class="body"><a id="pgfId-1146429"></a>As figure 11.4 shows, the further away from the black hole you get on this heatmap, the brighter the colors get, meaning the potential energy is greater. The scalar field representing potential energy is a different mathematical model than the vector field representing gravitational force, but they represent the same physics. They are also mathematically connected by an operation called the <i class="fm-italics">gradient</i>.</p>
+
+  <p class="body"><a id="pgfId-1146430"></a>The gradient of a scalar field is a vector field, which tells us the direction and magnitude of steepest increase in the scalar field. In our example, potential energy increases as you move away from the black hole, so the gradient of potential energy is a vector field pointing outward at every point. Superimposing the gradient vector field on the potential energy heatmap, figure 11.5 shows us that arrows point in the direction that the potential energy increases.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160078"></a>Figure 11.5 Potential energy function plotted as a heatmap with its gradient, a vector field, superimposed. The gradient points in the direction of increasing potential energy.</p>
+
+  <p class="body"><a id="pgfId-1146436"></a>The gradient vector field in figure 11.5 looks similar to the gravitational field of the black hole, except the arrows are pointing in the opposite directions and the magnitudes are reversed. To get a gravitational field from a potential energy function, we need to take the gradient and then reverse the directions of the force field vectors by adding a minus sign. At the end of this chapter, I’ll show you how to calculate the gradient of a scalar field using derivatives, which allow us to switch from the potential energy model of gravity to the force field model of gravity.</p>
+
+  <p class="body"><a id="pgfId-1146437"></a>Now that you have a sense of where we’re going in this chapter, we’re ready to dig in. The first thing we’ll do is look closer at vector fields and see how to turn them<a id="uc37I9MAzmCngUq87TUX9D3"></a> into Python functions.</p>
+
+  <h2 class="fm-head" id="heading_id_5"><a id="pgfId-1146439"></a><a id="id_p3s61itj8zt3"></a>11.2 Modeling gravitational fields</h2>
+
+  <p class="body"><a id="pgfId-1146440"></a>A vector field is an assignment of a vector to every point in a space−for instance, a gravitational force vector for every location in our asteroid game. We’ll look exclusively at 2D vector fields that assign 2D vectors to every point in a 2D space. The first thing we’ll</p>
+
+  <p class="body"><a id="pgfId-1157842"></a>do is build concrete representations of vector fields as Python functions taking 2D vectors as inputs and returning 2D vectors as outputs. I’ve given you a function, <code class="fm-code-in-text">plot_vector _field</code>, in the source code that takes such a function as an argument and draws a picture of it by drawing the output vectors at a large number of input points in 2D.</p>
+
+  <p class="body"><a id="pgfId-1146441"></a> Then, we’ll write code to add a black hole to our asteroid game. For our purposes, a black hole just means a black circle that exerts an attractive force on all objects around it as shown in figure 11.6.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160122"></a>Figure 11.6 The black hole in our asteroid game is a black circle with every object in the game feeling the pull of a force toward it.</p>
+
+  <p class="body"><a id="pgfId-1146448"></a>To make this work, we implement a <code class="fm-code-in-text">BlackHole</code> class, define its corresponding<a id="marker-1146447"></a> gravitational field as a function and then update our game loop so that the spaceship and asteroids respond to the forces according to Newton’s laws.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1146450"></a><a id="id_bk9qt38mz9fq"></a>11.2.1 Defining a vector field</h3>
+
+  <p class="body"><a id="pgfId-1149120"></a>Let’s cover a bit of basic notation for vector fields. A vector field in the 2D plane is a function <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) that takes a vector represented by its two coordinates, <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i>. It returns another 2D vector that is the value of the vector field at the point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). The bold <span class="fm-in-times"><b class="fm-bold">F</b></span> signifies that its return values are vectors and that we can say that <span class="fm-in-times"><b class="fm-bold">F</b></span> is a vector-valued function. When we’re talking about vector fields, we usually interpret the inputs as points in the plane and the outputs as arrows. Figure 11.7 shows a schematic for the vector field <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (−2<i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">x</i>).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160240"></a>Figure 11.7 The vector field F(<i class="fm-in-times-italic">x, y</i>) = (−2y, x) takes the point (3, 1) as input and produces the arrow (−2, 3) as output.</p>
+
+  <p class="body"><a id="pgfId-1149135"></a>It’s usual to draw the output vector as an arrow starting from the point in the plane that was the input vector, so that the output vector is “attached” to the input point (figure 11.8).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160462"></a>Figure 11.8 Attaching the vector (−2, 3) to the point (3, 1)</p>
+
+  <p class="body"><a id="pgfId-1146463"></a>If you calculate several values of <span class="fm-in-times"><b class="fm-bold">F</b></span>, you can start to picture the vector field by drawing a number of arrows attached to points at once. Figure 11.9 shows three more points, (−2, 2), (−1, −2), and (−1, −2) with arrows attached to them representing the values of <span class="fm-in-times"><b class="fm-bold">F</b></span> at the points. The results are (−4, −2), (4, −1), and (4, 3), respectively.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160494"></a>Figure 11.9 Arrows attached to points, representing more values of the vector field F(<i class="fm-in-times-italic">x, y</i>) = (−2y, x)</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160571"></a>Figure 11.10 A plot of F(<i class="fm-in-times-italic">x, y</i>) as vectors emanating from (<i class="fm-in-times-italic">x, y</i>) points that are generated by Matplotlib</p>
+
+  <p class="body"><a id="pgfId-1146469"></a>If we draw a lot more arrows, they start to overlap and the diagram becomes illegible. To avoid this, we typically scale down the lengths of vectors by a constant factor. I’ve included a wrapper function called <code class="fm-code-in-text">plot_vector_field</code> on top of Matplotlib, and you can use it as follows to generate a visualization of a vector field. You can see that the vector field <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) circulates in a counterclockwise direction around the origin (figure 11.10):</p>
+  <pre class="programlisting">def f(x,y):
+    return (−2*y, x)
+
+plot_vector_field(f, <span class="fm-in-cambria">−</span>5,5,<span class="fm-in-cambria">−</span>5,5)     <span class="fm-combinumeral">❶</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1158826"></a><span class="fm-combinumeral">❶</span> The first argument is the vector field; the next arguments are the <i class="fm-in-times-italic1">x</i> bounds followed by the y bounds for the plot.</p>
+
+  <p class="body"><a id="pgfId-1146478"></a>One of the big ideas of physics is how some kinds of forces are modeled by vector fields. The example we focus on next is a simplified model of gravity.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1146480"></a><a id="id_bdmyqu9e7icw"></a>11.2.2 Defining a simple force field</h3>
+
+  <p class="body"><a id="pgfId-1146481"></a>As you might expect, gravitational forces get stronger as you get closer to their sources. Even though the sun has stronger gravity than the Earth, you are much closer to the Earth, so you only feel the Earth’s gravity. For simplicity, we won’t use a realistic gravitational field. Instead, we’ll use the vector field <span class="fm-in-times"><b class="fm-bold">F</b></span>(<span class="fm-in-times"><b class="fm-bold">r</b></span>) = −<span class="fm-in-times"><b class="fm-bold">r</b></span>, which is <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (−<i class="fm-in-times-italic">x</i>, − <i class="fm-in-times-italic">y</i>) in the plane. Here’s what it looks like in code, and figure 11.11 shows what it looks like on a plot:</p>
+  <pre class="programlisting">def f(x,y):
+    return (−x,-y)
+
+plot_vector_field(f,<span class="fm-in-cambria">−</span>5,5,<span class="fm-in-cambria">−</span>5,5)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160623"></a>Figure 11.11 A visualization of the vector field F(<i class="fm-in-times-italic">x, y</i>) = (−x, -y)</p>
+
+  <p class="body"><a id="pgfId-1146488"></a>This vector field is like a gravitational field in that it points toward the origin everywhere, but it has the advantage that the field gets stronger as you go further away. That guarantees that we can’t have a simulated object reach escape velocity and completely disappear from view; every wayward object eventually gets to a point where the force field is big enough to slow it down and pull it back toward the origin. Let’s confirm this by implementing this gravitational field for a black hole in our asteroid game.</p>
+
+  <h2 class="fm-head" id="heading_id_8"><a id="pgfId-1146490"></a><a id="id_bzwx5tc5u0k0"></a>11.3 Adding gravity to the asteroid game</h2>
+
+  <p class="body"><a id="pgfId-1146491"></a>The black hole in our game is a <code class="fm-code-in-text">PolygonModel</code> object with 20 vertices at equal distances, so it will be approximately circular. We specify the strength of the gravitational pull of the black hole by one number, which we’ll call its gravity. This number is passed to the constructor for the black hole:</p>
+  <pre class="programlisting">class BlackHole(PolygonModel):
+    def __init__(self,gravity):
+        vs = [vectors.to_cartesian((0.5, 2 * pi * i / 20))
+                for i in range(0,20)]                     <span class="fm-combinumeral">❶</span>
+        super().__init__(vs)
+        self.gravity = gravity #&lt;2&gt;</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1158913"></a><span class="fm-combinumeral">❶</span> Defines the vertices of the BlackHole as a PolygonModel</p>
+
+  <p class="body"><a id="pgfId-1146495"></a>Note that the 20 vertices in our <code class="fm-code-in-text">BlackHole</code> are all 0.5 units from the<a id="marker-1146494"></a> origin at equally spaced angles, so the black hole appears approximately circular. Adding this line</p>
+  <pre class="programlisting">black_hole = BlackHole(0.1)</pre>
+
+  <p class="body"><a id="pgfId-1146497"></a>creates a <code class="fm-code-in-text">BlackHole</code> object with <code class="fm-code-in-text">gravity</code> valued at <code class="fm-code-in-text">0.1</code>, which is positioned at the origin by default. To make the black hole appear onscreen (figure 11.12), we need to draw it with</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160675"></a>Figure 11.12 Making the black hole show up in the center of our game screen</p>
+
+  <p class="body"><a id="pgfId-1160667"></a>each iteration of the game loop. In the following, I add a <code class="fm-code-in-text">fill</code> keyword argument to the <code class="fm-code-in-text">draw_poly</code> function to fill in the black hole and make it (appropriately) black:</p>
+  <pre class="programlisting">draw_poly(screen, black_hole, fill=True)</pre>
+
+  <p class="body"><a id="pgfId-1146504"></a>The gravitational field created by our black hole is inspired by the vector field <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (−<i class="fm-in-times-italic">x</i>, − <i class="fm-in-times-italic">y</i>), which points to the origin. If the black hole is centered at (<i class="fm-in-times-italic">x<sub class="fm-subscript1">bh</sub></i>, <i class="fm-in-times-italic">y<sub class="fm-subscript1">bh</sub></i>), the vector field <b class="fm-bold1">g</b>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (<i class="fm-in-times-italic">x<sub class="fm-subscript1">bh</sub></i> − <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y<sub class="fm-subscript1">bh</sub></i> − <i class="fm-in-times-italic">y</i>) points in the direction from (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) to (<i class="fm-in-times-italic">x<sub class="fm-subscript1">bh</sub></i>, <i class="fm-in-times-italic">y<sub class="fm-subscript1">bh</sub></i>). That means that as an arrow attached to the point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), it points toward the center of the black hole. To make the strength of the force field scale with the gravity of the black hole, we can multiply the vectors of the vector field by the gravity value:</p>
+  <pre class="programlisting">def gravitational_field(source, x, y):
+    relative_position = (<i class="fm-in-times-italic1">x</i> − source.x, y − source.y)
+    return vectors.scale(− source.gravity, relative_position)</pre>
+
+  <p class="body"><a id="pgfId-1146506"></a>In this function, <code class="fm-code-in-text">source</code> is a <code class="fm-code-in-text">BlackHole</code> object, and its <code class="fm-code-in-text">x</code> and <code class="fm-code-in-text">y</code> properties indicate its center as a <code class="fm-code-in-text">PolygonModel</code>, while its <code class="fm-code-in-text">gravity</code> property is the value passed to it in its constructor. The equivalent force field in mathematical notation would be written like this:</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2"><b class="calibre23">g</b></i>(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>) = <i class="fm-in-times-italic2">G<sub class="fm-subscript">bh</sub></i> <span class="fm-in-cambria">·</span>(<i class="fm-in-times-italic2">x</i> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">x<sub class="fm-subscript">bh</sub></i>, <i class="fm-in-times-italic2">y</i> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">y<sub class="fm-subscript">bh</sub></i>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-11-14.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1146514"></a>Here, <i class="fm-italics">Gbh</i> represents the made-up <code class="fm-code-in-text">gravity</code> property of the black hole, and (<i class="fm-in-times-italic">x<sub class="fm-subscript1">bh</sub></i>, <i class="fm-in-times-italic">y<sub class="fm-subscript1">bh</sub></i>), once again, represents its position. The next step is to use this gravitational field to decide how objects should move.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1146516"></a><a id="id_370rolj7b4cl"></a>11.3.1 Making game objects feel gravity</h3>
+
+  <p class="body"><a id="pgfId-1146517"></a>If this vector field works like a gravitational field, it tells us the force per unit mass on an object at position (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). In other words, the force on an object of mass <i class="fm-in-times-italic">m</i> will be <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = <i class="fm-in-times-italic">m</i> <span class="fm-in-cambria">·</span> <b class="fm-bold1">g</b>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). If this is the only force our object feels, we can figure out its acceleration using Newton’s second law of motion:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F12_Orland_EQ02.png"/></p>
+
+  <p class="body"><a id="pgfId-1146523"></a>This last expression for acceleration has the mass <i class="fm-in-times-italic">m</i> in both the numerator and denominator, so they cancel out. It turns out that the gravitational field vector is equal to the acceleration vector caused by gravity−it has nothing to do with the object’s mass. This calculation works for real gravitational fields as well, and it is why objects of different masses all fall at the same rate of about 9.81 meters per second near the Earth’s surface. In one iteration of the game loop taking an elapsed time <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>, the change in velocity of a spaceship or asteroid is determined by its (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) position as</p>
+
+  <p class="fm-equation"><span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic2">v</i> = <i class="fm-in-times-italic2">a</i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic2">t</i> = <i class="fm-in-times-italic2">g</i>(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>) <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span>t</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-11-16.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1146529"></a>We need to add some code to update the velocity of the spaceship as well as each asteroid in each iteration of the game loop. There are a few choices as to how to organize our code, and the one I’ll choose is to encapsulate all of the physics<a id="marker-1146530"></a> into the <code class="fm-code-in-text">move</code> method of <code class="fm-code-in-text">PolygonModel</code> objects. You might also remember that instead of having objects fly off the screen, we teleported them to the other side. Another small change I’ve made here is to add a global <code class="fm-code-in-text">bounce</code> flag that says whether objects teleport or simply bounce off the sides of the screen. I’ve done this because if objects teleport, they instantly feel a different gravitational field; if they bounce instead, we get more intuitive physics. Here’s the new <code class="fm-code-in-text">move</code> method:</p>
+  <pre class="programlisting">def move(self, milliseconds, 
+         thrust_vector, gravity_source):             <span class="fm-combinumeral">❶</span>
+    tx, ty = thrust_vector
+    gx, gy = gravitational_field(src, self.x, self.y)
+    ax = tx + gx                                     <span class="fm-combinumeral">❷</span>
+    ay = ty + gy
+    self.vx += ax * milliseconds/1000                <span class="fm-combinumeral">❸</span>
+    self.vy += ay * milliseconds/1000
+
+    self.x += self.vx * milliseconds / 1000.0        <span class="fm-combinumeral">❹</span>
+    self.y += self.vy * milliseconds / 1000.0
+
+    if bounce:                                       <span class="fm-combinumeral">❺</span>
+        if self.x &lt; −10 or self.x &gt; 10:
+            self.vx = − self.vx
+        if self.y &lt; −10 or self.y &gt; 10:
+            self.vy = − self.vy
+    else:                                            <span class="fm-combinumeral">❻</span>
+        if self.x &lt; −10:
+            self.x += 20
+        if self.y &lt; −10:
+            self.y += 20
+        if self.x &gt; 10:
+            self.x -= 20
+        if self.y &gt; 10:
+            self.y -=20</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159102"></a><span class="fm-combinumeral">❶</span> Passes in the thrust vector, which can be (0,0), and the gravity source (black hole) as parameters to the move method</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159119"></a><span class="fm-combinumeral">❷</span> Here the net force is the sum of the thrust vector and gravitational force vector. Assume the mass = 1 and the acceleration is the sum of the thrust and gravitational field.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159143"></a><span class="fm-combinumeral">❸</span> Updates the velocity as before, using <span class="fm-in-cambria">Δ</span>v = a*Δt</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159160"></a><span class="fm-combinumeral">❹</span> Updates the position vector as before, using <span class="fm-in-cambria">Δ</span>s = v*Δt</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159177"></a><span class="fm-combinumeral">❺</span> If the global bounce flag is true, flips the <i class="fm-in-times-italic1">x</i> component of velocity when the object is about to leave the screen on the left or right, or flips the y component of velocity when the object is about to leave the screen through the top or bottom</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159194"></a><span class="fm-combinumeral">❻</span> Otherwise, uses the same teleportation effect as before when the object is about to leave the screen</p>
+
+  <p class="body"><a id="pgfId-1146542"></a>The remaining work is to call this <code class="fm-code-in-text">move</code> method for the spaceship<a id="marker-1146541"></a> as well as each asteroid in the game loop:</p>
+  <pre class="programlisting">while not done:
+    ...
+    for ast in asteroids:
+        ast.move(milliseconds, (0,0), black_hole)                        <span class="fm-combinumeral">❶</span>
+
+    thrust_vector = (0,0)                                                <span class="fm-combinumeral">❷</span>
+
+    if keys[pygame.K_UP]:                                                <span class="fm-combinumeral">❸</span>
+        thrust_vector=vectors.to_cartesian((thrust, ship.rotation_angle))
+
+    elif keys[pygame.K_DOWN]:
+        thrust_vector=vectors.to_cartesian((−thrust, ship.rotation_angle))
+
+    ship.move(milliseconds, thrust_vector, black_hole)                   <span class="fm-combinumeral">❹</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1146548"></a><span class="fm-combinumeral">❶</span> For each asteroid, calls its move method with a thrust vector of 0</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159035"></a><span class="fm-combinumeral">❷</span> The ship’s thrust vector is also (0,0) by default.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159052"></a><span class="fm-combinumeral">❸</span> If the up or down arrow is pressed, calculates the thrust_vector using the direction of the spaceship and the fixed thrust scalar value</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1159083"></a><span class="fm-combinumeral">❹</span> Calls the move method for the spaceship to cause it to move</p>
+
+  <p class="body"><a id="pgfId-1151358"></a>Running the game now, you’ll see that objects start to be attracted by the black hole, and starting with zero velocity, the spaceship falls straight into it! Figure 11.13 shows a time-lapse photo of the ship’s acceleration.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160725"></a>Figure 11.13 With no initial velocity, the spaceship falls into the black hole.</p>
+
+  <p class="body"><a id="pgfId-1151386"></a>With any other starting velocity and no thrust, the ship begins to orbit the black hole, tracing out the shape of an ellipse, or stretched out circle (figure 11.14).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160770"></a>Figure 11.14 With some initial velocity perpendicular to the black hole, the spaceship begins an elliptical orbit.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160854"></a>Figure 11.15 An asteroid in another elliptical orbit around our black hole</p>
+
+  <p class="body"><a id="pgfId-1151387"></a>It turns out that any object feeling no forces other than the gravity of the black hole either fall right in or enter into an elliptical orbit. Figure 11.15 shows a randomly initialized asteroid along with the spaceship. You can see that its trajectory is a different ellipse.</p>
+
+  <p class="body"><a id="pgfId-1151292"></a>You can try adding all of the asteroids back in. You’ll see that with 11 simultaneously accelerating objects, the game has become <a id="uSH4tjm5v52t42Nrb6qvoi8"></a>much more interesting!</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1151281"></a><a id="id_gnpa1ur2mri0"></a>11.3.2 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1151276"></a><b class="fm-exercise-head">Exercise 11.1</b>: Where do all of the vectors in the vector field (−2 − <i class="fm-in-times-italic1">x</i>, 4 − <i class="fm-in-times-italic1">y</i>) point? Plot the vector field to confirm your answer.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1151277"></a><b class="fm-exercise-head">Solution</b>: This vector field is the same as the displacement vector (−2, 4) − (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>), which is a vector pointing from a point (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) to (−2, 4). Therefore, we expect every vector in this vector field to point toward (−2, 4). Drawing this vector field confirms this.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F15_Orland_UN01.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1152562"></a><b class="fm-exercise-head">Exercise 11.2-Mini Project</b>: Suppose we have <i class="fm-italics">two</i> black holes, both having gravity 0.1, and positioned at (−3, 4) and (2, 1), respectively. The gravitational fields are <b class="fm-bold1">g</b> 1(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = 0.1 <span class="fm-in-cambria">·</span> (−3 − <i class="fm-in-times-italic1">x</i>, 4 − <i class="fm-in-times-italic1">y</i>) and <b class="fm-bold1">g</b> 2(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = 0.1 <span class="fm-in-cambria">·</span> (2 − <i class="fm-in-times-italic1">x</i>, 1 − <i class="fm-in-times-italic1">y</i>). Calculate a formula for the total gravitational field <b class="fm-bold1">g</b>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) due to both black holes. Is it equivalent to a single black hole? If so, why?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1152563"></a><b class="fm-exercise-head">Solution</b>: At every position (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>), an object with mass <i class="fm-in-times-italic1">m</i> feels two gravitational forces: <i class="fm-in-times-italic1">m</i> <span class="fm-in-cambria">·</span> <b class="fm-bold1">g</b> 1(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) and <i class="fm-in-times-italic1">m</i> <span class="fm-in-cambria">·</span> <b class="fm-bold1">g</b> 2(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>). The vector sum of these forces is <i class="fm-in-times-italic1">m</i>(<b class="fm-bold1">g</b> 1(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) + <b class="fm-bold1">g</b> 2(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>)). Per unit of mass, the force felt will be <b class="fm-bold1">g</b> 1(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) + <b class="fm-bold1">g</b> 2(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>), which confirms that the total gravitational field vector is the sum of the gravitational field vectors due to each of the black holes. This total gravitational field is</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">g</i>(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>) = <i class="fm-in-times-italic2">g</i><sub class="fm-subscript">1</sub>(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>) + <i class="fm-in-times-italic2">g</i><sub class="fm-subscript">2</sub>(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>)</p>
+
+        <p class="fm-equation">            = 0.1 <span class="fm-in-cambria">· </span>(<span class="fm-in-cambria">−</span>3 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">x</i>, 4 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">y</i>) + 0.1 <span class="fm-in-cambria">· </span>(2 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">x</i>, 1 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">y</i>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-11-21.gif" ALT=""></P>-->
+
+        <p class="fm-sidebar"><a id="pgfId-1152570"></a>We can divide out a factor of 2 and rewrite as</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">g</i>(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>) = 0.1 <span class="fm-in-cambria">·</span> 2 <span class="fm-in-cambria">· </span>(0.5 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">x</i>, 2.5 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">y</i>)</p>
+
+        <p class="fm-equation">            = 0.2 <span class="fm-in-cambria">· </span>(0.5 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">x</i>, 2.5 <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">y</i>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-11-22.gif" ALT=""></P>-->
+
+        <p class="fm-sidebar"><a id="pgfId-1152571"></a>This is the same as a single black hole with gravity 0.2, positioned at (0.5, 2.5).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1152604"></a><b class="fm-exercise-head">Exercise 11.3-Mini Project</b>: In the asteroid game, add two black holes and allow these to feel each other’s gravity. Then move while these both also exert gravity on the asteroids and the spaceship.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1152606"></a><b class="fm-exercise-head">Solution</b>: For a full implementation, see the source code. The key addition<a id="marker-1152605"></a> calls the <code class="fm-code-in-text1">move</code> method for each black hole in each iteration of the game loop, passing it the list of all other black holes as sources of gravity:</p>
+        <pre class="programlisting">for bh in black_holes:
+    others = [other for other in black_holes if other != bh]
+    bh.move(milliseconds, (0,0), others)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_11"><a id="pgfId-1146605"></a><a id="id_ak16qfpknovf"></a>11.4 Introducing potential energy</h2>
+
+  <p class="body"><a id="pgfId-1146606"></a>Now that we’ve seen the behavior of the spaceship and asteroids in our gravitational field, we can build our second model of how they behave using <i class="fm-italics">potential energy</i>. We already have black holes working in the asteroid game, so the purpose of the rest of the chapter is to broaden your perspective on the underlying math. Vector fields, including gravitational fields, often arise as results of the calculus operation called the gradient, which is a critical tool in the remaining chapters of the book.</p>
+
+  <p class="body"><a id="pgfId-1146607"></a>The basic idea is as follows: instead of picturing gravity as a force vector at every point, pulling objects toward a source, we can think of objects in a gravitational field like marbles rolling around in a bowl. The marbles may roll back and forth, but they are always “pulled” back toward the bottom of the bowl as they roll away. A potential energy function essentially defines the shape of this bowl. You can see a preview of what the bowl looks like in the center image of figure 11.16.</p>
+
+  <p class="body"><a id="pgfId-1146608"></a>We’ll write potential energy as a function, taking a point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) and returning a single number, representing the gravitational potential energy at the point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). In terms of the bowl analogy, this is something like the height of the bowl at a given point. Once we implement a potential energy function in Python, we can visualize it in three ways: as a heatmap, which you saw at the beginning of this chapter; as a 3D graph; and as a contour map as shown in figure 11.16.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146613"></a>Figure 11.16 Three pictures of a scalar field: a heatmap, a graph, and a contour map</p>
+
+  <p class="body"><a id="pgfId-1146614"></a>These visualizations will help us picture potential energy functions in the final section of this chapter and in the remaining chapters of the book.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1146616"></a><a id="id_i3523eiw1lpz"></a>11.4.1 Defining a potential energy scalar field</h3>
+
+  <p class="body"><a id="pgfId-1146617"></a>Like a field, we can think of a scalar field as a function that takes (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) points as inputs. Instead of vectors, however, the outputs of this function are scalars. For instance, let’s work with the function <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = <span class="fm-in-cambria">½</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup>), which defines a scalar field. Figure 11.17 shows that you can plug in a 2D vector, and the output is some scalar determined by the formula for <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160954"></a>Figure 11.17 As a function, a scalar field takes a point in the plane and produces a corresponding number. In this case, where (<i class="fm-in-times-italic">x, y</i>) = (3, 1), the value of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) is <span class="fm-in-cambria">½</span> <span class="fm-in-cambria">·</span> (32 + 12) = 5.</p>
+
+  <p class="body"><a id="pgfId-1152770"></a>The function <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) turns out to be the potential energy function corresponding to the vector field <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (−<i class="fm-in-times-italic">x</i>, − <i class="fm-in-times-italic">y</i>). I’ll need to do some more work to explain this mathematically, but we can confirm it qualitatively by picturing the scalar field <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>).</p>
+
+  <p class="body"><a id="pgfId-1152774"></a> One way to picture <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is to draw a 3D plot like figure 11.18, where <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is a surface of (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) points and where <i class="fm-in-times-italic">z</i> = <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). For instance, <i class="fm-in-times-italic">U</i>(3, 1) = 5, so we would plot a first point above the point (3, 1) in the x,y plane at a <i class="fm-in-times-italic">z</i>-coordinate of 5.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F18_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1160996"></a>Figure 11.18 To plot one point of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) = <span class="fm-in-cambria">½</span>(x2 + y2), use (<i class="fm-in-times-italic">x, y</i>) = (3, 1), then use <i class="fm-in-times-italic">U</i>(3, 1) = 5 as the z-coordinate.</p>
+
+  <p class="body"><a id="pgfId-1152781"></a> Plotting a point in 3D for every single value of (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) gives us a whole surface representing the scalar field <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) and how it varies over the plane. In the source code, you’ll find a function, <code class="fm-code-in-text">plot_scalar_field</code>, that takes a function defining a scalar field, as well as <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> bounds, and draws the surface of 3D points representing the field:</p>
+  <pre class="programlisting">def u(x,y):
+    return 0.5 * (x**2 + y**2)
+    
+plot_scalar_field(u, <span class="fm-in-cambria">−</span>5, 5, <span class="fm-in-cambria">−</span>5, 5)</pre>
+
+  <p class="body"><a id="pgfId-1146632"></a>While there are several ways to visualize a scalar field, I’ll refer to the graph of the function <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) as shown in figure 11.19.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F19_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1161041"></a>Figure 11.19 A graph of the potential energy scalar field <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) = <span class="fm-in-cambria">½</span>(x2 + y2)</p>
+
+  <p class="body"><a id="pgfId-1146638"></a>This is the “bowl” from the previous analogy. It turns out this potential energy function gives the same model of gravity as the vector field <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>)= (−<i class="fm-in-times-italic">x</i>, − <i class="fm-in-times-italic">y</i>). We’ll see exactly why this is in section 11.5, but for now, we can confirm that the potential energy increases as the distance from the origin (0, 0) increases. In all radial directions, the height of the <a id="uWIkQ63OBfw6TFJ6fBYgJl5"></a>graph increases, meaning the value of <i class="fm-in-times-italic">U</i> increases.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1146640"></a><a id="id_gbkozgay1iqz"></a>11.4.2 Plotting a scalar field as a heatmap</h3>
+
+  <p class="body"><a id="pgfId-1146641"></a>Another way a scalar function is to draw a heatmap. Instead of using a <i class="fm-in-times-italic">z</i>-coordinate to visualize the value of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), we can use a color scheme. This allows us to plot the scalar field without leaving 2D. By including a color legend on the side (as in figure 11.20), we can see the approximate scalar value at (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) from the color at that point on the plot.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F20_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146646"></a>Figure 11.20 A heatmap of the function <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>)</p>
+
+  <p class="body"><a id="pgfId-1146647"></a>In the center of the plot in figure 11.20, near (0, 0), the color is darker, meaning the values of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) are lower. Toward the edges, the color is lighter, meaning the values of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) are higher. You can plot the potential energy function using the <code class="fm-code-in-text">scalar_field_heatmap</code> function you’ll find in the <a id="uwFwZvac3lSCnHcIDAY52HF"></a>source code.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1146649"></a><a id="id_20yts359u10r"></a>11.4.3 Plotting a scalar field as a contour map</h3>
+
+  <p class="body"><a id="pgfId-1146650"></a>Similar to a heatmap is a <i class="fm-italics">contour map</i>. You may have seen a contour map before as the format of a topographical map, a map which shows the elevation of terrain over a geographical area. This kind of map consists of paths where the elevation is constant, so if you’re walking along the path shown in the map, you’re neither walking uphill nor downhill. Figure 11.21 shows the analogous contour map for <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), showing paths in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane where <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is equal to 10, 20, 30, 40, 50, and 60.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F21_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146655"></a>Figure 11.21 A contour map of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>), showing curves where the value of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) is constant</p>
+
+  <p class="body"><a id="pgfId-1146656"></a>You can see that the curves are all circular and that they get closer together as they go outward. We can interpret this to mean that <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) gets steeper as we get further from the origin. For instance, <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) increases from 30 to 40 over a shorter distance than it takes to increase from 10 to 20. You can plot the scalar field <i class="fm-in-times-italic">U</i> as a contour map using the <code class="fm-code-in-text">scalar_field_contour</code> function from the <a id="uYrdpMrmPAkmyhqHfvS55oD"></a>source code.</p>
+
+  <h2 class="fm-head" id="heading_id_15"><a id="pgfId-1146658"></a><a id="id_go27bq1lf9q6"></a>11.5 Connecting energy and forces with the gradient</h2>
+
+  <p class="body"><a id="pgfId-1146660"></a>This <a id="id-startrange-gradients"></a>notion of <i class="fm-italics">steepness</i> is important−the steepness of a potential<a id="marker-1146659"></a> energy function tells us how much energy an object has to exert to move in that direction. As you might expect, the exertion required to move in a given direction is a measure of the force <i class="fm-italics">in the opposite direction</i>. In the remainder of this section, we’ll get to a precise and quantitative version of this statement.</p>
+
+  <p class="body"><a id="pgfId-1146661"></a>As I mentioned in the introduction to this chapter, the gradient is an operation that takes a scalar field like potential energy and produces a vector field like a gravitational field. At every location (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) in the plane, the gradient vector field at that location points in the direction of fastest increase in the scalar field. In this section, I will show you how to take the gradient of a scalar field <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), which requires taking a derivative of <i class="fm-in-times-italic">U</i> with respect to <i class="fm-in-times-italic">x</i> and, separately, taking a derivative with respect to <i class="fm-in-times-italic">y</i>. We’ll be able to show that the gradient of the potential energy function <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) we’ve been working with is -<span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), where <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is the gravitational field we implemented in our asteroid game. We’ll make extensive use of the gradient in the remaining chapters of this book.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1146663"></a><a id="id_ljuzu0o29ams"></a>11.5.1 Measuring steepness with cross sections</h3>
+
+  <p class="body"><a id="pgfId-1146664"></a>There’s one more way of visualizing the function <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) that makes it easy to see how steep it is at various points. Let’s focus on a specific point: (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (−5, 2). On a contour map like that shown in figure 11.22, this point is between the <i class="fm-in-times-italic">U</i> = 10 and <i class="fm-in-times-italic">U</i> = 20 curves, and in fact, <i class="fm-in-times-italic">U</i>(−5, 2) = 14.5. If we move in the +<i class="fm-in-times-italic">x</i> direction, we hit the <i class="fm-in-times-italic">U</i> = 10 curve, meaning that <i class="fm-in-times-italic">U</i> decreases in the +<i class="fm-in-times-italic">x</i> direction. If we instead move in the +<i class="fm-in-times-italic">y</i> direction, we hit the <i class="fm-in-times-italic">U</i> = 20 curve, meaning that <i class="fm-in-times-italic">U</i> increases in this direction.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F22_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146669"></a>Figure 11.22 Exploring the value of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) in the +x and +y directions from (−5, 2)</p>
+
+  <p class="body"><a id="pgfId-1146670"></a>Figure 11.22 shows that the steepness of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) depends on the direction. We can picture this by plotting the cross sections of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), where <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5 and <i class="fm-in-times-italic">y</i> = 2. <i class="fm-italics">Cross sections</i> are slices of the graph of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at fixed values of <i class="fm-in-times-italic">x</i> or <i class="fm-in-times-italic">y</i>. For example, figure 11.23 shows that the cross section of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5 is a slice of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) in the plane <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F23_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146675"></a>Figure 11.23 The cross section of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) at <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5</p>
+
+  <p class="body"><a id="pgfId-1146676"></a>Using the functional programming terminology from chapter 4, we can partially apply <i class="fm-in-times-italic">U</i> with <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5 to get a function that accepts a single number <i class="fm-in-times-italic">y</i> and returns the value of <i class="fm-in-times-italic">U</i>. There’s also a cross section in the <i class="fm-in-times-italic">y</i> direction at (5, 2). This is the cross section of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), where <i class="fm-in-times-italic">y</i> = 2. Figure 11.24 shows its shape as a graph of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) after partially applying with <i class="fm-in-times-italic">y</i> = 2.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F24_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146681"></a>Figure 11.24 The cross section of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) at y = 2</p>
+
+  <p class="body"><a id="pgfId-1146682"></a>Together, these cross sections tell us how <i class="fm-in-times-italic">U</i> is changing at (−5, 2) in both the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> directions. The slope of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, 2) at <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5 is negative, telling us that moving in the +<i class="fm-in-times-italic">x</i> direction from (−5, 2) causes <i class="fm-in-times-italic">U</i> to decrease. Likewise, the slope of <i class="fm-in-times-italic">U</i>(−5, <i class="fm-in-times-italic">y</i>) at <i class="fm-in-times-italic">y</i> = 2 is positive, telling us that moving in the +<i class="fm-in-times-italic">y</i> direction from (−5, 2) causes <i class="fm-in-times-italic">U</i> to increase (figure 11.25).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F25_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146687"></a>Figure 11.25 Cross sections show us that <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) is increasing in the +y direction and decreasing in the +x direction.</p>
+
+  <p class="body"><a id="pgfId-1146688"></a>We haven’t found the slope of the scalar field <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at this point, but we have found what we could call the slope in the <i class="fm-in-times-italic">x</i> direction and the slope<a id="id-endrange-gradients"></a> in the <i class="fm-in-times-italic">y</i> direction. <a id="ulMWyux4tEocsgmY5M2R8ZB"></a>These values are called <i class="fm-italics">partial derivatives</i> of <i class="fm-in-times-italic">U</i>.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1146690"></a><a id="id_y3job0eamiw1"></a>11.5.2 Calculating partial derivatives</h3>
+
+  <p class="body"><a id="pgfId-1146691"></a>You already know <a id="id-startrange-derivatives"></a>everything you need to know to find the previous slopes. Both <i class="fm-in-times-italic">U</i>(−5, <i class="fm-in-times-italic">y</i>) and <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, 2) are functions of one variable, so you could approximate their derivatives by calculating the slope of small secant lines.</p>
+
+  <p class="body"><a id="pgfId-1146692"></a>For instance, if we want to find the partial derivative of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) with respect to <i class="fm-in-times-italic">x</i> at the point (−5, 2), we’re asking for the slope of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, 2) at <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5. That is, we want to know how fast <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is changing in the <i class="fm-in-times-italic">x</i> direction at the point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (−5, 2). We could approximate this by plugging in a small value of <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">x</i> into the following slope calculation:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F25_Orland_EQ06.png"/></p>
+
+  <p class="body"><a id="pgfId-1146698"></a>We can also calculate the derivative exactly by writing the formula for <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, 2). Because <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = <span class="fm-in-cambria">½</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup>), we have <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, 2) = <span class="fm-in-cambria">½</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + 2<sup class="fm-superscript">2</sup>) = <span class="fm-in-cambria">½</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + 4) = 2 + (<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>/2). Using the power rule for derivatives, the derivative of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, 2) with respect to <i class="fm-in-times-italic">x</i> is 0 + 2<i class="fm-in-times-italic">x</i>/2 = <i class="fm-in-times-italic">x</i>. At <i class="fm-in-times-italic">x</i> = <span class="fm-in-cambria">−</span>5, the derivative is <span class="fm-in-cambria">−</span>5.</p>
+
+  <p class="body"><a id="pgfId-1146699"></a>Notice that in both the slope approximation and the symbolic derivative process, the variable <i class="fm-in-times-italic">y</i> doesn’t appear. Instead, we’re working with the constant value 2. This is to be expected because when we’re thinking about a partial derivative in the <i class="fm-in-times-italic">x</i> direction, <i class="fm-in-times-italic">y</i> isn’t changing. The general way to calculate partial derivatives symbolically is to take the derivative as if only one symbol (like <i class="fm-in-times-italic">x</i>) is a variable, while all the other symbols (like <i class="fm-in-times-italic">y</i>) are constants.</p>
+
+  <p class="body"><a id="pgfId-1146700"></a>Using this method, the partial derivative of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) with respect to <i class="fm-in-times-italic">x</i> is <span class="fm-in-cambria">½</span>(2<i class="fm-in-times-italic">x</i> + 0) = <i class="fm-in-times-italic">x</i>, and the partial derivative with respect to <i class="fm-in-times-italic">y</i> is <span class="fm-in-cambria">½</span>(0 + 2<i class="fm-in-times-italic">y</i>) = <i class="fm-in-times-italic">y</i>. By the way, the notation <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) we previously preferred for the derivative of a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) is insufficient to extend to partial derivatives. When taking partial derivatives, you can take the derivative with respect to different variables, and you need to specify which one you’re working with. There’s another equivalent notation for the derivative of <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>):</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F25_Orland_EQ07.png"/></p>
+
+  <p class="body"><a id="pgfId-1146706"></a>(I use the ≡ sign to indicate that these notations are equivalent; they represent the same concept.) This is reminiscent of the slope formula <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">f</i> /Δ<i class="fm-in-times-italic">x</i>, but in this notation, <i class="fm-in-times-italic">df</i> and <i class="fm-in-times-italic">dx</i> instead represent <i class="fm-italics">infinitesimal</i> changes in the value of <i class="fm-in-times-italic">f</i> and <i class="fm-in-times-italic">x</i>. The notation <i class="fm-in-times-italic">df</i>/<i class="fm-in-times-italic">dx</i> means the<a id="marker-1146707"></a> same thing as <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>), but it makes it clearer that the derivative is taken with respect to <i class="fm-in-times-italic">x</i>. For a partial derivative of a function like <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), we can take the derivative with respect to either <i class="fm-in-times-italic">x</i> or <i class="fm-in-times-italic">y</i>. It’s traditional to use different shaped <i class="fm-in-times-italic">d</i> ’s to indicate that we’re not taking an ordinary derivative (called a <i class="fm-italics">total</i> derivative). The partial derivatives of <i class="fm-in-times-italic">U</i> with respect to <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> are (respectivel<i class="fm-in-times-italic">y</i>) written as follows:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F25_Orland_EQ08.png"/></p>
+
+  <p class="body"><a id="pgfId-1146717"></a>Here’s another example with a function <i class="fm-in-times-italic">q</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = <i class="fm-in-times-italic">x</i> <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">xy</i>) + <i class="fm-in-times-italic">y</i>. If we treat <i class="fm-in-times-italic">y</i> as a constant and take the derivative with respect to <i class="fm-in-times-italic">x</i>, we need to use the product rule and the chain rule. The result is the partial derivative with respect to <i class="fm-in-times-italic">x</i> :</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F25_Orland_EQ09.png"/></p>
+
+  <p class="body"><a id="pgfId-1146723"></a>To take the partial derivative with respect to <i class="fm-in-times-italic">y</i>, we treat <i class="fm-in-times-italic">x</i> as a constant, and we need to use the chain rule and the sum rule:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F25_Orland_EQ10.png"/></p>
+
+  <p class="body"><a id="pgfId-1146731"></a>It’s true that each of the partial derivatives only tells part of the story of how a function like <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) changes at any point. Next, we combine them to gain a full understanding, analogous to the total derivative for a function <a id="id-endrange-derivatives"></a>of one variable.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1146733"></a>11.5.3 <a id="id_jhs12y5zheqg"></a>Finding the steepness of a graph with the gradient</h3>
+
+  <p class="body"><a id="pgfId-1146734"></a>Let’s zoom <a id="id-startrange-gradient"></a>in on the point (−5, 2) on the graph of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) (figure 11.26). Just as any smooth function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) looks like a straight line on a sufficiently small range of <i class="fm-in-times-italic">x</i> values, it turns out the graph of a smooth scalar field looks like a plane in a small enough vicinity of the x,y plane.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F26_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146739"></a>Figure 11.26 Up close, the region of the graph of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) near (<i class="fm-in-times-italic">x, y</i>) = (−5, 2) looks like a plane.</p>
+
+  <p class="body"><a id="pgfId-1146740"></a>Just as the derivative <i class="fm-in-times-italic">df</i>/<i class="fm-in-times-italic">dx</i> tells us about the slope of the line that approximates <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) at a given point, the partial derivatives <span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">U</i>/<span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">x</i> and <span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">U</i>/<span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">y</i> tell us about a plane that approximates <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at a given point. The dotted lines in figure 11.26 show the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> cross sections of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at this point. In this window, they are approximately straight lines, and their slopes in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">y</i>,<i class="fm-in-times-italic">z</i> planes are close to the partial derivatives <span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">U</i>/<span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">x</i> and <span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">U</i>/<span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic">y</i>.</p>
+
+  <p class="body"><a id="pgfId-1146741"></a>I haven’t proven it, but suppose there <i class="fm-italics">is</i> a plane that best approximates <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) near (−5, 2), and because we can’t distinguish it, we can pretend the graph in figure 11.26 is that plane for a moment. The partial derivatives tell us how much it is slanted in the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> directions. On a plane, there are actually two better directions to think about. First of all, there’s a direction on the plane you could walk without gaining or losing elevation. In other words, this is the line in the plane that is parallel to the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane. For the plane that approximates <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at (−5, 2), that turns out to be in the direction (2, 5) as shown by figure 11.27.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F27_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1161215"></a>Figure 11.27 Walking along the graph of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x, y</i>) from (<i class="fm-in-times-italic">x, y</i>) = (−5,2) in the direction of (2,5), you won’t gain or lose elevation.</p>
+
+  <p class="body"><a id="pgfId-1146747"></a>The walker in figure 11.27 is having an easy time because they’re not climbing or descending the plane when walking in this direction. If, however, the walker turns <span class="fm-in-cambria">90°</span> to the left, they would be walking uphill in the steepest direction possible. That is the direction (−5, 2), which is perpendicular to (2, 5).</p>
+
+  <p class="body"><a id="pgfId-1146748"></a>This direction of steepest ascent happens to be a vector whose components are the partial derivatives of <i class="fm-in-times-italic">U</i> at a given point. I gave one illustration of this instead of proving it, but this fact is true in general. For a function <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), the vector of its partial derivatives<a id="marker-1146749"></a> is called its <i class="fm-italics">gradient</i> and written <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">U</i>. It gives the magnitude and direction of steepest ascent of <i class="fm-in-times-italic">U</i> at a given point:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F27_Orland_EQ11.png"/></p>
+
+  <p class="body"><a id="pgfId-1146755"></a>Because we have formulas for the partial derivatives, we can tell, for instance, that <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) for our function. The function <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">U</i>, which is the gradient of <i class="fm-in-times-italic">U</i>, is an assignment of a vector to every point in the plane, so it is indeed a vector field! The plot of <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">U</i> shows us at every point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) which direction is uphill on the graph of <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), as well as how steep it is (figure 11.28).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F28_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1161260"></a>Figure 11.28 The gradient <span class="fm-in-cambria">∇</span>U is a vector field telling us the magnitude and direction of steepest ascent on the graph of U at any point (<i class="fm-in-times-italic">x, y</i>).</p>
+
+  <p class="body"><a id="pgfId-1146761"></a>The gradient is a way of connecting a scalar field with a vector field. It turns out that this gives the <a id="id-endrange-gradient"></a>connection between potential energy and force.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1146763"></a><a id="id_33oehb8zqixv"></a>11.5.4 Calculating force fields from potential energy with the gradient</h3>
+
+  <p class="body"><a id="pgfId-1146764"></a>The gradient is the best analogy of the ordinary derivative for scalar fields. It has all the information needed to find the direction of steepest ascent of the scalar field, the slope along the <i class="fm-in-times-italic">x</i> or <i class="fm-in-times-italic">y</i> directions, or the plane of best approximation. But from the perspective of physics, the direction of steepest ascent is not what we’re looking for. After all, there’s no object in nature that spontaneously moves uphill.</p>
+
+  <p class="body"><a id="pgfId-1146765"></a>Neither the spaceship in the asteroid game nor the ball rolling around in the bowl would feel forces that impel them toward regions of higher potential energy. As we’ve discussed, they would need to apply a force or sacrifice some kinetic energy to gain more potential energy. For that reason, the right description of the force an object<a id="marker-1146766"></a> feels is the <i class="fm-italics">negative</i> gradient of potential energy, which points<a id="marker-1146767"></a> in the direction of steepest <i class="fm-italics">descent</i> rather than steepest <i class="fm-italics">ascent</i>. If <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) represents<a id="marker-1146768"></a> the scalar field of potential energy, then the associated force field <span class="fm-in-times"><b class="fm-bold">F</b></span>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) can be calculated by</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2"><b class="calibre23">F</b></i>(<i class="fm-in-times-italic2">x, y</i>) = <span class="fm-in-cambria">−</span><span class="fm-in-cambria">∇</span><i class="fm-in-times-italic2">U</i>(<i class="fm-in-times-italic2">x, y</i>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-11-42.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1146774"></a>Let’s try a fresh example. What kind of force field would be produced by the following potential energy function?</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">V</i>(<i class="fm-in-times-italic2">x, y</i>) = 1 + <i class="fm-in-times-italic2">y</i><sup class="fm-superscript">2</sup> <span class="fm-in-cambria">−</span> 2<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic2">x</i><sup class="fm-superscript">6</sup></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-11-43.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1146780"></a>We can get a sense for how this function behaves by plotting it.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F29_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146785"></a>Figure 11.29 The potential energy function V(<i class="fm-in-times-italic">x, y</i>) shown in 3D</p>
+
+  <p class="body"><a id="pgfId-1146786"></a>Figure 11.29 illustrates that this potential energy function has a double bowl shape with two minimum points and a hump between them. What does the force field associated with this potential energy function look like? To find out, we need to take the negative gradient of <i class="fm-in-times-italic">V</i> :</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F29_Orland_EQ14.png"/></p>
+
+  <p class="body"><a id="pgfId-1146792"></a>We can get the partial derivative of <i class="fm-in-times-italic">V</i> with respect to <i class="fm-in-times-italic">x</i> by treating <i class="fm-in-times-italic">y</i> like a constant, so the terms 1 and <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup> don’t contribute. The result is just the derivative of −2<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">x</i><sup class="fm-superscript">6</sup> with respect to <i class="fm-in-times-italic">x</i>, which is <span class="fm-in-cambria">−</span>4<i class="fm-in-times-italic">x</i> + 6<i class="fm-in-times-italic">x</i><sup class="fm-superscript">5</sup>.</p>
+
+  <p class="body"><a id="pgfId-1146793"></a>For the partial derivative of <i class="fm-in-times-italic">V</i> with respect to <i class="fm-in-times-italic">y</i>, we treat <i class="fm-in-times-italic">x</i> like a constant, so the only term that contributes to the result is <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup> having a derivative 2<i class="fm-in-times-italic">y</i>. The negative gradient of <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is therefore</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">F</i>(<i class="fm-in-times-italic2">x, y</i>) = <span class="fm-in-cambria">−</span><span class="fm-in-cambria">∇</span><i class="fm-in-times-italic2">V</i>(<i class="fm-in-times-italic2">x, y</i>) = (4<i class="fm-in-times-italic2">x</i> <span class="fm-in-cambria">−</span> 6<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">5</sup>, <span class="fm-in-cambria">−</span>2<i class="fm-in-times-italic2">y</i>)</p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-11-46.gif" ALT=""></P>-->
+
+  <p class="body"><a id="pgfId-1146799"></a>Plotting this vector field, figure 11.30 shows that the force field points toward the points of lowest potential energy. An object feeling this force field would experience these two points as exerting an attractive force.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1146804"></a>Figure 11.30 A plot of the vector field -<span class="fm-in-cambria">∇</span>V(<i class="fm-in-times-italic">x, y</i>), the force field associated with the potential energy function V(<i class="fm-in-times-italic">x, y</i>). This is an attractive force toward the two points shown.</p>
+
+  <p class="body"><a id="pgfId-1146805"></a>The negative gradient of potential energy is the direction nature prefers; it is the direction to release stored energy. Objects are naturally pushed toward states where their potential energy is minimized. The gradient is an important tool for finding optimum values of scalar fields, as we’ll see in the next chapters. Specifically, in the last part of this book, I’ll show you how following the negative gradient in search of an optimal value mimics the process of “learning” in certain machine learning algorithms.</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1146807"></a><a id="id_4t9x39v6jais"></a>11.5.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1153908"></a><b class="fm-exercise-head">Exercise 11.4</b>: Plot the cross section of <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-italics">ey</i> <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>), where <i class="fm-in-times-italic1">y</i> = 1. Then plot the cross section of <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>), where <i class="fm-in-times-italic1">x</i> = <i class="fm-in-cambria2">π</i>/6.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154008"></a><b class="fm-exercise-head">Solution</b>: The cross section of <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) where <i class="fm-in-times-italic1">y</i> = 1 is a function of only <i class="fm-in-times-italic1">x</i> : <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>, 1) = <i class="fm-in-times-italic1">e</i><sup class="fm-superscript1">1</sup> <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">e</i> <span class="fm-in-cambria">·</span> <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) as shown here:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland_UN02.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154012"></a>Where <i class="fm-in-times-italic1">x</i> = <i class="fm-in-cambria2">π</i>/6, the value of <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) depends only on <i class="fm-in-times-italic1">y</i>. That is, <i class="fm-in-times-italic1">h</i>(<i class="fm-in-cambria2">π</i>/6, <i class="fm-in-times-italic1">y</i>) = <i class="fm-italics">ey</i> <span class="fm-in-times1">sin</span>(<i class="fm-in-cambria2">π</i>/6) = <i class="fm-italics">ey</i>/2. The graph is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland_UN03.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1154063"></a><b class="fm-exercise-head">Exercise 11.5</b>: What are the partial derivatives of the function <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) from the first exercise? What is the gradient? What is the value of the gradient at (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = (<i class="fm-in-cambria2">π</i>/6, 1)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154064"></a><b class="fm-exercise-head">Solution</b>: The partial derivative of <i class="fm-italics">ey</i> <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) with respect to <i class="fm-in-times-italic1">x</i> is obtained by treating <i class="fm-in-times-italic1">y</i> as a constant. <i class="fm-italics">ey</i> is therefore treated as a constant as well. The result is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland_UN03_EQ16.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154070"></a>Likewise, we get the partial derivative with respect to <i class="fm-in-times-italic1">y</i> by treating <i class="fm-in-times-italic1">x</i> and, therefore, <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) as constants:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland_UN03_EQ17.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154076"></a>The gradient <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) is the vector field whose components are the partial derivatives:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland_UN03_EQ18.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154082"></a>At (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = (<i class="fm-in-cambria2">π</i>/6, 1), this vector field evaluates as follows:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland_UN03_EQ19.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1154123"></a><b class="fm-exercise-head">Exercise 11.6</b>: Prove (−5, 2) is perpendicular to (2, 5).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154124"></a><b class="fm-exercise-head">Solution</b>: This is a review from chapter 2. These two vectors are perpendicular because their dot product is zero: (−5, 2) <span class="fm-in-cambria">·</span> (2, 5) = −10 + 10 = 0.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1154288"></a><b class="fm-exercise-head">Exercise 11.7-Mini Project</b>: Let <i class="fm-in-times-italic1">z</i> = <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) be the equation of the plane that best approximates <i class="fm-in-times-italic1">U</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) at (−5, 2). Figure out (from scratch!) an equation for <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) and the line contained in <i class="fm-in-times-italic1">p</i> and passing through (−5, 2), which is parallel to the <i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i> plane. This line should be parallel to the vector (2, 5, 0) as I claimed in the previous exercise.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154289"></a><b class="fm-exercise-head">Solution</b>: Remember that the formula for <i class="fm-in-times-italic1">U</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) is <span class="fm-in-cambria">½</span>(<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + <i class="fm-in-times-italic1">y</i><sup class="fm-superscript1">2</sup>). The value of <i class="fm-in-times-italic1">U</i>(−5, 2) is 14.5, so the point (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, <i class="fm-in-times-italic1">z</i>) = (−5, 2, 14.5) is on the graph of <i class="fm-in-times-italic1">U</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) in 3D.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154396"></a>Before we think about the formula for the plane of best approximation for <i class="fm-in-times-italic1">U</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>), let’s review how we got the line of best approximation for a function <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>). The line that best approximates a function <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) at a point <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">0</sub> is the line that passes through the point (<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">0</sub>, <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">0</sub>)) and has a slope <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">0</sub>). Those two facts ensure that both the value and the derivative of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) agree with the line that approximates it.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154397"></a>Following this model, let’s look for the plane <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>), whose value and <i class="fm-italics">both</i> partial derivatives match at (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = (−5, 2). That means we must have <i class="fm-in-times-italic1">p</i>(−5, 2) = 14.5, while <span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic1">p</i>/<span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic1">x</i> = <span class="fm-in-cambria">−</span>5 and <span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic1">p</i>/<span class="fm-in-cambria"><i class="calibre20">∂</i></span><i class="fm-in-times-italic1">y</i> = 2. As a plane, <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) has the form <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> + <i class="fm-in-times-italic1">c</i> for some numbers <i class="fm-in-times-italic1">a</i> and <i class="fm-in-times-italic1">b</i>(do you remember why?). The partial derivatives are</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH11_F30_Orland_UN03_EQ20.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154407"></a>To make them match, the formula must be <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <span class="fm-in-cambria">−</span>5<i class="fm-in-times-italic1">x</i> + 2<i class="fm-in-times-italic1">y</i> + <i class="fm-in-times-italic1">c</i>, and to satisfy <i class="fm-in-times-italic1">p</i>(−5, 2) = 14.5, it must be that <i class="fm-in-times-italic1">c</i> = −14.5. Therefore, the formula for the plane of best approximation is <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <span class="fm-in-cambria">−</span>5<i class="fm-in-times-italic1">x</i> + 2<i class="fm-in-times-italic1">y</i> − 14.5.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154408"></a>Now, let’s look for the line in the plane <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) passing through (−5, 2), which is parallel to the <i class="fm-in-times-italic1">x</i>,<i class="fm-in-times-italic1">y</i> plane. This is the set of points (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) such that <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">p</i>(−5, 2), meaning that there is no elevation change between (−5, 2) and (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1154409"></a>If <i class="fm-in-times-italic1">p</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">p</i>(−5, 2), then <span class="fm-in-cambria">−</span>5<i class="fm-in-times-italic1">x</i> + 2<i class="fm-in-times-italic1">y</i> − 14.5 = <span class="fm-in-cambria">−</span>5 <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">−</span>5 + 2 <span class="fm-in-cambria">·</span> 2 − 14.5. That simplifies to the equation of a line: <span class="fm-in-cambria">−</span>5<i class="fm-in-times-italic1">x</i> + 2<i class="fm-in-times-italic1">y</i> = 29. This line is equivalent to the set of vectors (−5, 2, 14.5) + <i class="fm-in-times-italic1">r</i> <span class="fm-in-cambria">·</span> (2, 5, 0), where <i class="fm-in-times-italic1">r</i> is a real number, so it is indeed parallel to (2, 5, 0).</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_21"><a id="pgfId-1154416"></a><a id="id_bz3vbd8uggxy"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146872"></a>A vector field is a function that takes a vector both as input and output. Specifically, we picture it as an assignment of an arrow vector to every point in a space.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146873"></a>Gravitational force can be modeled by a vector field. The value of the vector field at any point in space tells you how strong and in what direction an object is pulled by the force of gravity.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146874"></a>To simulate the motion of an object in a vector field, you need to use its position to calculate the strength and direction of the force field where it is. In turn, the value of the force field tells you the force on the object, and Newton’s second law tells you the resulting acceleration.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146875"></a> <i class="fm-italics">Potential energy</i> is stored energy that has the potential to create motion. The potential energy for an object in a force field is determined by where the object is.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146876"></a>Potential energy can be modeled as a scalar field: an assignment of a number to every point in space, which is the amount of potential energy an object would have at that point.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146877"></a>There are several ways to picture a scalar field in 2D: as a 3D surface, a heatmap, a contour map, or a pair of cross-section graphs.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146878"></a>The partial derivatives of a scalar field give the rate of change in the value of the field with respect to the coordinates. For instance, if <i class="fm-in-times-italic">U</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is a scalar field in 2D, there are partial derivatives with respect to <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146879"></a>Partial derivatives are the same as the derivatives of a cross section of the scalar field. You can calculate the partial derivative with respect to one variable by treating the other variables as constants.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146880"></a>The gradient of a scalar field <i class="fm-in-times-italic">U</i> is a vector whose components are partial derivatives of <i class="fm-in-times-italic">U</i> with respect to each of the coordinates. The gradient points in the direction of steepest ascent for <i class="fm-in-times-italic">U</i> or the direction in which <i class="fm-in-times-italic">U</i> increases most rapidly.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1146881"></a>The negative gradient of a potential energy function corresponding to a force field tells us the vector value of the force field at that point. This means that objects are pushed towards regions of lower potential energy.</p>
+    </li>
+  </ul>
+</body>
+</html>

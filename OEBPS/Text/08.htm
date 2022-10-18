@@ -1,0 +1,834 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Unknown</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1100122"></a>8 <a id="id_4cwx06g7tma4"></a>Understanding rates of change</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1100867"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1100868"></a>Calculating the average rate of change in a mathematical function</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1100869"></a>Approximating the instantaneous rate of change at a point</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1100870"></a>Picturing how the rate of change is itself changing</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1100871"></a>Reconstructing a function from its rate of change</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1100128"></a>In this chapter, I<a id="marker-1108544"></a> introduce you to two of the most important concepts from calculus: the derivative and the integral. Both of these are operations that work with functions. The <i class="fm-italics">derivative</i> takes a function and gives<a id="marker-1100129"></a> you another function measuring its rate of change. The <i class="fm-italics">integral</i> does the opposite; it takes a function representing a rate of change and gives you back a function measuring the original, cumulative value.<a id="marker-1109408"></a></p>
+
+  <p class="body"><a id="pgfId-1100130"></a>I focus on a simple example from my own work in data analysis for oil production. The set up we’ll picture is a pump lifting crude oil out of a well, which then flows through a pipe into a tank. The pipe is equipped with a meter that continuously measures the rate of fluid flow, and the tank is equipped with a sensor that detects the height of fluid in the tank and reports the volume of oil stored within (figure 8.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110121"></a>Figure 8.1 Schematic diagram of a pump lifting oil from a well and pumping it into a tank</p>
+
+  <p class="body"><a id="pgfId-1100136"></a>The volume sensor measurements tell us the volume of oil in the tank as a function of time, while the flow meter measurements tell us the volume flowing into the tank per hour, also as a function of time. In this example, the volume is the cumulative value and the flow rate is its rate of change.</p>
+
+  <p class="body"><a id="pgfId-1100137"></a>In this chapter, we solve two main problems. First, in our example, we start with known, cumulative volumes over time and calculate the flow rate as a function of time using the derivative. Second, we do the opposite task, starting with the flow rate as a function of time and calculating the cumulative volume of oil in the tank over time using the integral. Figure 8.2 shows this process.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1100142"></a>Figure 8.2 Finding the flow rate over time from the volume using the derivative and then finding the volume over time from the flow rate using the integral</p>
+
+  <p class="body"><a id="pgfId-1100143"></a>We’ll write a function called <code class="fm-code-in-text">get_flow_rate(volume_function)</code> that takes the volume function as an input and returns a new Python function that gives the flow rate at any time. Then we’ll write a second function, <code class="fm-code-in-text">get_volume(flow_rate_function)</code>, that takes the flow rate function and returns a Python function giving volume over time. I intersperse a few smaller examples along the way as a warm up to help you think about rates of change.</p>
+
+  <p class="body"><a id="pgfId-1100144"></a>Even though its big ideas aren’t that complicated or foreign, calculus gets a bad reputation because it requires so much tedious algebra. For that reason, I focus on introducing new ideas in this chapter but not a lot of new techniques. Most of the examples require only the linear function math that we covered in chapter 7. Let’s get started!</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1100146"></a><a id="id_b8op731d8cvz"></a>8.1 Calculating average flow rate from volume</h2>
+
+  <p class="body"><a id="pgfId-1102897"></a>Let’s start <a id="marker-1108554"></a>by assuming <a id="marker-1108559"></a>we know the volume in the tank over time, which is encoded as a Python function called <code class="fm-code-in-text">volume</code>. This function takes as an argument, the time in hours after a predefined starting point, and returns the volume of oil in the tank at that time, measured in a unit called barrels (abbreviated “bbl”). To keep the focus on the ideas rather than the algebra, I won’t even tell you the formula for the <code class="fm-code-in-text">volume</code> function (though you can see it in the source code if you’re curious). All you need to do for now is to call it and to plot it. When you plot it, you’ll see something like figure 8.3.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110186"></a> Figure 8.3 A plot of the <code class="fm-code-in-text">volume</code> function shows the volume of oil in the tank over time.</p>
+
+  <p class="body"><a id="pgfId-1100153"></a>We want to move in the direction of finding the flow rate into the tank at any point in time, so for our first baby step, let’s calculate this in an intuitive way. In this example, let’s write a function <code class="fm-code-in-text">average_flow_rate(v,</code> <code class="fm-code-in-text">t1,</code> <code class="fm-code-in-text">t2)</code> that takes a volume function <code class="fm-code-in-text">v</code>, a start time <code class="fm-code-in-text">t1</code>, and an end time <code class="fm-code-in-text">t2</code>, and returns a number that is the <i class="fm-italics">average flow rate</i> into the tank on the time interval. That is, it tells us the overall number of barrels per hour entering the tank.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1100155"></a><a id="id_fuqc5vjo8xmu"></a>8.1.1 Implementing an average_flow_rate function</h3>
+
+  <p class="body"><a id="pgfId-1104021"></a>The word <i class="fm-italics">per</i> <a id="marker-1108569"></a> in “barrels per hour” <a id="marker-1108574"></a>suggests <a id="marker-1108586"></a>that we’re going to do some division to get our answer. The way to calculate the average flow rate is to take the total change in volume divided by the elapsed time:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F03_Orland_EQ01.png"/></p>
+
+  <p class="body"><a id="pgfId-1100163"></a>The elapsed time between the starting time <i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub> and the ending time <i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub> measured in hours is <i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>. If we have a function <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i>) that tells us volume as a function of time, the overall change in volume is the volume at <i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub> minus the volume at <i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>, or <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub>) − <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>). That gives us a more specific equation to work with:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F03_Orland_EQ02.png"/></p>
+
+  <p class="body"><a id="pgfId-1100169"></a>This is how we calculate rates of change in different contexts. For instance, your speed when driving a car is the rate at which you cover distance with respect to time. To calculate your average speed for a drive, you divide your total distance traveled in miles by the elapsed time in hours to get a result in miles per hour (mph). To know the distance traveled and time elapsed, you need to check your clock and odometer at the beginning and end of the trip.</p>
+
+  <p class="body"><a id="pgfId-1100170"></a>Our formula for average flow rate depends on the volume function <i class="fm-in-times-italic">V</i> and the starting and ending times <i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub>, which are the parameters we’ll pass to the corresponding Python function. The body of the function is a direct translation of this mathematical formula to Python:</p>
+  <pre class="programlisting">def average_flow_rate(v,t1,t2):
+    return (v(t2) - v(t1))/(t2 - t1)</pre>
+
+  <p class="body"><a id="pgfId-1100172"></a>This function is simple, but important enough to walk through as an example calculation. Let’s use the <code class="fm-code-in-text">volume</code> function (plotted in figure 8.3 and included in the source code) and say we want to know the average flow rate into the tank between the 4-hr mark and the 9-hr mark. In this case, <code class="fm-code-in-text">t1</code> <code class="fm-code-in-text">=</code> <code class="fm-code-in-text">4</code> and <code class="fm-code-in-text">t2</code> <code class="fm-code-in-text">=</code> <code class="fm-code-in-text">9</code>. To find the starting and ending volumes, we can evaluate the <code class="fm-code-in-text">volume</code> function at these times:</p>
+  <pre class="programlisting">&gt;&gt;&gt; volume(4)
+3.3
+&gt;&gt;&gt; volume(9)
+5.253125</pre>
+
+  <p class="body"><a id="pgfId-1100174"></a>Rounding for simplicity, the difference between the two volumes is 5.25 bbl − 3.3 bbl = 1.95 bbl, and the total elapsed time is 9 hr − 4 hr = 5 hr. Therefore, the average flow rate into the tank is roughly 1.95 bbl divided by 5 hr or 0.39 bbl/hr. Our function confirms we got this right:</p>
+  <pre class="programlisting">&gt;&gt;&gt; average_flow_rate(volume,4,9)
+0.390625</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110235"></a>Figure 8.4 A secant line connects the starting and ending points on the volume graph.</p>
+
+  <p class="body"><a id="pgfId-1100176"></a>This completes our first basic example of finding the rate of change of a function. That wasn’t too bad! Before we move on to some more interesting examples, let’s spend a bit more time<a id="marker-1108591"></a> interpreting what <a id="marker-1108601"></a>the <a id="marker-1108606"></a>volume function does.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1100178"></a><a id="id_jltfs2n2aqzi"></a>8.1.2 Picturing the average flow rate with a secant line</h3>
+
+  <p class="body"><a id="pgfId-1100179"></a>Another useful <a id="marker-1108621"></a>way <a id="marker-1108626"></a>to think <a id="marker-1108631"></a>about the average rate of change in volume over time is to look at the volume graph. Let’s focus on the two points on the volume graph between which we calculated the average flow rate. In figure 8.4, the points are shown as dots on the graph, and I’ve drawn a line passing through them. A line passing through two points on a graph like this is called a <i class="fm-italics">secant line</i>.</p>
+
+  <p class="body"><a id="pgfId-1100185"></a>As you can see, the graph is higher at 9 hrs than at 4 hrs because the volume of oil in the tank increased during this period. This causes the secant line connecting the starting and ending points to slope upward. It turns out the slope of the secant tells us <i class="fm-italics">exactly</i> what the average flow rate is on the time interval.</p>
+
+  <p class="body"><a id="pgfId-1107036"></a>Here’s why. Given two points on a line, the slope is the change in the vertical coordinate divided by the change in the horizontal coordinate. In this case, the vertical coordinate goes from <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>) to <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub>) for a change of <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub>) − <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>), and the horizontal coordinate goes from <i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub> to <i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub> for a change of <i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>. The slope is then (<i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub>) − <i class="fm-in-times-italic">V</i>(<i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>)) divided by (<i class="fm-in-times-italic">t</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">t</i><sub class="fm-subscript">1</sub>), exactly the same calculation as the average flow rate (figure 8.5)!</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110338"></a>Figure 8.5 We calculate the slope of a secant line in the same way as the average rate of change of the <code class="fm-code-in-text">volume</code> function.</p>
+
+  <p class="body"><a id="pgfId-1100192"></a>As we <a id="marker-1108641"></a>continue, <a id="marker-1108646"></a>you can <a id="marker-1108651"></a>picture secant lines on graphs to reason about the average rate of change in a function.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1100194"></a><a id="id_k853i0vyyflg"></a>8.1.3 Negative rates of change</h3>
+
+  <p class="body"><a id="pgfId-1100196"></a>One case <a id="marker-1108661"></a>worth a <a id="marker-1108666"></a>brief mention is that the secant line can<a id="marker-1100195"></a> have a <i class="fm-italics">negative</i> slope. Figure 8.6 shows the graph of a different <code class="fm-code-in-text">volume</code> function, which you can find implemented as <code class="fm-code-in-text">decreasing_volume</code> in the source code for this book. Figure 8.6 plots the volume in the tank decreasing over time.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110387"></a>Figure 8.6 A different <code class="fm-code-in-text">volume</code> function shows that the volume in the tank decreases over time.</p>
+
+  <p class="body"><a id="pgfId-1100202"></a>This example isn’t compatible with our previous example because we don’t expect oil to be flowing out of the tank back into the ground. But it does illustrate that a secant line can go downward, for instance, from <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 4. On this time interval, the change in volume is <span class="fm-in-cambria">−</span>3.2 bbl (figure 8.7).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110440"></a>Figure 8.7 Two points on a graph that define a secant line with a negative slope</p>
+
+  <p class="body"><a id="pgfId-1100208"></a>In this case, the slope is <span class="fm-in-cambria">−</span>3.2 bbl divided by 4 hr or -0.8 bbl/hr. That means that the rate at which oil is entering the tank is -0.8 bbl/hr. A more sensible way to say this is that oil is <i class="fm-italics">leaving</i> the tank at a rate of 0.8 bbl/hr. Regardless of whether the <code class="fm-code-in-text">volume</code> function is increasing or decreasing, our <code class="fm-code-in-text">average_flow_rate</code> function is reliable. In this case,</p>
+  <pre class="programlisting">&gt;&gt;&gt; average_flow_rate(decreasing_volume,0,4)
+-0.8</pre>
+
+  <p class="body"><a id="pgfId-1104187"></a>Equipped with this function to measure the average flow rate, we can go a step further in the next section−figuring <a id="marker-1108671"></a>out <a id="marker-1108676"></a>how the flow rate changes over time.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1104189"></a><a id="id_vop4zwi2gn6u"></a>8.1.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1104342"></a><b class="fm-exercise-head">Exercise 8.1</b>: Suppose you <a id="marker-1108691"></a>start a road trip at noon when your odometer reads 77,641 miles, and you end your road trip at 4:30 in the afternoon with your odometer reading 77,905 miles. What was your average speed during the trip?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1104209"></a><b class="fm-exercise-head">Solution</b>: The total distance traveled is 77,905 − 77,641 = 264 miles covered over 4.5 hrs. The average speed is 264 mi / 4.5 hr or about 58.7 mph.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1104232"></a><b class="fm-exercise-head">Exercise 8.2</b>: Write a Python function <code class="fm-code-in-text1">secant_line(f,x1,x2)</code> that takes a function <code class="fm-code-in-text1"><i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>)</code> and two values, <code class="fm-code-in-text1">x1</code> and <code class="fm-code-in-text1">x2</code>, and that returns a new function representing a secant line over time. For instance, if you ran <code class="fm-code-in-text1">line</code> <code class="fm-code-in-text1">=</code> <code class="fm-code-in-text1">secant_line (f,x1,x2)</code>, then <code class="fm-code-in-text1">line(3)</code> would give you the <i class="fm-in-times-italic1">y</i> value of the secant line at <i class="fm-in-times-italic1">x</i> = 3.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1104233"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def secant_line(f,x1,x2):
+    def line(<i class="fm-in-times-italic1">x</i>):
+        return f(x1) + (x-x1) * (f(x2)-f(x1))/(x2-x1)
+    return line</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1104257"></a><b class="fm-exercise-head">Exercise 8.3</b>: Write a function that uses <a id="marker-1108718"></a>the code from the <a id="marker-1108728"></a>previous <a id="marker-1108733"></a>exercise to plot a secant line of a function <code class="fm-code-in-text1">f</code> between two given points.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1104258"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def plot_secant(f,x1,x2,color='k'):
+    line = secant_line(f,x1,x2)
+    plot_function(line,x1,x2,c=color)
+    plt.scatter([x1,x2],[f(x1),f(x2)],c=color)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_8"><a id="pgfId-1100230"></a><a id="id_2653icvw3c95"></a>8.2 Plotting the average flow rate over time</h2>
+
+  <p class="body"><a id="pgfId-1100231"></a>One of our big <a id="marker-1110531"></a>objectives <a id="marker-1110532"></a>for this chapter is to start with the volume function and recover the flow rate function. To find the flow rate as a function of time, we need to ask how rapidly the volume of the tank is changing at different points in time. For starters, we can see in figure 8.8 that the flow rate is changing over time−different secant lines on the volume graph have different slopes.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110483"></a>Figure 8.8 Different secant lines on the volume graph have different slopes, indicating that the flow rate is changing.</p>
+
+  <p class="body"><a id="pgfId-1100237"></a>In this section, we get closer to finding the flow rate as a function of time by calculating the average flow rate on different intervals. We break up the 10-hr period into a number of smaller intervals of a fixed duration (for example, ten, 1-hr intervals) and calculate the average flow rate for each one.</p>
+
+  <p class="body"><a id="pgfId-1100238"></a>We package this work in a function called <code class="fm-code-in-text">interval_flow_rates(v,t1, t2,dt)</code>, where <code class="fm-code-in-text">v</code> is the volume function, <code class="fm-code-in-text">t1</code> and <code class="fm-code-in-text">t2</code> are the starting and ending times, and <code class="fm-code-in-text">dt</code> is the fixed duration of the time intervals. This function returns a list of pairs of time and flow rate. For instance, if we break the 10 hrs into 1-hr segments, the result should look like this:</p>
+  <pre class="programlisting">[(0,...), (1,...), (2,...), (3,...), (4,...), (5,...), (6,...), (7,...),
+     (8,...), (9,...)]</pre>
+
+  <p class="body"><a id="pgfId-1100241"></a>Where each <code class="fm-code-in-text">...</code> would be replaced by the flow rate in the corresponding hour. Once we get these pairs, we can draw them as a scatter plot alongside the flow rate function from the beginning of the chapter and compare the results.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1100243"></a><a id="id_y0gj7pgdmsy"></a>8.2.1 Finding the average flow rate in different time intervals</h3>
+
+  <p class="body"><a id="pgfId-1100244"></a>As a first <a id="marker-1108771"></a>step<a id="marker-1108776"></a> to implementing <code class="fm-code-in-text">interval_flow_rates()</code>, we need to find the starting points for each time interval. This means finding a list of time values from the starting time <code class="fm-code-in-text">t1</code> to the ending time <code class="fm-code-in-text">t2</code> in increments of the interval length <code class="fm-code-in-text">dt</code>. There’s a handy function in Python’s NumPy library<a id="marker-1100245"></a> called <code class="fm-code-in-text">arange</code> that does this for us. For instance, starting from time zero and going to time 10 in 0.5-hr increments gives us the following interval start times:<a id="marker-1109356"></a></p>
+  <pre class="programlisting">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; np.arange(0,10,0.5)
+array([0. , 0.5, 1. , 1.5, 2. , 2.5, 3. , 3.5, 4. , 4.5, 5. , 5.5, 6. ,
+       6.5, 7. , 7.5, 8. , 8.5, 9. , 9.5])</pre>
+
+  <p class="body"><a id="pgfId-1100247"></a>Note that the end time of 10 hrs isn’t included in the list. This is because we list the <i class="fm-italics">start</i> time for each half hour, and the half hour from <i class="fm-in-times-italic">t</i> =10 to <i class="fm-in-times-italic">t</i> =10.5 isn’t part of the overall time interval we’re considering.</p>
+
+  <p class="body"><a id="pgfId-1100248"></a>For each of these interval start times, adding <code class="fm-code-in-text">dt</code> returns the corresponding interval end times. For instance, the interval starting at 3.5 hrs in the preceding list ends at 3.5 + 0.5 = 4.0 hrs. To implement the <code class="fm-code-in-text">interval_flow_rates</code> function, we just need to use our <code class="fm-code-in-text">average_flow_rate</code> function on each of the intervals. Here’s how the complete function looks:</p>
+  <pre class="programlisting">def interval_flow_rates(v,t1,t2,dt):
+    return [(t,average_flow_rate(v,t,t+dt))      <span class="fm-combinumeral">❶</span>
+                for t in np.arange(t1,t2,dt)]</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1109540"></a><span class="fm-combinumeral">❶</span> For every interval start time t, finds the average flow rate from t to t+dt. (We want the list of pairs of t with the corresponding rate.)</p>
+
+  <p class="body"><a id="pgfId-1100251"></a>If we pass in our <code class="fm-code-in-text">volume</code> function with 0 hrs and 10 hrs as the start and end times, and 1 hr as the interval length, we get a list telling us the flow rate in each hour:</p>
+  <pre class="programlisting">&gt;&gt;&gt; interval_flow_rates(volume,0,10,1)
+[(0, 0.578125),
+ (1, 0.296875),
+ (2, 0.109375),
+ (3, 0.015625),
+ (4, 0.015625),
+ (5, 0.109375),
+ (6, 0.296875),
+ (7, 0.578125),
+ (8, 0.953125),
+ (9, 1.421875)]</pre>
+
+  <p class="body"><a id="pgfId-1100253"></a>We can tell a few things by looking at this list. The average flow rate is always positive, meaning that there is a net addition of oil into the tank in each hour. The flow rate decreases to its lowest value around hours 3 and 4 and then increases to its highest value in the final hour. This is <a id="marker-1108786"></a>even <a id="marker-1108791"></a>clearer if we plot it on a graph.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1100255"></a><a id="id_6wgzqerupbzd"></a>8.2.2 Plotting the interval flow rates</h3>
+
+  <p class="body"><a id="pgfId-1100256"></a>We can use <a id="marker-1108801"></a>Matplotlib’s <code class="fm-code-in-text">scatter</code> function <a id="marker-1108806"></a>to quickly make a plot of these flow rates over time. This function plots a set of points on a graph, given a list of horizontal coordinates followed by a list of vertical coordinates. We need to pull out the times and flow rates as two separate lists of 10 numbers and then pass them to the function. To avoid repeating this process, we can build it all into one function:</p>
+  <pre class="programlisting">def plot_interval_flow_rates(volume,t1,t2,dt):
+    series = interval_flow_rates(volume,t1,t2,dt)
+    times = [t for (t,_) in series]
+    rates = [q for (_,q) in series]
+    plt.scatter(times,rates)</pre>
+
+  <p class="body"><a id="pgfId-1100258"></a><a id="marker-1110514"></a>Calling <code class="fm-code-in-text">plot_interval_flow_rates(volume,0,10,1)</code> generates a scatter plot of the data produced by <code class="fm-code-in-text">interval_flow_rates</code>. Figure 8.9 shows the result of plotting the <code class="fm-code-in-text">volume</code> function from zero to 10 hrs in increments of 1 hr.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110577"></a>Figure 8.9 A plot of the average flow rate in each hour</p>
+
+  <p class="body"><a id="pgfId-1100264"></a>This confirms what we saw in the data: the average flow rate decreases to its lowest value around hours 3 and 4 and then increases again after that to a highest rate of nearly 1.5 bbl/hr. Let’s compare these average flow rates with the actual flow rate function. Again, I don’t want you to worry about the formula for flow rate as a function of time. I include a <code class="fm-code-in-text">flow_rate</code> function in the source code for this book that we can plot (figure 8.10), along with the scatter plot.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110621"></a>Figure 8.10 A plot of the average flow rate in each hour (dots) and the actual flow rate (smooth curve) per hour</p>
+
+  <p class="body"><a id="pgfId-1100270"></a>These two plots tell the same story, but they don’t quite line up. The difference is that the dots measure average flow rates, whereas the <code class="fm-code-in-text">flow_rate</code> function shows<a id="marker-1100271"></a> the <i class="fm-italics">instantaneous</i> value of the flow rate at any point in time.<a id="marker-1109366"></a></p>
+
+  <p class="body"><a id="pgfId-1100272"></a>To understand this, it’s helpful to think of the road trip example again. If you cover 60 miles in 1 hr, your average speed is 60 mph. However, it’s unlikely your speedometer read exactly 60 mph at every instant of the hour. At some point on the open road, your <i class="fm-italics">instantaneous speed</i> might have<a id="marker-1100273"></a> been 70 mph, while at another time in traffic, you might have slowed down to 50 mph.</p>
+
+  <p class="body"><a id="pgfId-1100274"></a>Similarly, the flow rate meter on the pipeline needn’t agree with the average flow rate on the subsequent hour. It turns out that if you make the time intervals smaller, the graphs are in closer agreement. Figure 8.11 shows the plot of the average flow rates at 20-min intervals (1/3hrs) next to the flow rate function.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110665"></a>Figure 8.11 The graph of the flow rate over time compared with the average flow rates at 20-min intervals</p>
+
+  <p class="body"><a id="pgfId-1104667"></a>The average flow rates are still not a perfect match to the instantaneous flow rates, but they’re a lot closer. In the next section, we’ll run with this idea and calculate the flow rates on extremely small <a id="marker-1108816"></a>intervals, <a id="marker-1108821"></a>where the difference between average and instantaneous rates is imperceptible.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1104672"></a><a id="id_nbua8ha4nrag"></a>8.2.3 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1104671"></a><b class="fm-exercise-head">Exercise 8.4</b>: Plot the <code class="fm-code-in-text1">decreasing_volume</code> flow<a id="marker-1108831"></a> rates <a id="marker-1108836"></a>over time at 0.5-hr intervals. When is its flow rate the lowest? That is, when is oil leaving the tank at the fastest rate?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1104802"></a><b class="fm-exercise-head">Solution</b>: Running <code class="fm-code-in-text1">plot_interval_flow_rates(decreasing_volume,0, 10,0.5)</code>, we can see that the rate is the lowest (most negative) just before the 5-hr mark.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F11_Orland_UN01.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1104754"></a><b class="fm-exercise-head">Exercise 8.5</b>: Write a <code class="fm-code-in-text1">linear_volume_function</code> and plot the flow rate over time to show that it is constant.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1104755"></a><b class="fm-exercise-head">Solution</b>: A <code class="fm-code-in-text1">linear_volume_function(<i class="fm-char-times-italic">t</i>)</code> has the form <i class="fm-in-times-italic1">V</i>(<i class="fm-in-times-italic1">t</i>) = <i class="fm-italics">at</i> + <i class="fm-in-times-italic1">b</i> for the constants <i class="fm-in-times-italic1">a</i> and <i class="fm-in-times-italic1">b</i>. For instance,</p>
+        <pre class="programlisting">def linear_volume_function(t):
+    return 5*t + 3
+
+plot_interval_flow_rates(linear_volume_function,0,10,0.25)</pre>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F11_Orland_UN02.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1104760"></a>This graph <a id="marker-1108846"></a>shows that for a linear <a id="marker-1108861"></a>volume<a id="marker-1108866"></a> function, the flow rate is constant over time.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_12"><a id="pgfId-1100302"></a><a id="id_x5xu8svp90uc"></a>8.3 Approximating instantaneous flow rates</h2>
+
+  <p class="body"><a id="pgfId-1100303"></a>As we <a id="marker-1108876"></a>calculate <a id="marker-1108881"></a>the average rate of change in our <code class="fm-code-in-text">volume</code> function over smaller and smaller time intervals, we get closer and closer to measuring what’s going on in a single instant. But if we try to measure the average rate of change in volume at a single instant, meaning an interval whose start and end times are the same, we run into trouble. At a time <i class="fm-in-times-italic">t</i>, the formula for average flow rate would read:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F11_Orland_UN02_EQ03.png"/></p>
+
+  <p class="body"><a id="pgfId-1100309"></a>Dividing 0/0 is undefined, so this method doesn’t work. This is where algebra no longer helps us, and we need to turn to reasoning from calculus. In calculus, there’s an operation called the <i class="fm-italics">derivative</i> that sidesteps this undefined division problem to tell you the instantaneous rate of change in a function.</p>
+
+  <p class="body"><a id="pgfId-1100310"></a>In this section, I explain why the instantaneous flow rate function, which in calculus is called <i class="fm-italics">the derivative</i> of the volume<a id="marker-1100311"></a> function, is well-defined and how to approximate it. We’ll write a function <code class="fm-code-in-text">instantaneous_flow_rate(v,t)</code> that takes a volume function <i class="fm-in-times-italic">v</i> and a single point in time <i class="fm-in-times-italic">t</i>, and returns an approximation of the instantaneous rate at which oil is flowing into the tank. This result is the number of barrels per hour, which should match the value of the <code class="fm-code-in-text">instantaneous_flow_rate</code> function exactly.</p>
+
+  <p class="body"><a id="pgfId-1100312"></a>Once we do that, we’ll write a second function <code class="fm-code-in-text">get_flow_rate_function(<i class="fm-in-times-italic2">v</i>)</code>, which is the curried version of <code class="fm-code-in-text">instantaneous_flow_rate()</code>. Its argument is a volume function, and it returns a function that takes a time and returns an instantaneous flow rate. This function completes our first of two major objectives for this chapter: starting with a volume function and producing a corresponding flow rate function.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1100314"></a><a id="id_30xoqvdhv4cg"></a>8.3.1 Finding the slope of small secant lines</h3>
+
+  <p class="body"><a id="pgfId-1100315"></a>Before we do <a id="marker-1108891"></a>any <a id="marker-1108896"></a>coding, <a id="marker-1108901"></a>I want to convince you that it makes sense to talk about an “instantaneous flow rate” in the first place. To do that, let’s zoom in on the volume graph around a single instant and see what’s going on (figure 8.12). Let’s pick the point where <i class="fm-in-times-italic">t</i> = 1 hour and look at a smaller window around it.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1100320"></a>Figure 8.12 Zooming in on the 1-hr window around <i class="fm-in-times-italic">t</i> = 1 hr</p>
+
+  <p class="body"><a id="pgfId-1100321"></a>On this smaller time interval, we no longer see much of the curviness of the volume graph. That is, the steepness of the graph has less variability than on the whole 10-hr window. We can measure this by drawing some secant lines and seeing that their slopes are fairly close (figure 8.13).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110737"></a>Figure 8.13 Two secant lines around <i class="fm-in-times-italic">t</i> = 1 hr have similar slopes, meaning that the flow rate doesn’t change much during this time interval.</p>
+
+  <p class="body"><a id="pgfId-1100327"></a>If we zoom in even further, the steepness of the graph looks more and more constant. Zooming in to the interval between 0.9 hrs and 1.1 hrs, the volume graph is almost a straight line. If you draw a secant line over this interval, you can barely see the graph rise above the secant line (figure 8.14).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110781"></a>Figure 8.14 The volume graph looks nearly straight at a smaller interval around <i class="fm-in-times-italic">t</i> = 1 hr.</p>
+
+  <p class="body"><a id="pgfId-1100333"></a>Finally, if we zoom in to the window between <i class="fm-in-times-italic">t</i> = 0.99 hrs and <i class="fm-in-times-italic">t</i> = 1.01 hrs, the volume graph is indistinguishable from a straight line (figure 8.15). At this level, a secant line appears to overlap exactly with the graph of the function appearing like one line.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110825"></a>Figure 8.15 Zooming in even closer, the volume graph is visually indistinguishable from a straight line.</p>
+
+  <p class="body"><a id="pgfId-1100339"></a>If you keep zooming in, the graph continues to look like a line. It’s not that the graph <i class="fm-italics">is</i> a line at this point, it’s that it gets closer and closer to looking like a line the closer you zoom in. The leap in reasoning that we can make in calculus is that there’s a single, best line approximating a smooth graph like the volume graph at any point. Here are a few calculations showing that the slopes of smaller and smaller secant lines <i class="fm-italics">converge</i> to a single value, suggesting we really are approaching a single “best” approximation of the slope:</p>
+  <pre class="programlisting">&gt;&gt;&gt; average_flow_rate(volume,0.5,1.5)
+0.42578125
+&gt;&gt;&gt; average_flow_rate(volume,0.9,1.1)
+0.4220312499999988
+&gt;&gt;&gt; average_flow_rate(volume,0.99,1.01)
+0.42187656249998945
+&gt;&gt;&gt; average_flow_rate(volume,0.999,1.001)
+0.42187501562509583
+&gt;&gt;&gt; average_flow_rate(volume,0.9999,1.0001)
+0.42187500015393936
+&gt;&gt;&gt; average_flow_rate(volume,0.99999,1.00001)
+0.4218750000002602</pre>
+
+  <p class="body"><a id="pgfId-1100341"></a>Unless those zeroes are a big coincidence, the number we’re approaching is 0.421875 bbl/hr. We can conclude that the line of best approximation for the volume function at the point <i class="fm-in-times-italic">t</i> = 1 hr has a slope of 0.421875. If we zoom out again (figure 8.16), we can see what this line of best approximation looks like.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110869"></a>Figure 8.16 A line with slope 0.421875 is the best approximation of the volume function at time <i class="fm-in-times-italic">t</i> = 1 hr.</p>
+
+  <p class="body"><a id="pgfId-1100347"></a>This line is called the <i class="fm-italics">tangent line</i> to the volume graph at the point <i class="fm-in-times-italic">t</i> = 1, and it’s distinguished by the fact that it lies flat against the volume graph at that point. Because the tangent line is the line that best approximates the volume graph, its slope is the best measure of the instantaneous slope of that graph and, therefore, the instantaneous flow rate at <i class="fm-in-times-italic">t</i> = 1. Lo and behold, the <code class="fm-code-in-text">flow_rate</code> function I’ve provided in the source code gives us exactly the same number that the smaller and smaller secant line slopes approach:</p>
+  <pre class="programlisting">&gt;&gt;&gt; flow_rate(1)
+0.421875</pre>
+
+  <p class="body"><a id="pgfId-1100349"></a>To have a tangent line, a function needs to be “smooth.” As a mini-project at the end of this section, you can try repeating this exercise with a function that’s not smooth, and you’ll see that there’s no line of best approximation. When we can find a tangent line to the graph of a function<a id="marker-1100350"></a> at a point, its slope is called the <i class="fm-italics">derivative of the function at the point</i>. For instance, the derivative<a id="marker-1108911"></a> of the <a id="marker-1108916"></a>volume <a id="marker-1108921"></a>function at the point <i class="fm-in-times-italic">t</i> = 1 is equal to 0.421875 (barrels per hour).</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1100352"></a><a id="id_tdmwzoddbmuq"></a>8.3.2 Building the instantaneous flow rate function</h3>
+
+  <p class="body"><a id="pgfId-1100353"></a>Now that <a id="marker-1108931"></a>we’ve <a id="marker-1108936"></a>seen how to calculate instantaneous rates of change of the volume function, we have what we need to implement the <code class="fm-code-in-text">instantaneous_flow_rate</code> function. There’s one major obstacle to automating the procedure we previously used, which is that Python can’t “eyeball” the slopes of several small secant lines and decide what number they’re converging to. To get around this, we can calculate slopes of smaller and smaller secant lines until they stabilize to some fixed number of decimal digits.</p>
+
+  <p class="body"><a id="pgfId-1100354"></a>For instance, we could have decided that we were going to find the slopes of a series of secant lines, each a tenth as wide as the previous, until the values stabilized to four decimal places. The following table shows the slopes once again.</p>
+
+  <table border="1" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1102109"></a>Secant line interval</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1102111"></a>Secant line slope</p>
+      </th>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102113"></a>0.5 to 1.5</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102115"></a>0.42578125</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102117"></a>0.9 to 1.1</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102119"></a>0.4220312499999988</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102121"></a>0.99 to 1.01</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102123"></a>0.42187656249998945</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102125"></a>0.999 to 1.001</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1102127"></a>0.42187501562509583</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1100378"></a>In the last two rows, the slopes agree to four decimal places (they differ by less than 10<sup class="fm-superscript"><span class="fm-in-cambria1">−</span>4</sup>), so we could round the final result to 0.4219 and call that our result. This isn’t the exact result of 0.421875, but it’s a solid approximation to the specified number of digits.</p>
+
+  <p class="body"><a id="pgfId-1100379"></a>Fixing the number of digits of the approximation, we now have a way to know if we are done. If after some large number of steps, we still haven’t converged to the specified number of digits, we can say that there is no line of best approximation and, therefore, no derivative at the point. Here’s how this procedure translates to Python:</p>
+  <pre class="programlisting">def instantaneous_flow_rate(v,t,digits=6):
+    tolerance = 10 ** (−digits)                      <span class="fm-combinumeral">❶</span>
+    h = 1
+    approx = average_flow_rate(v,t-h,t+h)            <span class="fm-combinumeral">❷</span>
+    for i in range(0,2*digits):                      <span class="fm-combinumeral">❸</span>
+        h = h / 10
+        next_approx = average_flow_rate(v,t-h,t+h)   <span class="fm-combinumeral">❹</span>
+        if abs(next_approx − approx) &lt; tolerance:
+            return round(next_approx,digits)         <span class="fm-combinumeral">❺</span>
+        else:
+            approx = next_approx                     <span class="fm-combinumeral">❻</span>
+    raise Exception("Derivative did not converge")   <span class="fm-combinumeral">❼</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1100381"></a><span class="fm-combinumeral">❶</span> If two numbers differ by less than a tolerance of 10<sup class="fm-in-superscript-italic">−<i class="calibre32">d</i></sup>, then they agree to d decimal places.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1105184"></a><span class="fm-combinumeral">❷</span> Calculates a first secant line slope on an interval spanning <i class="fm-in-times-italic1">h</i> = 1 units on either side of the target point t</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1105187"></a><span class="fm-combinumeral">❸</span> As a crude approximation, we only try 2<span class="fm-in-cambria">·</span>digits iterations before giving up on the convergence.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1109681"></a><span class="fm-combinumeral">❹</span> At each step, calculates the slope of a new secant line around the point t on a 10 times smaller interval</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1109712"></a><span class="fm-combinumeral">❺</span> If the last two approximations differ by less than the tolerance, rounds the result and returns it</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1109729"></a><span class="fm-combinumeral">❻</span> Otherwise, runs the loop again with a smaller interval</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1109751"></a><span class="fm-combinumeral">❼</span> If we exceed the maximum number of iterations, the procedure has not converged to a result.</p>
+
+  <p class="body"><a id="pgfId-1105437"></a>I arbitrarily chose six digits as the default precision, so this function matches our result for the instantaneous flow rate at the 1-hr mark:</p>
+  <pre class="programlisting">&gt;&gt;&gt; instantaneous_flow_rate(volume,1)
+0.421875</pre>
+
+  <p class="body"><a id="pgfId-1100391"></a>We can now compute the instantaneous flow rate at any point in time, which means we have the complete data of the flow rate function. Next, we can plot it and confirm it matches the <code class="fm-code-in-text">flow_rate</code> function I provide<a id="marker-1108946"></a> in the <a id="marker-1108956"></a>source code.</p>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1100393"></a><a id="id_5d65gjsx51iy"></a>8.3.3 Currying and plotting the instantaneous flow rate function</h3>
+
+  <p class="body"><a id="pgfId-1100394"></a>For a function <a id="marker-1108966"></a>that <a id="marker-1108971"></a>behaves like the <code class="fm-code-in-text">flow_rate</code> function in the source code, taking a time variable and returning a flow rate, we need to curry the <code class="fm-code-in-text">instantaneous_flow _rate</code> function. The curried function takes a volume function (<code class="fm-code-in-text">v</code>) and returns a flow rate function:</p>
+  <pre class="programlisting">def get_flow_rate_function(<i class="fm-in-times-italic1">v</i>):
+    def flow_rate_function(t):
+        instantaneous_flow_rate(v,t)
+    return flow_rate_function</pre>
+
+  <p class="body"><a id="pgfId-1100396"></a>The output of <code class="fm-code-in-text">get_flow_rate_function(<i class="fm-in-times-italic2">v</i>)</code> is a function that should be identical to the function <code class="fm-code-in-text">flow_rate</code> in the source code. We can plot these both over the 10-hr period to confirm and, indeed, figure 8.17 shows that their graphs are indistinguishable:</p>
+  <pre class="programlisting">plot_function(flow_rate,0,10)
+plot_function(get_flow_rate_function(volume),0,10)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103390"></a>Figure 8.17 Plotting the <code class="fm-code-in-text">flow_rate</code> function alongside the <code class="fm-code-in-text">get_flow_rate</code> function shows that the graphs are indistinguishable.</p>
+
+  <p class="body"><a id="pgfId-1100403"></a>We’ve completed our first major goal of this chapter, producing the flow rate function from the volume function. As I mentioned at the beginning of the chapter, this procedure<a id="marker-1100404"></a> is called <i class="fm-italics">taking a derivative</i>.</p>
+
+  <p class="body"><a id="pgfId-1100406"></a>Given a function like the <code class="fm-code-in-text">volume</code> function, another function giving its instantaneous rate of change at any given<a id="marker-1100407"></a> point is called its <i class="fm-italics">derivative</i>. You can think of the derivative as an operation that takes one (sufficiently smooth) function and returns another function measuring the rate of change of the original (figure 8.18). In this case, it would be correct to say that the flow rate function is the derivative of the volume function.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F18_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110940"></a>Figure 8.18 You can think of the derivative as a machine that takes a function and returns another function, measuring the rate of change of the input function.</p>
+
+  <p class="body"><a id="pgfId-1100414"></a>The derivative is a general procedure that works on <i class="fm-italics">any</i> function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), which is smooth enough to have tangent lines at every point. The derivative of a function <i class="fm-in-times-italic">f</i> is written <i class="fm-in-times-italic">f</i>' (and reads “<i class="fm-in-times-italic">f</i> prime”), so <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) means the instantaneous rate of change in <i class="fm-in-times-italic">f</i> with respect to <i class="fm-in-times-italic">x</i>. Specifically, <i class="fm-in-times-italic">f</i>'(5) is the derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) at <i class="fm-in-times-italic">x</i> = 5, measuring the slope of a tangent line to <i class="fm-in-times-italic">f</i> at <i class="fm-in-times-italic">x</i> = 5. There are some other common notations for the derivative of a function including:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F11_Orland_UN02_EQ03a.png"/></p>
+
+  <p class="body"><a id="pgfId-1100420"></a>The <i class="fm-in-times-italic">df </i>and <i class="fm-in-times-italic">dx</i> are meant to signify infinitesimal (infinitely small) changes in <i class="fm-in-times-italic">f</i> and <i class="fm-in-times-italic">x</i>, respectively, and their quotient gives the slope of an infinitesimal secant line. The last notation of the three is nice because it makes <i class="fm-in-times-italic">d</i>/<i class="fm-in-times-italic">dx</i> look like an operation applied to <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>). In many contexts, you’ll see standalone derivative operators<a id="marker-1100421"></a> like <i class="fm-in-times-italic">d</i>/<i class="fm-in-times-italic">dx</i>. This, in particular, means “the operation of taking the derivative with respect to <i class="fm-in-times-italic">x</i>.” Figure 8.19 shows a schematic of how these notations fit together.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F19_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1110984"></a>Figure 8.19 The “derivative with respect to x” as an operation that takes a function and returns a new function</p>
+
+  <p class="body"><a id="pgfId-1100427"></a>We make more use of derivatives throughout the rest of this book, but<a id="marker-1108981"></a> for <a id="marker-1108986"></a>now, let’s turn to the counterpart operation−the integral.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1100429"></a><a id="id_ppsje7bwzrvs"></a>8.3.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1105599"></a><b class="fm-exercise-head">Exercise 8.6</b>: Confirm that <a id="marker-1109070"></a>the graph of the <code class="fm-code-in-text1">volume</code> function is <i class="fm-italics">not</i> a straight line on the interval from 0.999 hrs to 1.001 hrs.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1105600"></a><b class="fm-exercise-head">Solution</b>: If it were a straight line, it would equal its secant line at every point. However, the secant line from 0.999 hrs to 1.001 hrs has a different value than the <code class="fm-code-in-text1">volume</code> function at <i class="fm-in-times-italic1">t</i> = 1 hr:</p>
+        <pre class="programlisting">&gt;&gt;&gt; volume(1)
+2.878125
+&gt;&gt;&gt; secant_line(volume,0.999,1.001)(1)
+2.8781248593749997</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1105624"></a><b class="fm-exercise-head">Exercise 8.7</b>: Approximate the slope of a tangent line to the volume graph at <i class="fm-in-times-italic1">t</i> = 8 by computing the slopes of smaller and smaller secant lines around <i class="fm-in-times-italic1">t</i> = 8.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1105625"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">&gt;&gt;&gt; average_flow_rate(volume,7.9,8.1)
+0.7501562500000007
+&gt;&gt;&gt; average_flow_rate(volume,7.99,8.01)
+0.750001562499996
+&gt;&gt;&gt; average_flow_rate(volume,7.999,8.001)
+0.7500000156249458
+&gt;&gt;&gt; average_flow_rate(volume,7.9999,8.0001)
+0.7500000001554312</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1105627"></a>It appears that the instantaneous rate of change at <i class="fm-in-times-italic1">t</i> = 8 is 0.75 bbl/hr.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1105672"></a><b class="fm-exercise-head">Exercise 8.8</b>: For the <code class="fm-code-in-text1">sign</code> function defined in Python, convince yourself that it doesn’t have a derivative at <i class="fm-in-times-italic1">x</i> = 0:</p>
+        <pre class="programlisting">def sign(<i class="fm-in-times-italic1">x</i>):
+    return <i class="fm-in-times-italic1">x</i>/ abs(<i class="fm-in-times-italic1">x</i>)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1105674"></a><b class="fm-exercise-head">Solution</b>: On smaller and smaller intervals, the slope of a secant line gets bigger and bigger rather than converging on a single number:</p>
+        <pre class="programlisting">&gt;&gt;&gt; average_flow_rate(sign,-0.1,0.1)
+10.0
+&gt;&gt;&gt; average_flow_rate(sign,-0.01,0.01)
+100.0
+&gt;&gt;&gt; average_flow_rate(sign,-0.001,0.001)
+1000.0
+&gt;&gt;&gt; average_flow_rate(sign,<span class="fm-in-cambria">−</span>0.000001,0.000001)
+1000000.0</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1105694"></a>This is because the <code class="fm-code-in-text1">sign</code> function jumps from −1 to 1 immediately at <i class="fm-in-times-italic1">x</i> = 0, and it doesn’t look <a id="marker-1109080"></a>like a <a id="marker-1109085"></a>straight line when<a id="marker-1109100"></a> you <a id="marker-1109105"></a>zoom in on it.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_17"><a id="pgfId-1100449"></a><a id="id_56u9lp54hqz9"></a>8.4 Approximating the change in volume</h2>
+
+  <p class="body"><a id="pgfId-1100450"></a>For<a id="marker-1109110"></a> the <a id="marker-1109115"></a>rest of <a id="marker-1109120"></a>the chapter, I’m going to focus on our second major objective: starting with a known flow rate function and recovering the volume function. This is the reverse of the process of finding a derivative because we assume we know the rate of change of a function, and we want to recover<a id="marker-1100451"></a> the original function. In calculus, this is called <i class="fm-italics">integration</i>.</p>
+
+  <p class="body"><a id="pgfId-1100452"></a>I’ll break the task of recovering the volume function into a few smaller examples, which will help you get a sense of how integration works. For the first example, we write two Python functions to help us find the change in volume in the tank over a specified period of time.</p>
+
+  <p class="body"><a id="pgfId-1100453"></a>We call the first function <code class="fm-code-in-text">brief_volume_change(q,t,dt)</code>, taking a flow rate function <code class="fm-code-in-text">q</code>, a time <code class="fm-code-in-text">t</code>, and a short time duration <code class="fm-code-in-text">dt</code>, which returns the approximate change in volume from time <i class="fm-in-times-italic">t</i> to time <i class="fm-in-times-italic">t</i> + <i class="fm-italics">dt</i>. This function calculates its result by assuming the time interval is so short that the flow rate does not change by much.</p>
+
+  <p class="body"><a id="pgfId-1100454"></a>We call the second function <code class="fm-code-in-text">volume_change(q,t1,t2,dt)</code> and, as the difference in naming suggests, we use it to calculate the volume change on any time interval, not just a brief one. Its arguments are the flow rate function <code class="fm-code-in-text">q</code>, a start time <code class="fm-code-in-text">t1</code>, an end time <code class="fm-code-in-text">t2</code>, and a small time interval <code class="fm-code-in-text">dt</code>. The function breaks the time interval down into increments of duration <code class="fm-code-in-text">dt</code>, which are short enough to use the <code class="fm-code-in-text">brief_volume _change</code> function. The total volume change returned is the sum of all of the volume changes on the short time intervals.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1100456"></a><a id="id_k6yee3wyq7q6"></a>8.4.1 Finding the change in volume for a short time interval</h3>
+
+  <p class="body"><a id="pgfId-1100457"></a>To understand <a id="marker-1109130"></a>the <a id="marker-1109135"></a>rationale behind the <code class="fm-code-in-text">brief_volume_change</code> function, let’s return to the familiar example of a speedometer on a car. If you glance at your speedometer and it reads exactly 60 mph, you might predict that in the next 2 hrs, you’ll travel 120 miles, which is 2 hrs times 60 mph. That estimate could be correct if you’re lucky, but it’s also possible that the speed limit increases or that you exit the freeway and park the car. The point is, one glance at a speedometer won’t help you estimate the distance traveled over a long period.</p>
+
+  <p class="body"><a id="pgfId-1100458"></a>On the other hand, if you used the value of 60 mph to calculate how far you traveled in a single <i class="fm-italics">second</i> after looking at the speedometer, you’d probably get a very accurate answer; your speed is not going to change that much over a single second. A second is 1/3,600 of an hour, so 60 mph times 1/3,600 per hour gives you 1/60 of a mile, or 88 feet. Unless you’re actively slamming on the brakes or flooring the gas pedal, this is probably a good estimate.</p>
+
+  <p class="body"><a id="pgfId-1100459"></a>Returning to flow rates and volumes, let’s assume that we’re working with a short enough duration that the flow rate is roughly constant. In other words, the flow rate on the time interval is close to the average flow rate on the time interval, so we can apply our original equation:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F19_Orland_EQ05.png"/></p>
+
+  <p class="body"><a id="pgfId-1100464"></a>Rearranging this equation, we can get an approximation for the change in volume:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F19_Orland_EQ06.png"/></p>
+
+  <p class="body"><a id="pgfId-1100469"></a>Our <code class="fm-code-in-text">small_volume_change</code> function is just a translation of this assumed formula into Python code. Given a flow rate function <code class="fm-code-in-text">q</code>, we can find the flow rate at the input time <code class="fm-code-in-text">t</code> as <code class="fm-code-in-text">q(<i class="fm-char-times-italic">t</i>)</code>, and we just need to multiply it by the duration <code class="fm-code-in-text">dt</code> to get the change in volume:</p>
+  <pre class="programlisting">def small_volume_change(q,t,dt):
+    return q(t) * dt</pre>
+
+  <p class="body"><a id="pgfId-1100471"></a>Because we have an actual pair of volume and flow rate functions, we can now test how good our approximation is. As expected, the prediction is not great for a whole hour interval:</p>
+  <pre class="programlisting">&gt;&gt;&gt; small_volume_change(flow_rate,2,1)
+0.1875
+&gt;&gt;&gt; volume(3) − volume(2)
+0.109375</pre>
+
+  <p class="body"><a id="pgfId-1100473"></a>That approximation is off by about 70%. By comparison, we get a great approximation on a time interval of 0.01 hrs. The result is within 1% of the actual volume change:</p>
+  <pre class="programlisting">&gt;&gt;&gt; small_volume_change(flow_rate,2,0.01)
+0.001875
+&gt;&gt;&gt; volume(2.01) − volume(2)
+0.0018656406250001645</pre>
+
+  <p class="body"><a id="pgfId-1100475"></a>Because we can get good approximations for the volume change on small time intervals, we can piece them together<a id="marker-1109145"></a> to get the <a id="marker-1109314"></a>volume change on a longer interval.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1100477"></a><a id="id_eqnqvtqi31p6"></a>8.4.2 Breaking up time into smaller intervals</h3>
+
+  <p class="body"><a id="pgfId-1100478"></a>To implement the<a id="marker-1109155"></a> function <a id="marker-1109160"></a><code class="fm-code-in-text">volume_change(q,t1,t2,dt)</code>, we split the time from <code class="fm-code-in-text">t1</code> to <code class="fm-code-in-text">t2</code> into intervals of duration <code class="fm-code-in-text">dt</code>. For simplicity, we’ll only handle values of <code class="fm-code-in-text">dt</code> that evenly divide <code class="fm-code-in-text">t2</code> - <code class="fm-code-in-text">t1</code> so that we break the time period into a whole number of intervals.</p>
+
+  <p class="body"><a id="pgfId-1100479"></a>Once again, we can use the NumPy <code class="fm-code-in-text">arange</code> function to get the starting time for each of the intervals. The function call <code class="fm-code-in-text">np.arange(t1,t2,dt)</code> gives us an array of times from <code class="fm-code-in-text">t1</code> to <code class="fm-code-in-text">t2</code> in increments of <code class="fm-code-in-text">dt</code>. For each time value <code class="fm-code-in-text">t</code> in this array, we can find the volume change in the ensuing time interval using <code class="fm-code-in-text">small_volume_change</code>. Finally, we need to sum the results to get the total volume change over all of the intervals. This can be done in roughly one line:</p>
+  <pre class="programlisting">def volume_change(q,t1,t2,dt):
+    return sum(small_volume_change(q,t,dt)
+               for t in np.arange(t1,t2,dt))</pre>
+
+  <p class="body"><a id="pgfId-1100481"></a>With this function, we can break up the time from 0 to 10 hrs into 100 time intervals of duration 0.1 hrs and sum the volume changes during each. The result matches the actual volume change to one decimal place:</p>
+  <pre class="programlisting">&gt;&gt;&gt; volume_change(flow_rate,0,10,0.1)
+4.32890625
+&gt;&gt;&gt; volume(10) − volume(0)
+4.375</pre>
+
+  <p class="body"><a id="pgfId-1100483"></a>If we break the time into smaller and smaller intervals, the results get better and better. For instance:</p>
+  <pre class="programlisting">&gt;&gt;&gt; volume_change(flow_rate,0,10,0.0001)
+4.3749531257812455</pre>
+
+  <p class="body"><a id="pgfId-1100485"></a>As with the process of taking a derivative, we can make the intervals smaller and smaller, and our results will converge to the expected answer. Calculating the overall change in a function on some interval from its rate of change<a id="marker-1100486"></a> is called a <i class="fm-italics">definite integral</i>. We’ll return to the definition of the definite integral in the last <a id="marker-1109170"></a>section, <a id="marker-1109175"></a>but for now, let’s focus on how to picture it.</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1100488"></a><a id="id_yskjjfax9tv9"></a>8.4.3 Picturing the volume change on the flow rate graph</h3>
+
+  <p class="body"><a id="pgfId-1100489"></a>Suppose we’re <a id="marker-1109185"></a>breaking the <a id="marker-1109190"></a>10-hr period into 1-hr intervals, even though we know this won’t give us very accurate results. The only 10 points on the flow rate graph we care about are the beginning times of each interval: 0 hrs, 1 hrs, 2 hrs, 3 hrs, and so on, up to 9 hrs. Figure 8.20 shows these points marked on a graph.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F20_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111056"></a>Figure 8.20 Plotting the points used to calculate <code class="fm-code-in-text">volume_change(flow_rate,0,10,1)</code></p>
+
+  <p class="body"><a id="pgfId-1100495"></a>Our calculation assumed the flow rates in each of the intervals remained constant, which is clearly not the case. Within each of these intervals, the flow rate visibly changes. In our assumption, it’s as if we’re working with a different flow rate function, whose graph is constant during every hour. Figure 8.21 shows what these intervals look like next to the original.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F21_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111100"></a>Figure 8.21 If we assumed flow rate were constant on each interval, its graph would look like a staircase going down and back up.</p>
+
+  <p class="body"><a id="pgfId-1100501"></a>In each interval, we calculate the flow rate (which is the height of each flat graph segment) times the elapsed time of 1 hr (which is the width of each graph segment). Each small volume we calculate is a height multiplied by a width on the graph, or the area of an imaginary rectangle. Figure 8.22 shows the rectangles filled in.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F22_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111182"></a>Figure 8.22 The overall change in volume as a sum of the areas of 10 rectangles</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F23_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111255"></a>Figure 8.23 The volume as a sum of the area of 30 rectangles (top) or 100 rectangles (bottom) under the flow rate graph (figure 8.20)</p>
+
+  <p class="body"><a id="pgfId-1100507"></a>As we shorten the time intervals, we see our results improve. Visually, that corresponds with more rectangles that can hug the graph more closely. Figure 8.23 shows what the rectangles look like using 30 intervals of 1/3 hrs (20 mins) each, or 100 intervals of 0.1 hrs each.</p>
+
+  <p class="body"><a id="pgfId-1100516"></a>From these pictures, you can see that as our intervals get smaller and our computed result approaches the actual change in volume, the rectangles come closer and closer to filling the space under the flow rate graph. The insight here is that the area under the flow rate graph on a given time interval <i class="fm-italics">is (approximately) equal to</i> the volume added to the tank on the same interval.</p>
+
+  <p class="body"><a id="pgfId-1100517"></a>A sum of the areas of rectangles approximating the area under a graph is called a <i class="fm-italics">Riemann sum</i>. Riemann sums made<a id="marker-1100518"></a> of skinnier and skinnier rectangles converge to the area under a graph, much the same way as slopes of smaller and smaller secant lines converge to the slope of a tangent line. We’ll return to the convergence of Riemann sums and definite integrals, but first let’s make <a id="marker-1109195"></a>some<a id="marker-1109205"></a> more progress toward finding the volume over time.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1100520"></a><a id="id_4huyci2v8in9"></a>8.4.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1105938"></a><b class="fm-exercise-head">Exercise 8.9</b>: <a id="marker-1109210"></a>Approximately how <a id="marker-1109220"></a>much oil is added to the tank in the first 6 hrs? In the last 4 hrs? During which time interval is more added?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1105939"></a><b class="fm-exercise-head">Solution</b>: In the first 6 hrs, about 1.13 bbls of oil are pumped into the tank, which is less than the roughly 3.24 bbls <a id="marker-1109225"></a>pumped into <a id="marker-1109235"></a>the <a id="marker-1109240"></a>tank <a id="marker-1109245"></a>in <a id="marker-1109250"></a>the last 4 hrs:</p>
+        <pre class="programlisting">&gt;&gt;&gt; volume_change(flow_rate,0,6,0.01)
+1.1278171874999996
+&gt;&gt;&gt; volume_change(flow_rate,6,10,0.01)
+3.2425031249999257</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_22"><a id="pgfId-1100527"></a><a id="id_6c5rgb6medb5"></a>8.5 Plotting the volume over time</h2>
+
+  <p class="body"><a id="pgfId-1100528"></a>In the <a id="marker-1109255"></a>previous section, we were able to start with the flow rate and come up with approximations for the <i class="fm-italics">change</i> in volume over a given time interval. Our main goal is to come up with the <i class="fm-italics">total</i> volume in the tank at any given point in time.</p>
+
+  <p class="body"><a id="pgfId-1100529"></a>Here’s a trick question for you: if oil flows into the tank at a constant rate of 1.2 bbl/hr for 3 hrs, how much oil is in the tank after 3 hrs? The answer is: we don’t know because I didn’t tell you how much was in the tank to begin with! Fortunately, if I tell you, then the answer is easy to figure out. For instance, if 0.5 bbls were in the tank to begin with, then 3.6 bbls were added during this period, and 0.5 + 3.6 = 4.1 bbls are in the tank at the end of the 3-hr period. Adding the initial volume at time zero to the change in volume to any time <i class="fm-in-times-italic">T</i>, we can find the total volume at time <i class="fm-in-times-italic">T</i>.</p>
+
+  <p class="body"><a id="pgfId-1100530"></a>In our last examples for this section, we turn this idea into code to reconstruct a volume function. We implement a function called <code class="fm-code-in-text">approximate_volume(q,v0, dt,T)</code>, which takes a flow rate <code class="fm-code-in-text">q</code>, an initial volume of oil in the tank <code class="fm-code-in-text">v0</code>, a small time interval <code class="fm-code-in-text">dt</code>, and a time <code class="fm-code-in-text">T</code> in question. The output of the function is an approximation of the total volume in the tank at time <code class="fm-code-in-text">T</code>, by adding the starting volume <code class="fm-code-in-text">v0</code> to the change in volume from time zero to time <code class="fm-code-in-text">T</code>.</p>
+
+  <p class="body"><a id="pgfId-1100531"></a>Once we do that, we can curry it to get a function called <code class="fm-code-in-text">approximate_volume _function(q,v0,dt)</code>, which produces a function giving the approximate volume as a function of time. The function returned by <code class="fm-code-in-text">approximate_volume_function</code> is a volume function we can plot alongside our original volume function for comparison.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1100533"></a><a id="id_f2e90x9c80di"></a>8.5.1 Finding the volume over time</h3>
+
+  <p class="body"><a id="pgfId-1100534"></a>The<a id="marker-1109260"></a> basic formula we’ll use is as follows:</p>
+
+  <p class="body"><a id="pgfId-1100535"></a>volume at time <i class="fm-in-times-italic">T</i> = (volume at time 0) + (change in volume from time 0 to time <i class="fm-in-times-italic">T</i>)</p>
+
+  <p class="body"><a id="pgfId-1100536"></a>We need to provide the first term of the sum, the volume in the tank at time zero, because there’s no way to infer it from the flow rate function. Then we can use our <code class="fm-code-in-text">volume_change</code> function to find the volume from time zero to time <i class="fm-in-times-italic">T</i>. Here’s what the implementation looks like:</p>
+  <pre class="programlisting">def approximate_volume(q,v0,dt,T):
+    return v0 + volume_change(q,0,T,dt)</pre>
+
+  <p class="body"><a id="pgfId-1100538"></a>To curry this function, we can define a new function taking the first three arguments as parameters and returning a new function that takes the last parameter, <code class="fm-code-in-text">T</code> :</p>
+  <pre class="programlisting">def approximate_volume_function(q,v0,dt):
+    def volume_function(T):
+        return approximate_volume(q,v0,dt,T)
+    return volume_function</pre>
+
+  <p class="body"><a id="pgfId-1100540"></a>This function directly produces a plottable volume function from our <code class="fm-code-in-text">flow_rate</code> function. Because the <code class="fm-code-in-text">volume</code> function I provide in the source code has <code class="fm-code-in-text">volume(0)</code> equal to 2.3, let’s use that value for <code class="fm-code-in-text">v0</code>. Finally, let’s try a <code class="fm-code-in-text">dt</code> value of 0.5, meaning we’re calculating our changes in volume in half-hour (30 mins) intervals. Let’s see how this looks plotted against the original volume function (figure 8.24):</p>
+  <pre class="programlisting">plot_function(approximate_volume_function(flow_rate,2.3,0.5),0,10)
+plot_function(volume,0,10)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F24_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111315"></a>Figure 8.24 A plot of the output of <code class="fm-code-in-text">approximate _volume_function</code>(jagged line) alongside the original <code class="fm-code-in-text">volume</code> function (smooth line)</p>
+
+  <p class="body"><a id="pgfId-1100547"></a>The good news is that the output is pretty close to our original volume function! But the result produced by <code class="fm-code-in-text">approximate_volume_function</code> is jagged, having steps every 0.5 hrs. You might guess that this has to do with our <code class="fm-code-in-text">dt</code> value of 0.5 and that we’ll<a id="marker-1100548"></a> get a better approximation if we reduce this value. This is correct, but let’s dig in to how the volume change is computed to see exactly why the graph looks like this, and why a smaller time interval will<a id="marker-1109265"></a> improve it.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1100550"></a><a id="id_kfctkc9i8oug"></a>8.5.2 Picturing Riemann sums for the volume function</h3>
+
+  <p class="body"><a id="pgfId-1100551"></a>At any <a id="marker-1109270"></a>point in time, the volume in the tank computed by our approximate <code class="fm-code-in-text">volume</code> function is the sum of the initial volume in the tank plus the change in volume to that point. For <i class="fm-in-times-italic">t</i> = 4 hrs, the equation looks like this:</p>
+
+  <p class="fm-equation"><a id="pgfId-1100552"></a>volume at 4 hrs = (volume at 0 hrs) + (change in volume from 0 hr to 4 hrs)</p>
+
+  <p class="body"><a id="pgfId-1100553"></a>The result of this sum gives us one point on the graph at the 4-hr mark. The value at any other time is computed the same way. In this case, the sum consists of the 2.3 bbls at time zero plus a Riemann sum, giving us the change from 0 hrs to 4 hrs. This is the sum of eight rectangles, each having a width of 0.5 hrs, which fit evenly into the 4-hr window. The result is approximately 3.5 bbls (figure 8.25).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F25_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1100558"></a>Figure 8.25 The volume in the tank at 4 hrs using a Riemann sum</p>
+
+  <p class="body"><a id="pgfId-1100559"></a>We could do the same thing for any other point in time. For example, figure 8.26 shows the result for 8 hrs in.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F26_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1100564"></a>Figure 8.26 The volume in the tank at 8 hrs using a Riemann sum</p>
+
+  <p class="body"><a id="pgfId-1100565"></a>In this case, the answer is approximately 4.32 bbls in the tank at the 8-hr mark. This required summing 8/0.5 = 16 rectangle areas. These two values show up as points on the graph we produced (figure 8.27):</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F27_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111391"></a>Figure 8.27 The two previous results shown on the approximate volume graph</p>
+
+  <p class="body"><a id="pgfId-1100571"></a>In both of these cases, we could get from zero to the point in time in question using a whole number of timesteps. To produce this graph, our Python code computes a lot of Riemann sums, corresponding to whole number hours and half hours, as well as all the points plotted in between.</p>
+
+  <p class="body"><a id="pgfId-1100572"></a>How does our code get the approximate volume at 3.9 hrs, which isn’t divisible by the <i class="fm-italics">dt</i> value of 0.5 hrs? Looking back at the implementation of <code class="fm-code-in-text">volume_change (q,t1,t2,dt)</code>, we made one small change in the volume calculation, corresponding to the area of one rectangle for every start time in <code class="fm-code-in-text">np.arange(t1,t2,dt)</code>. When we find the volume change from 0 to 3.9 hrs with a <i class="fm-italics">dt</i> of 0.5, our rectangles are given by:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.arange(0,3.9,0.5)
+array([0. , 0.5, 1. , 1.5, 2. , 2.5, 3. , 3.5])</pre>
+
+  <p class="body"><a id="pgfId-1100574"></a>Even though the eight rectangles of width 0.5 hr go past the 3.9-hr mark, we calculate the area of all eight! To be completely clean, we should have probably shortened our last time interval to 0.4 hrs, lasting from the end of the 7th time interval at 3.5 hrs to the end time of 3.9 hrs, and no further. As a mini-project at the end of this section, you can try updating the <code class="fm-code-in-text">volume_change</code> function to use a smaller duration for the last time interval, if necessary. For now, I’ll ignore this oversight.</p>
+
+  <p class="body"><a id="pgfId-1100576"></a>In the last section, we saw that we got better results by shrinking<a id="marker-1100575"></a> the <i class="fm-italics">dt</i> value and, therefore, the widths of the rectangles. In addition to fitting the graph better, smaller rectangles are likely to have less error even if they slightly overshoot the end of a time interval. For instance, while 0.5-hr intervals can only add up to 3.5 hrs or 4.0 hrs but not 3.9 hrs, 0.1-hr intervals can add up <a id="marker-1109275"></a>evenly to 3.9 hrs.</p>
+
+  <h3 class="fm-head1" id="heading_id_25"><a id="pgfId-1100578"></a><a id="id_o7z8bmvcbao1"></a>8.5.3 Improving the approximation</h3>
+
+  <p class="body"><a id="pgfId-1100579"></a>Let’s<a id="marker-1109280"></a> try using smaller values of <i class="fm-italics">dt</i>, corresponding to smaller rectangle sizes, and see the improvements we get. Here’s the approximation with <code class="fm-code-in-text">dt</code> = 0.1 hrs (figure 8.28 plots the results). The steps on the graph are barely visible, but they are smaller, and the graph stays closer to the actual volume graph than it did with 0.5-hr intervals:</p>
+  <pre class="programlisting">plot_function(approximate_volume_function(flow_rate,2.3,0.1),0,10)
+plot_function(volume,0,10)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F28_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111441"></a>Figure 8.28 With dt = 0.1 hr, the graphs nearly match.</p>
+
+  <p class="body"><a id="pgfId-1100586"></a>With even smaller timesteps, like <code class="fm-code-in-text">dt</code> =0.01 hrs, the graphs are nearly indistinguishable (figure 8.29):</p>
+  <pre class="programlisting">plot_function(approximate_volume_function(flow_rate,2.3,0.01),0,10)
+plot_function(volume,0,10)</pre>
+
+  <p class="body"><a id="pgfId-1100593"></a>Even though the graphs appear to match exactly, we can ask the question of how accurate is this approximation. The graphs of the approximate <code class="fm-code-in-text">volume</code> functions with smaller and smaller values of <code class="fm-code-in-text">dt</code> get closer and closer to the actual volume graph at every point, so we could say the values<a id="marker-1100594"></a> are <i class="fm-italics">converging</i> to the actual volume values. But at each step, the approximation still might disagree with the actual volume measurement.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F29_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111532"></a>Figure 8.29 With 0.01-hr timesteps, the graph of the approximate <code class="fm-code-in-text">volume</code> function is indistinguishable from the actual <code class="fm-code-in-text">volume</code> function.</p>
+
+  <p class="body"><a id="pgfId-1100595"></a>Here’s a way we could find the volume at any point to an arbitrary precision (within any tolerance we want). For any point <code class="fm-code-in-text">t</code> in time, we can recalculate <code class="fm-code-in-text">volume_change(q,0,t,dt)</code> with smaller and smaller values of <code class="fm-code-in-text">dt</code> until the outputs stop changing by more than the tolerance value. This looks a lot like our function to make repeated approximations of the derivative until they stabilize:</p>
+  <pre class="programlisting">def get_volume_function(q,v0,digits=6):
+    def volume_function(T):
+        tolerance = 10 ** (−digits)
+        dt = 1
+        approx = v0 + volume_change(q,0,T,dt)
+        for i in range(0,digits*2):
+            dt = dt / 10
+            next_approx = v0 + volume_change(q,0,T,dt)
+            if abs(next_approx − approx) &lt; tolerance:
+                return round(next_approx,digits)
+            else:
+                approx = next_approx
+        raise Exception("Did not converge!")
+    return volume_function</pre>
+
+  <p class="body"><a id="pgfId-1100597"></a>For instance, the volume <i class="fm-in-times-italic">v</i>(1) is exactly 2.878125 bbls, and we can ask for any precision estimation of this result that we want. For example, for three digits, we get</p>
+  <pre class="programlisting">&gt;&gt;&gt; xv  = get_volume_function(flow_rate,2.3,digits=3)
+&gt;&gt;&gt; v(1)
+2.878</pre>
+
+  <p class="body"><a id="pgfId-1100599"></a>and for six digits, we get the exact answer:</p>
+  <pre class="programlisting">&gt;&gt;&gt; xv  = get_volume_function(flow_rate,2.3,digits=6)
+&gt;&gt;&gt; v(1)
+2.878125</pre>
+
+  <p class="body"><a id="pgfId-1100601"></a>If you run this code yourself, you’ll see the second computation takes quite a while. This is because it has to run a Riemann sum consisting of millions of small volume changes to get the answer to this precision. There’s probably no realistic use for this function, which computes volume values to an arbitrary precision, but it illustrates the point that with smaller and smaller <i class="fm-italics">dt</i> values, our volume approximation <i class="fm-italics">converges</i> to the exact value of the <code class="fm-code-in-text">volume</code> function. The result it is converging<a id="marker-1100602"></a> to is called the <i class="fm-italics">integral</i> of the <a id="marker-1109285"></a>flow rate.</p>
+
+  <h3 class="fm-head1" id="heading_id_26"><a id="pgfId-1100604"></a><a id="id_mqgzqull5gt6"></a>8.5.4 Definite and indefinite integrals</h3>
+
+  <p class="body"><a id="pgfId-1100605"></a>In the <a id="marker-1109290"></a>last two sections, we <i class="fm-italics">integrated</i> the flow rate function to obtain the volume function. Like taking a derivative, finding an integral is a general procedure that you can do with functions. We can integrate any function specifying a rate of change to get a function giving a compatible, cumulative value. If we know the speed of a car as a function of time, for example, we can integrate it to get the distance traveled as a function of time. In this section, we look at two types of integrals: definite integrals and indefinite integrals.</p>
+
+  <p class="body"><a id="pgfId-1106170"></a>A <i class="fm-italics">definite integral</i> tells you the total change in a function on some interval from its derivative function. The function and a pair of start and end values for the argument, which in our case is time, specify the definite integral. The output is a single number, which gives the cumulative change. For instance, if <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) is our function of interest and <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) is the derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), then the change in <i class="fm-in-times-italic">f</i> from <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">a</i> to <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">b</i> is <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">b</i>) − <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">a</i>), and it can be found by taking a definite integral (figure 8.30).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F30_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111580"></a>Figure 8.30 The definite integral takes the rate of change (derivative) of a function and a specified interval and recovers the cumulative change in the function on that interval.</p>
+
+  <p class="body"><a id="pgfId-1103909"></a>In calculus, the definite integral of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) from <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">a</i> to <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">b</i> is written like this:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F30_Orland_EQ07.png"/></p>
+
+  <p class="body"><a id="pgfId-1100617"></a>and its value is <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">b</i>) − <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">a</i>). The big <span class="fm-in-cambria">ʃ</span> symbol is the integral symbol, <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> are called the <i class="fm-italics">bounds of integration, f</i>'(<i class="fm-in-times-italic">x</i>) is the function being<a id="marker-1100618"></a> integrated, and <i class="fm-in-times-italic">dx</i> indicates that the integral is being taken with respect to <i class="fm-in-times-italic">x</i>.</p>
+
+  <p class="body"><a id="pgfId-1100619"></a>Our <code class="fm-code-in-text">volume_change</code> function approximates definite integrals, and as we saw in section 8.4.3, it also approximates the area under the flow rate graph. It turns out that the definite integral of a function on an interval is equal to the area under the rate graph on that interval. For most rate functions you meet in the wild, the graphs will be nice enough that you can approximate the area underneath them with skinnier and skinnier rectangles, and your approximations will converge to a single value.</p>
+
+  <p class="body"><a id="pgfId-1100620"></a>After taking a definite integral, let’s look at an indefinite integral. The <i class="fm-italics">indefinite integral</i> takes the derivative of a function and recovers the original function. For instance, if you know that <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) is the derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), then to reconstruct <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), you have to find the indefinite integral of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>).</p>
+
+  <p class="body"><a id="pgfId-1100621"></a>The catch is that the derivative <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) on its own is not enough to reconstruct the original function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>). As we saw with <code class="fm-code-in-text">get_volume_function</code>, which computed a definite integral, you need to know an initial value of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), like <i class="fm-in-times-italic">f</i>(0) for instance. The value of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) can then be found by adding a definite integral to <i class="fm-in-times-italic">f</i>(0). Because</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F30_Orland_EQ08.png"/></p>
+
+  <p class="body"><a id="pgfId-1100626"></a>we can get any value of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) as:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F30_Orland_EQ09.png"/></p>
+
+  <p class="body"><a id="pgfId-1100634"></a>Note we have to use a different name <i class="fm-in-times-italic">t</i> for the argument of <i class="fm-in-times-italic">f</i> because <i class="fm-in-times-italic">x</i> becomes a bound of integration here. The indefinite integral of a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) is written as</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F30_Orland_EQ10.png"/></p>
+
+  <p class="body"><a id="pgfId-1100639"></a>which looks like a definite integral but without specified bounds. If, for example, <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-cambria">ʃ</span> <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) <i class="fm-in-times-italic">dx</i>, then <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) is said to be an <i class="fm-italics">antiderivative</i> of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>). Antiderivatives are not unique, and in fact, there is a different function <i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) whose derivative is <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) for any initial value <i class="fm-in-times-italic">g</i>(0) that you choose.</p>
+
+  <p class="body"><a id="pgfId-1100640"></a>This is a lot of terminology to absorb in a short time, but fortunately, we spend the rest of the second part of this book reviewing it. We’ll continue to work with functions and their rates of change using derivatives and integrals to <a id="marker-1109295"></a>switch <a id="marker-1109300"></a>between them interchangeably.</p>
+
+  <h2 class="fm-head" id="heading_id_27"><a id="pgfId-1100642"></a><a id="id_nlqdwk8u81vv"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1100643"></a>The average rate of change in a function, say <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), is the change in the value of <i class="fm-in-times-italic">f</i> on some <i class="fm-in-times-italic">x</i> interval divided by the length of the interval. For instance, the average rate of change in <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) from <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">a</i> to <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">b</i> is</p>
+
+      <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH08_F30_Orland_EQ11.png"/></p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1100648"></a>The average rate of change in a function can be pictured as the steepness of a <i class="fm-italics">secant line</i>, a line passing through the graph of the function at two points.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1100649"></a>Zooming in on the graph of a smooth function, it appears indistinguishable from a straight line. The line it looks like is the best linear approximation for the function in that area, and its slope is called the <i class="fm-italics">derivative</i> of the function.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1100650"></a>You can approximate the derivative by taking the slopes of secant lines on successively smaller intervals containing the point. This approximates the instantaneous rate of change in the function at the point of interest.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1100651"></a>The <i class="fm-italics">derivative</i> of a function is another function that tells you the instantaneous rate of change at every point. You can plot the derivative of a function to see its rate of change over time.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1100652"></a>Starting with a derivative of a function, you can figure out how it changes over time by breaking it into brief intervals and assuming the rate is constant on each. If each interval is short enough, the rate will be approximately constant and summed to find the total. This approximates the definite integral of a function.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1100653"></a>Knowing the initial value of a function and taking the definite integral of its rate on various intervals, you can reconstruct the function. This is <a id="marker-1109305"></a>called the <i class="fm-italics">indefinite integral</i> of the function.</p>
+    </li>
+  </ul>
+</body>
+</html>

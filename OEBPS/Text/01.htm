@@ -1,0 +1,350 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>1</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1077622"></a>1 <a id="id_30j0zll"></a>Learning math with code</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1078217"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1078218"></a>Solving lucrative problems with math and software</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1078219"></a>Avoiding common pitfalls in learning math</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1078220"></a>Building on intuition from programming to understand math</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1078221"></a>Using Python as a powerful and extensible calculator</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1077628"></a>Math is like <a id="marker-1080311"></a>baseball, or poetry, or fine wine. Some people are so fascinated by math that they devote their whole lives to it, while others feel like they just don’t get it. You’ve probably already been forced into one camp or another by twelve years of compulsory math education in school.</p>
+
+  <p class="body"><a id="pgfId-1077629"></a>What if we learned about fine wine in school like we learned math? I don’t think I’d like wine at all if I got lectured on grape varietals and fermentation techniques for an hour a day, five days a week. Maybe in such a world, I’d need to consume three or four glasses for homework as assigned by the teacher. Sometimes this would be a delicious educational experience, but sometimes I might not feel like getting loaded on a school night. My experience in math class went something like that, and it turned me off of the subject for a while. Like wine, mathematics is an acquired taste, and a daily grind of lectures and assignments is no way to refine one’s palate.</p>
+
+  <p class="body"><a id="pgfId-1077630"></a>It’s easy to think you’re either cut out for math or you aren’t. If you already believe in yourself, and you’re excited to start learning, that’s great! Otherwise, this chapter is designed for those less optimistic. Feeling intimidated by math is so common, it has a name: <i class="fm-italics">math anxiety</i> <a id="marker-1077631"></a>. I hope to dispel any anxiety you might have and show you that math can be a stimulating experience rather than a frightening one. All you need are the right tools and the right mindset.</p>
+
+  <p class="body"><a id="pgfId-1077632"></a>The main tool for learning in this book is the Python programming language. I’m guessing that when you learned math in high school, you saw it written on the blackboard and not in computer code. That’s a shame, because a high-level programming language is far more powerful than a blackboard and far more versatile than whatever overpriced calculator you may have used. An advantage of meeting math in code is that the ideas have to be precise enough for a computer to understand, and there’s never any hand-waving about what new symbols mean.</p>
+
+  <p class="body"><a id="pgfId-1077633"></a>As with learning any new subject, the best way to set yourself up for success is to <i class="fm-italics">want</i> to learn. There are plenty of good reasons for this. You could be intrigued by the beauty of mathematical concepts or enjoy the “brain-teaser” feel of math problems. Maybe there’s an app or game that you dream of building, and you need to write some mathematical code to make it work. For now, I’ll focus on a more pragmatic kind of motivation−solving mathematical problems with software can make you a lot of money.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1077635"></a><a id="id_1fob9te"></a>1.1 Solving lucrative problems with math and software</h2>
+
+  <p class="body"><a id="pgfId-1077636"></a>A <a id="marker-1080601"></a>classic criticism you hear in high school math class is, “When am I ever going to use this stuff in real life?” Our teachers told us that math would help us succeed professionally and make money. I think they were right about this, even though their examples were off. For instance, I don’t calculate my compounding bank interest by hand (and neither does my bank). Maybe if I became a construction site surveyor as my trigonometry teacher suggested, I’d be using sines and cosines every day to earn my paycheck.</p>
+
+  <p class="body"><a id="pgfId-1077637"></a>It turns out the “real world” applications from high school textbooks aren’t that useful. Still, there are real applications of math out there, and some of them are mind-bogglingly lucrative. Many are solved by translating the right mathematical idea into usable software. I’ll share some of my favorite examples.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1077639"></a><a id="id_3znysh7"></a>1.1.1 Predicting financial market movements</h3>
+
+  <p class="body"><a id="pgfId-1077640"></a>We’ve <a id="marker-1080606"></a>all heard legends of stock traders making millions of dollars by buying and selling the right stocks at the right time. Based on the movies I’ve seen, I always picture a trader as a middle-aged man in a suit yelling at his broker over a cell phone while driving around in a sports car. Maybe this stereotype was spot-on at one point, but the situation is different today.</p>
+
+  <p class="body"><a id="pgfId-1077641"></a>Holed up in back offices of skyscrapers all over Manhattan are thousands of people called <i class="fm-italics">quants</i> <a id="marker-1077642"></a>. Quants, otherwise known as quantitative analysts, design mathematical algorithms to automatically trade stocks and earn a profit. They don’t wear suits and they don’t spend time yelling on their cell phones, but I’m sure many of them own very nice sports cars.</p>
+
+  <p class="body"><a id="pgfId-1077643"></a>So how does a quant write a program that automatically makes money? The best answers to that question are closely-guarded trade secrets, but you can be sure they involve a lot of math. We can look at a brief example to get a sense of how an automated trading strategy might work.</p>
+
+  <p class="body"><a id="pgfId-1077644"></a> <i class="fm-italics">Stocks</i> are types of financial assets that represent ownership stakes in companies. When the market perceives a company is doing well, its stock price goes up−buying the stock becomes more costly and selling it becomes more rewarding. Stock prices change erratically and in real time. Figure 1.1 shows how a graph of a stock price over a day of trading might look.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F01_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1077650"></a>Figure 1.1 Typical graph of a stock price over time</p>
+
+  <p class="body"><a id="pgfId-1077651"></a>If you bought a thousand shares of this stock for $24 around minute 100 and sold them for $38 at minute 400, you would make $14,000 for the day. Not bad! The challenge is that you’d have to know in advance that the stock was going up, and that minutes 100 and 400 were the best times to buy and sell, respectively. It may not be possible to predict the exact lowest or highest price points, but maybe you can find relatively good times to buy and sell throughout the day. Let’s look at a way to do this mathematically.</p>
+
+  <p class="body"><a id="pgfId-1077652"></a>We could measure whether the stock is going up or down by finding a line of “best fit” that approximately follows the direction the price is moving. This process is called <i class="fm-italics">linear regression</i> <a id="marker-1077653"></a>, and we cover it in part 3 of this book. Based on the variability of data, we can calculate two more lines above and below the “best fit” line that show the region in which the price is wobbling up and down. Overlaid on the price graph, figure 1.2 shows that the lines follow the trend nicely.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F02_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080902"></a>Figure 1.2 Using linear regression to identify a trend in changing stock prices</p>
+
+  <p class="body"><a id="pgfId-1077659"></a>With a mathematical understanding of the price movement, we can then write code to automatically buy when the price is going through a low fluctuation relative to its trend and to sell when the price goes back up. Specifically, our program could connect to the stock exchange over the network and buy 100 shares when the price crosses the bottom line and sell 100 shares when the price crosses the top line. Figure 1.3 illustrates one such profitable trade: buying at around $27.80 and selling at around $32.60 makes you $480 in an hour.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F03_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085021"></a>Figure 1.3 Buying and selling according to our rules-based software to make a profit</p>
+
+  <p class="body"><a id="pgfId-1077665"></a>I don’t claim I’ve shown you a complete or viable strategy here, but the point is that with the right mathematical model, you can make a profit automatically. At this moment, some unknown number of programs are building and updating models measuring the predicted trend of stocks and other financial instruments.<a id="marker-1085015"></a> If you write such a program, you can enjoy some leisure time while it makes money for you!</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1077667"></a><a id="id_2et92p0"></a>1.1.2 Finding a good deal</h3>
+
+  <p class="body"><a id="pgfId-1077668"></a>Maybe <a id="marker-1080632"></a>you don’t <a id="marker-1080642"></a>have deep enough pockets to consider risky stock trading. Math can still help you make and save money in other transactions like buying a used car, for example. New cars are easy-to-understand commodities. If two dealers are selling the same car, you obviously want to buy from the dealer that has the lowest cost. But used cars have more numbers associated with them: an asking price, as well as mileage and model year. You can even use the duration that a particular used car has been on the market to assess its quality: the longer the duration, the more suspicious you might be.</p>
+
+  <p class="body"><a id="pgfId-1077669"></a>In mathematics, objects you can describe with ordered lists of numbers are called <i class="fm-italics">vectors</i> <a id="marker-1077670"></a><a id="marker-1077671"></a><a id="marker-1077672"></a>, and there is a whole field (called <i class="fm-italics">linear algebra</i> <a id="marker-1077673"></a>) dedicated to studying them. For example, a used car might correspond to a <i class="fm-italics">four-dimensional</i> vector<a id="marker-1077674"></a>, meaning a four-tuple of numbers:</p>
+
+  <p class="fm-equation"><a id="pgfId-1077675"></a>(2015, 41429, 22.27, 16980)</p>
+
+  <p class="body"><a id="pgfId-1077676"></a>These numbers represent the model year, mileage, days on the market, and asking price, respectively. A friend of mine runs a site called CarGraph.com that aggregates data on used cars for sale. At the time of writing, it shows 101 Toyota Priuses for sale, and it gives some or all of these four pieces of data for each one. The site also lives up to its name and visually presents the data in a graph (figure 1.4). It’s hard to visualize four-dimensional objects, but if you choose two of the dimensions like price and mileage, you can graph them as points on a scatter plot.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F04_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1077681"></a>Figure 1.4 A graph of price vs. mileage for used Priuses from CarGraph.com</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F05_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085084"></a>Figure 1.5 Fitting an exponential decline curve to price vs. mileage data for used Toyota Priuses</p>
+
+  <p class="body"><a id="pgfId-1077682"></a>We might be interested in drawing a trend line here too. Every point on this graph represents someone’s opinion of a fair price, so the trend line would aggregate these opinions together into a more reliable price at any mileage. In figure 1.5, I decided to fit to an <i class="fm-italics">exponential</i> decline curve rather than a line, and I omitted some of the nearly new cars selling for below retail price.</p>
+
+  <p class="body"><a id="pgfId-1080099"></a>To make the numbers more manageable, <i class="fm-italics">I converted the mileage values to tens of thousands of miles, so a mileage of 5 represents 50,000 miles. Calling p the price and m the mileage, the eq</i> uation for the curve of best fit is as follows:</p>
+
+  <p class="fm-equation"><a id="pgfId-1080107"></a>p = $26,500 <span class="fm-in-cambria">·</span> (0.905)m</p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080471"></a>Equation 1.1</p>
+
+  <p class="body"><a id="pgfId-1077694"></a>Equation 1.1 shows that the best fit price is $26,500 times 0.905 raised to the power of the mileage. Plugging the values into the equation, I find that if my budget is $10,000, then I should buy a Prius with about 97,000 miles on it (figure 1.6). If I believe the curve indicates a <i class="fm-italics">fair</i> price, then cars below the line should typically be good deals.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F06_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085137"></a>Figure 1.6 Finding the mileage I should expect on a used Prius for my $10,000 budget</p>
+
+  <p class="body"><a id="pgfId-1077705"></a>But we can learn more from equation 1.1 than just how to find a good deal. It tells a story about how cars depreciate. The first number in the equation is $26,500, which is the exponential function’s understanding of the price at zero mileage. This is an impressively close match to the retail price of a new Prius. If we use a line of best fit, it implies a Prius loses a fixed amount of value with each mile driven. This exponential function says, instead, that it loses a fixed <i class="fm-italics">percentage</i> of its value with each mile driven. After driving 10,000 miles, a Prius is only worth 0.905 or 90.5% of its original price according to this equation. After 50,000 miles, we multiply its price by a factor of (0.905)<sup class="fm-superscript">5</sup> = 0.607. That tells us that it’s worth about 61% of what it was originally.</p>
+
+  <p class="body"><a id="pgfId-1077706"></a>To make the graph in figure 1.6, I implemented a <code class="fm-code-in-text">price(mileage)</code> function in Python, which takes a mileage as an input (measured in 10,000s of miles) and returns the best-fit price as an output. Calculating <code class="fm-code-in-text">price(0) − price(5)</code> and <code class="fm-code-in-text">price(5) − price(10)</code> tells me that the first and second 50,000 miles driven cost about $10,000 and $6,300, respectively.</p>
+
+  <p class="body"><a id="pgfId-1077707"></a>If we use a line of best fit instead of an exponential curve, it implies that the car depreciated at a fixed rate of $0.10 per mile. This suggests that every 50,000 miles of driving leads to the same depreciation of $5,000. Conventional wisdom says that the first miles you drive a new car are the most expensive, so the exponential function (equation 1.1) agrees with this, while a linear model does not.</p>
+
+  <p class="body"><a id="pgfId-1080843"></a>Remember, this is only a <i class="fm-italics">two-dimensional</i> analysis. We only built a mathematical model to relate two of the four numerical dimensions describing each car. In part 1, you learn more about vectors of various dimensions and how to manipulate higher-dimensional data. <i class="fm-italics">In p</i> art 2, we cover different kinds of functions like linear functions and exponential functions, and we compare them by analyzing their rates of change. Finally, <a id="udQh3vQkeugMMstz4VBHQ89"></a>in part 3, we look at how to build mathematical models that incorporate <i class="fm-italics">all</i> the dimensions of a data set to give us a more accurate picture.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1080847"></a><a id="id_tyjcwt"></a>1.1.3 Building 3D graphics and animations</h3>
+
+  <p class="body"><a id="pgfId-1077711"></a>Many of the most famous and financially successful software projects deal with multi-dimensional data, specifically <i class="fm-italics">three-dimensional</i> or <i class="fm-italics">3D</i> data. Here I’m thinking of 3D animated movies and 3D video games that gross in the billions of dollars. For example, Pixar’s 3D animation software has helped them rake in over $13 billion at box offices. Activision’s <i class="fm-italics">Call of Duty</i> franchise of 3D action games has earned over $16 billion, and Rockstar’s <i class="fm-italics">Grand Theft Auto V</i> alone has brought in $6 billion.</p>
+
+  <p class="body"><a id="pgfId-1079152"></a>Every one of these acclaimed projects is based on an understanding of how to do computations with 3D vectors, or triples of numbers of the form <i class="fm-in-times-italic">v</i> = (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>). A triple of</p>
+
+  <p class="body"><a id="pgfId-1079726"></a>numbers is sufficient to locate a point in 3D space relative to a reference point called the <i class="fm-italics">origin</i> <a id="marker-1079153"></a>. Figure 1.7 shows how each of the three numbers tells you how far to go in one of three perpendicular directions.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F07_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085179"></a>Figure 1.7 Labeling a point in 3D with a vector of three numbers, <i class="fm-in-times-italic">x, y</i>, and <i class="fm-in-times-italic">z</i></p>
+
+  <p class="body"><a id="pgfId-1077720"></a><a id="id_3dy6vkm"></a>Any 3D object from a clownfish in <i class="fm-italics">Finding Nemo</i> to an aircraft carrier in <i class="fm-italics">Call of Duty</i> can be defined for a computer as a collection of 3D vectors. In code, each of these objects looks like a list of triples of <code class="fm-code-in-text">float</code> values. With three triples of floats, we have three points in space that can define a triangle (figure 1.8). For instance,</p>
+  <pre class="programlisting">triangle = [(2.3,1.1,0.9), (4.5,3.3,2.0), (1.0,3.5,3.9)]</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F08_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1077726"></a>Figure 1.8 Building a 3D triangle using a triple of float values for each of its corners</p>
+
+  <p class="body"><a id="pgfId-1077727"></a>Combining many triangles, you can define the surface of a 3D object. Using more, smaller triangles, you can even make the result look smooth. Figure 1.9 shows six renderings of a 3D sphere using an increasing number of smaller and smaller triangles.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F09_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1077732"></a>Figure 1.9 Three-dimensional (3D) spheres built out of the specified number of triangles.</p>
+
+  <p class="body"><a id="pgfId-1077733"></a>In chapters 3 and 4, you learn how to use 3D vector math to turn 3D models into shaded 2D images like the ones in figure 1.9. You also need to make your 3D models smooth to make them realistic in a game or movie, and you need them to move and change in realistic ways. This means that your objects should obey the laws of physics, which are also expressed in terms of 3D vectors.</p>
+
+  <p class="body"><a id="pgfId-1077734"></a>Suppose you’re a programmer for <i class="fm-italics">Grand Theft Auto V</i> and want to enable a basic use case like shooting a bazooka at a helicopter. A projectile coming out of a bazooka starts at the protagonist’s location and then its position changes over time. You can use numeric subscripts to label the various positions it has over its flight, starting with <i class="fm-in-times-italic">v</i><sub class="fm-subscript">0</sub> = (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">0</sub>). As time elapses, the projectile arrives at new positions labeled by vectors <i class="fm-in-times-italic">v</i><sub class="fm-subscript">1</sub> = (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">1</sub>), <i class="fm-in-times-italic">v</i><sub class="fm-subscript">2</sub> = (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">2</sub>), and so on. The rates of change for the <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i> values are decided by the direction and speed of the bazooka. Moreover, the rates can change over time−the projectile increases its <i class="fm-in-times-italic">z</i> position at a decreasing rate because of the continuous downward pull of gravity (figure 1.10).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F10_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085249"></a>Figure 1.10 The position vector of the projectile changes over time due to its initial speed and the pull of gravity.</p>
+
+  <p class="body"><a id="pgfId-1077740"></a>As any experienced action gamer will tell you, you need to aim slightly above the helicopter to hit it! To simulate physics, you have to know how forces affect objects and cause continuous change over time. The math of continuous change is called <i class="fm-italics">calculus</i> <a id="marker-1077741"></a>, and the laws of physics are usually expressed in terms of objects from calculus called <i class="fm-italics">differential equations</i> <a id="marker-1077742"></a>. You learn how to animate 3D objects in chapters 4 and 5, and then how to simulate physics using ideas from <a id="u3qxiBM8sumVU2UVlKhNvw9"></a>calculus in part 2.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1077744"></a><a id="id_1t3h5sf"></a>1.1.4 Modeling the physical world</h3>
+
+  <p class="body"><a id="pgfId-1077745"></a>My claim that mathematical software produces real financial value isn’t just speculation; I’ve seen the value in my own career. In 2013, I founded a company called Tachyus that builds software to optimize oil and gas production. Our software uses mathematical models to understand the flow of oil and gas underground to help producers extract it more efficiently and profitably. Using the insight it generates, our customers have achieved millions of dollars a year in cost savings and production increases.</p>
+
+  <p class="body"><a id="pgfId-1077746"></a>To explain how our software works, you need to know a few pieces of oil terminology. Holes called <i class="fm-italics">wells</i> are drilled into the ground until they reach the target layer of porous (sponge-like) rock containing oil. This layer of oil-rich rock underground is called a <i class="fm-italics">reservoir</i>. Oil is pumped to the surface and is then sold to refiners who convert it into the products we use every day. A schematic of an oilfield (not to scale!) is shown in figure 1.11.</p>
+
+  <p class="body"><a id="pgfId-1077752"></a>Over the past few years, the price of oil has varied significantly, but for our purposes, let’s say it’s worth $50 a barrel, where a barrel is a unit of volume equal to 42 gallons or about 159 liters. If by drilling wells and pumping effectively, a company is able to extract 1,000 barrels of oil per day (the volume of a few backyard swimming pools), it will have annual revenues in the tens of millions of dollars. Even a few percentage points of increased efficiency can mean a sizable amount of money.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F11_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption">Figure 1.11  A schematic diagram of an oilfield</p>
+
+  <p class="body"><a id="pgfId-1077754"></a><a id="id_4d34og8"></a>The underlying question is what’s going on underground: where is the oil now and how is it moving? This is a complicated question, but it can also be answered by solving differential equations. The changing quantities here are not positions of a projectile, but rather locations, pressures, and flow rates of fluids underground. Fluid flow rate is a special kind of function that returns a vector, called a <i class="fm-italics">vector field</i>. This means that fluid can flow at any rate in any three-dimensional direction, and that direction and rate can vary across different locations within the reservoir.</p>
+
+  <p class="body"><a id="pgfId-1077755"></a>With our best guess for some of these parameters, we can use a differential equation called <i class="fm-italics">Darcy’s law</i> <a id="marker-1077756"></a> to predict flow rate of liquid through a porous rock medium like sandstone. Figure 1.12 shows Darcy’s law, but don’t worry if some symbols are unfamiliar! The function named q representing flow rate is bold to indicate it returns a vector value.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F12_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085313"></a>Figure 1.12 Darcy’s law annotated for a physics equation, governing how fluid flows within a porous rock.</p>
+
+  <p class="body"><a id="pgfId-1077762"></a>The most important part of this equation is the symbol that looks like an upside-down triangle, which represents the <i class="fm-italics">gradient operator</i> <a id="marker-1077763"></a> in vector calculus. The gradient of the pressure function <i class="fm-italics">p</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) at a given spatial point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) is the 3D vector <i class="fm-in-times-italic">q</i>(<i class="fm-in-times-italic">x, y, z</i>), indicating the direction of increasing pressure and the rate of increase in pressure at that point. The negative sign tells us that the 3D vector of flow rate is in the <i class="fm-italics">opposite</i> direction. This equation states, in mathematical terms, that fluid flows from areas of high pressure to areas of low pressure.</p>
+
+  <p class="body"><a id="pgfId-1077764"></a>Negative gradients are common in the laws of physics. One way to think of this is that nature is always seeking to move toward lower potential energy states. The potential energy of a ball on a hill depends on the altitude <i class="fm-in-times-italic">h</i> of the hill at any lateral point <i class="fm-in-times-italic">x</i>. If the height of a hill is given by a function <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>), the gradient points uphill while the ball rolls in the exact opposite direction (figure 1.13).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F13_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085356"></a>Figure 1.13 The positive gradient points uphill, while the negative gradient points downhill.</p>
+
+  <p class="body"><a id="pgfId-1077770"></a>In chapter 11, you learn how to calculate gradients. There, I show you how to apply gradients to simulate physics and also to solve other mathematical problems. The gradient happens to be one of the most important mathematical concepts in machine learning as well.</p>
+
+  <p class="body"><a id="pgfId-1077771"></a>I hope these examples have been more compelling and realistic than the real-world applications you heard in high school math class. Maybe, at this point, you’re convinced these math concepts are worth learning, but you’re worried that they might be too difficult. It’s true that learning math can be hard, especially on your own. To make it as smooth as possible, let’s talk about some of the pitfalls <a id="uZsOomSLsKNDADXsfkY3X79"></a>you can face as a math student and how I’ll help you avoid them in this book.</p>
+
+  <h2 class="fm-head" id="heading_id_8"><a id="pgfId-1077773"></a><a id="id_2s8eyo1"></a>1.2 How not to learn math</h2>
+
+  <p class="body"><a id="pgfId-1077774"></a>There are plenty of math books out there, but not all of them are equally useful. I have quite a few programmer friends who tried to learn mathematical concepts like the ones in the previous section, either motivated by intellectual curiosity or by career ambitions. When they use traditional math textbooks as their main resource, they often get stuck and give up. Here’s what a typical <i class="fm-italics">unsuccessful</i> math-learning story looks like.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1077776"></a><a id="id_17dp8vu"></a>1.2.1 Jane wants to learn some math</h3>
+
+  <p class="body"><a id="pgfId-1077777"></a>My (fictional) friend Jane is a full-stack web developer working at a medium-sized tech company in San Francisco. In college, Jane didn’t study computer science or any mathematical subjects in depth, and she started her career as a product manager. Over the last ten years, she picked up coding in Python and JavaScript and was able to transition into software engineering. Now, at her new job, she is one of the most capable programmers on the team, able to build the databases, web services, and user interfaces required to deliver important new features to customers. Clearly, she’s pretty smart!</p>
+
+  <p class="body"><a id="pgfId-1077778"></a>Jane realizes that learning data science could help her design and implement better features at work, using data to improve the experience for her customers. Most days on the train to work, Jane reads blogs and articles about new technologies, and recently, she’s been amazed by a few about a topic called “deep learning.” One article talks about Google’s AlphaGo, powered by deep learning, which beat the top-ranked human players in the world in a board game. Another article showed stunning impressionist paintings generated from ordinary images, again using a deep learning system.</p>
+
+  <p class="body"><a id="pgfId-1077779"></a>After reading these articles, Jane overheard that her friend-of-a-friend Marcus got a deep learning research job at a big tech company. Marcus supposedly gets paid over $400,000 a year in salary and stock. Thinking about the next step in her career, what more could Jane want than to work on a fascinating and lucrative problem?</p>
+
+  <p class="body"><a id="pgfId-1077780"></a>Jane did some research and found an authoritative (and free!) resource online: the book <i class="fm-italics">Deep Learning</i> by Goodfellow, et al., (MIT Press, 2016). The introduction read much like the technical blog posts she was used to and got her even more excited about learning the topic. But as she kept reading, the content of the book got harder. The first chapter covered the required math concepts and introduced a lot of terminology and notation that Jane had never seen. She skimmed it and tried to get on to the meat of the book, but it continued to get more difficult.</p>
+
+  <p class="body"><a id="pgfId-1077781"></a>Jane decided she needed to pause her study of AI and deep learning until she learned some math. Fortunately, the math chapter of <i class="fm-italics">Deep Learning</i> listed a reference on linear algebra for students who had never seen the topic before. She tracked down this textbook, <i class="fm-italics">Linear Algebra</i> by Georgi Shilov (Dover, 1977), and discovered that it was 400 pages long and equally as dense as <i class="fm-italics">Deep Learning</i>.</p>
+
+  <p class="body"><a id="pgfId-1077783"></a><a id="id_3rdcrjn"></a>After spending an afternoon reading abstruse theorems about concepts like number fields, determinants, and cofactors, she called it quits. She had no idea how these concepts were going to help her write a program to win a board game or to generate artwork, and she no longer cared to spend dozens of hours with this dry material to find out.</p>
+
+  <p class="body"><a id="pgfId-1080094"></a>Jane and I met to catch up over a cup of coffee. She told me about her struggles reading real AI literature because she didn’t know linear algebra. Recently, I’m hearing a lot of the same form of lamentation:</p>
+
+  <p class="fm-quote"><a class="calibre10" id="pgfId-1080095"></a><i>I’m trying to read about [new technology] but it seems like I need to learn [math topic] first.</i></p>
+
+  <p class="body"><a id="pgfId-1077786"></a>Her approach was admirable: she tracked down the best resource for the subject she wanted to learn and sought out resources for prerequisites she was missing. But in taking that approach to its logical conclusion, she found herself in a nauseating “depth-first” search of technical literature.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1077788"></a><a id="id_lnxbz9"></a>1.2.2 Slogging through math textbooks</h3>
+
+  <p class="body"><a id="pgfId-1077789"></a>College-level math books like the linear algebra book Jane picked up tend to be very formulaic. Every section follows the same format: it defines some new terminology, states some facts (called <i class="fm-italics">theorems</i> <a id="marker-1077790"></a>) using that terminology, and then proves that those theorems are true.</p>
+
+  <p class="body"><a id="pgfId-1077791"></a>This sounds like a good, logical order: you introduce the concept you’re talking about, state some conclusions that can be drawn, and then justify them. Then why is it so hard to read advanced mathematical textbooks?</p>
+
+  <p class="body"><a id="pgfId-1077792"></a>The problem is that this is not how math is actually created. When you’re coming up with new mathematical ideas, there can be a long period of experimentation before you even find the right definitions. I think most professional mathematicians would describe their steps like this:</p>
+
+  <ol class="calibre12">
+    <li class="fm-list-numbered">
+      <p class="list"><a id="pgfId-1077793"></a>Invent a <i class="fm-italics">game</i>. For example, start playing with some mathematical objects by trying to list all of them, find patterns among them, or find one with a particular property.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077794"></a>Form some <i class="fm-italics">conjectures</i>. Speculate about some general facts you can state about your game and, at least, convince yourself these must be true.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077795"></a>Develop some <i class="fm-italics">precise language</i> to describe your game and your conjectures. After all, your conjectures won’t mean anything until you can communicate them.</p>
+    </li>
+
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-1077796"></a>Finally, with some determination and luck, find a <i class="fm-italics">proof</i> for your conjecture, showing why it <i class="fm-italics">needs</i> to be true.</p>
+    </li>
+  </ol>
+
+  <p class="body"><a id="pgfId-1077797"></a>The main lesson to learn from this process is that you should start by thinking about big ideas, and the formalism can wait. Once you have a rough idea of how the math works, the vocabulary and notation become an asset for you rather than a distraction. Math textbooks usually work in the opposite order, so I recommend using textbooks as references rather than as introductions to new subjects.</p>
+
+  <p class="body"><a id="pgfId-1077798"></a>Instead of reading traditional textbooks, the best way to learn math is to explore ideas and draw your own conclusions. However, you don’t have enough hours in the day to reinvent everything yourself. What is the right balance to strike? I’ll give you my humble opinion, which guides how I’ve written this<a id="uVGpix689JxI4AsIs9dVb9H"></a> non-traditional <a id="ujfqEATrGwHpRTrxXUkCMZA"></a>book about math.</p>
+
+  <h2 class="fm-head" id="heading_id_11"><a id="pgfId-1077800"></a><a id="id_35nkun2"></a>1.3 Using your well-trained left brain</h2>
+
+  <p class="body"><a id="pgfId-1077801"></a>This book is designed for people who are either experienced programmers or for those who are excited to learn programming as they work through it. It’s great to write about math for an audience of programmers, because if you can write code, you’ve already trained your analytical left brain. I think the best way to learn math is with the help of a high-level programming language, and I predict that in the not-so-distant future, this will be the norm in math classrooms.</p>
+
+  <p class="body"><a id="pgfId-1077802"></a>There are several specific ways programmers like you are well equipped to learn math. I list those here, not only to flatter you, but also to remind you what skills you already have that you can lean on in your mathematical studies.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1077804"></a><a id="id_1ksv4uv"></a>1.3.1 Using a formal language</h3>
+
+  <p class="body"><a id="pgfId-1077805"></a>One of the first hard lessons you learn in programming is that you can’t write your code like you write simple English. If your spelling or grammar is slightly off when writing a note to a friend, they can probably still understand what you’re trying to say. But any syntactic error or misspelled identifier in code causes your program to fail. In some languages, even forgetting a semicolon at the end of an otherwise correct statement prevents the program from running. As another example, consider the two statements:</p>
+  <pre class="programlisting"><i class="fm-in-times-italic1">x</i> = 5
+5 = x</pre>
+
+  <p class="body"><a id="pgfId-1077808"></a>I could read either of these to mean that the symbol <i class="fm-in-times-italic">x</i> has the value 5. But that’s not <i class="fm-italics">exactly</i> what either of these means in Python, and in fact, only the first one is correct. The Python statement <code class="fm-code-in-text">x</code> <code class="fm-code-in-text">=</code> <code class="fm-code-in-text">5</code> is an instruction to <i class="fm-italics">set the variable x to have the value 5</i>. On the other hand, you can’t set the number 5 to have the value <i class="fm-in-times-italic">x</i>. This may seem pedantic, but you need to know it to write a correct program.</p>
+
+  <p class="body"><a id="pgfId-1077809"></a>Another example that trips up novice programmers (and experienced ones as well!) is reference equality. If you define a new Python class and create two identical instances of it, they are not equal!</p>
+  <pre class="programlisting">&gt;&gt;&gt; class A(): pass
+...
+&gt;&gt;&gt; A() == A()
+False</pre>
+
+  <p class="body"><a id="pgfId-1077814"></a>You might expect two identical expressions to be equal, but that’s evidently not a rule in Python. Because these are different instances of the <code class="fm-code-in-text">A</code> class, they are not considered equal.</p>
+
+  <p class="body"><a id="pgfId-1077816"></a>Be on the lookout for new mathematical objects that look like ones you know but don’t behave the same way. For instance, if the letters <i class="fm-in-times-italic">a</i> and <i class="fm-italics">B</i> represent numbers, then <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <i class="fm-italics">B</i> = <i class="fm-italics">B</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">a</i>. But, as you’ll learn in chapter 5, this is not necessarily the case if <i class="fm-in-times-italic">a</i> and <i class="fm-italics">B</i> are <i class="fm-italics">not</i> numbers. If, instead, <i class="fm-in-times-italic">a</i> and <i class="fm-italics">B</i> are matrices, then the products <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <i class="fm-italics">B</i> and <i class="fm-italics">B</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">a</i> are different. In fact, it’s possible that only one of the products is even doable or that neither product is correct.</p>
+
+  <p class="body"><a id="pgfId-1077817"></a>When you’re writing code, it’s not enough to write statements with correct syntax. The ideas that your statements represent need to make sense to be valid. If you apply the same care when you’re writing mathematical statements, you’ll catch your mistakes faster. Even better, if you write your mathematical statements in code, you’ll have the computer to help check your work.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1077819"></a><a id="id_44sinio"></a>1.3.2 Build your own calculator</h3>
+
+  <p class="body"><a id="pgfId-1077820"></a>Calculators are prevalent in math classes because it’s useful to check your work. You need to know how to multiply 6 by 7 without using your calculator, but it’s good to confirm that your answer of 42 is correct by consulting your calculator. The calculator also helps you save time once you’ve mastered mathematical concepts. If you’re doing trigonometry, and you need to know the answer to 3.14159 / 6, the calculator is there to handle it so you can instead think about what the answer means. The more a calculator can do out-of-the-box, the more useful it should theoretically be.</p>
+
+  <p class="body"><a id="pgfId-1077821"></a>But sometimes our calculators are too complicated for our own good. When I started high school, I was required to get a graphing calculator and I got a TI-84. It had about 40 buttons, each with 2 to 3 different modes. I only knew how to use maybe 20 of them, so it was a cumbersome tool to learn how to use. The story was the same when I got my first ever calculator in first grade. There were only 15 buttons or so, but I didn’t know what some of them did. If I had to invent a first calculator for students, I would make it look something like the one in figure 1.14.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F14_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085442"></a>Figure 1.14 A calculator for students learning to count</p>
+
+  <p class="body"><a id="pgfId-1077827"></a>This calculator only has two buttons. One of them resets the value to 1, and the other advances to the next number. Something like this would be the right “no-frills” tool for children learning to count. (My example may seem silly, but you can actually buy calculators like this! They are usually mechanical and sold as tally counters.)</p>
+
+  <p class="body"><a id="pgfId-1077828"></a>Soon after you master counting, you want to practice writing numbers and adding them. The perfect calculator at that stage of learning might have a few more buttons (figure 1.15).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F15_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085487"></a>Figure 1.15 A calculator capable of writing whole numbers and adding them</p>
+
+  <p class="body"><a id="pgfId-1077834"></a>There’s no need for buttons like <span class="fm-in-cambria">−</span> , *, or <span class="fm-in-cambria">÷</span> to get in your way at this phase. As you solve subtraction problems like 5 <span class="fm-in-cambria">−</span> 2, you can still check your answer of 3 with this calculator by confirming the sum 3 + 2 = 5. Likewise, you can solve multiplication problems by adding numbers repeatedly. You could upgrade to a calculator that does all of the operations of arithmetic when you’re done exploring with this one.</p>
+
+  <p class="body"><a id="pgfId-1080573"></a>I think an ideal calculator would be extensible, meaning that you could add more functionality to it as needed. For instance, you could add a button to your calculator for every new mathematical operation you learn. Once you got to algebra, maybe you could enable it to understand symbols like <i class="fm-in-times-italic">x</i> or <i class="fm-in-times-italic">y</i> in addition to numbers. When you</p>
+
+  <p class="body"><a id="pgfId-1080570"></a>learned calculus, you could further enable it to understand and manipulate mathematical functions.</p>
+
+  <p class="body"><a id="pgfId-1077836"></a>Extensible calculators that can hold many types of data seem far-fetched, but that’s exactly what you get when you use a high-level programming language. Python comes with arithmetic operations, a <code class="fm-code-in-text">math</code> module<a id="marker-1077837"></a>, and numerous third-party mathematical libraries you can pull in to make your programming environment more powerful whenever you want. Because Python is <i class="fm-italics">Turing complete</i> <a id="marker-1077838"></a>, you can (in principle) compute anything that can be computed. You only need a powerful enough computer, a clever enough implementation, or both.</p>
+
+  <p class="body"><a id="pgfId-1077839"></a>In this book, we implement each new mathematical concept in reusable Python code. Working through the implementation yourself can be a great way of cementing your understanding of a new concept, and by the end, you’ve added a new tool to your toolbelt. After trying it yourself, you can always swap in a polished, mainstream library if you like. Either way, the new tools you build or import lay the groundwork <a id="uA5HEddfvEd4AeSc2cQHjd6"></a>to explore even bigger ideas.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1077841"></a><a id="id_2jxsxqh"></a>1.3.3 Building abstractions with functions</h3>
+
+  <p class="body"><a id="pgfId-1077842"></a>In programming, the process I just described is called <i class="fm-italics">abstraction</i>. For example, when you get tired of repeated counting, you create the abstraction of addition. When you get tired of doing repeated addition, you create the abstraction of multiplication, and so on.</p>
+
+  <p class="body"><a id="pgfId-1077843"></a>Of all the ways that you can make abstractions in programming, the most important one to carry over to math is the <i class="fm-italics">function</i>. A function in Python is a way of repeating some task that can take one or more inputs or that can produce an output. For example,</p>
+  <pre class="programlisting">def greet(name):
+    print("Hello %s!" % name)</pre>
+
+  <p class="body"><a id="pgfId-1077846"></a>allows me to issue multiple greetings with short, expressive code like this:</p>
+  <pre class="programlisting">&gt;&gt;&gt; for name in ["John","Paul","George","Ringo"]:
+...     greet(name)
+...
+Hello John!
+Hello Paul!
+Hello George!
+Hello Ringo!</pre>
+
+  <p class="body"><a id="pgfId-1077854"></a>This function can be useful, but it’s not like a mathematical function. Mathematical functions always take input values, and they always return output values with no side effects.</p>
+
+  <p class="body"><a id="pgfId-1077855"></a>In programming, we call the functions that behave like mathematical functions <i class="fm-italics">pure functions</i> <a id="marker-1077856"></a>. For example, the square function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> takes a number and returns the product of the number with itself. When you evaluate <i class="fm-in-times-italic">f</i>(3), the result is 9. That doesn’t mean that the number 3 has now changed and becomes 9. Rather, it means 9 is the corresponding output for the input 3 for the function <i class="fm-in-times-italic">f</i> . You can picture this squaring function as a machine that takes numbers in an input slot and produces results (numbers) in its output slot (figure 1.16).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH01_F16_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1085537"></a>Figure 1.16 A function as a machine with an input slot and an output slot</p>
+
+  <p class="body"><a id="pgfId-1077863"></a>This is a simple and useful mental model, and I’ll return to it throughout the book. One of the things I like most about it is that you can picture a function as an object in and of itself. In math, as in Python, functions are data that you can manipulate independently and even pass to other functions.</p>
+
+  <p class="body"><a id="pgfId-1077864"></a>Math can be intimidating because it is abstract. Remember, as in any well-written software, the abstraction is introduced for a reason: it helps you organize and communicate bigger and more powerful ideas. When you grasp these ideas and translate them into code, you’ll open up some exciting possibilities.</p>
+
+  <p class="body"><a id="pgfId-1077865"></a>If you didn’t already, I hope you now believe there are many exciting applications of math in software development. As a programmer, you already have the right mindset and tools to learn some new mathematical ideas. The ideas<a id="marker-1080784"></a> in this book <a id="marker-1080789"></a>provided <a id="marker-1080794"></a>me with professional and personal enrichment, and I hope they will for you as well. <a id="marker-1080316"></a>Let’s get started!</p>
+
+  <h2 class="fm-head" id="heading_id_15"><a id="pgfId-1077866"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077867"></a>There are interesting and lucrative applications of math in many software engineering domains.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077868"></a>Math can help you quantify a trend for data that changes over time, for instance, to predict the movement of a stock price.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077869"></a>Different types of functions convey different kinds of qualitative behavior. For instance, an exponential depreciation function means that a car loses a percentage of its resale value with each mile driven rather than a fixed amount.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077870"></a>Tuples of numbers (called <i class="fm-italics">vectors</i>) represent multidimensional data. Specifically, 3D vectors are triples of numbers and can represent points in space. You can build complex 3D graphics by assembling triangles specified by vectors.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077871"></a> <i class="fm-italics">Calculus</i> is the mathematical study of continuous change, and many of the laws of physics are written in terms of calculus equations that are called <i class="fm-italics">differential equations</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077872"></a>It’s hard to learn math from traditional textbooks! You learn math by exploration, not as a straightforward march through definitions and theorems.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1077873"></a>As a programmer, you’ve already trained yourself to think and communicate precisely; this skill will help you learn math as well.</p>
+    </li>
+  </ul>
+</body>
+</html>

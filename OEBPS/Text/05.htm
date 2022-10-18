@@ -1,0 +1,1466 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>5</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1115525"></a>5 <a id="id_30j0zll"></a>Computing transformations with matrices</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1117076"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1117077"></a>Writing a linear transformation as a matrix</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1117078"></a>Multiplying matrices to compose and apply linear transformations</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1117079"></a>Operating on vectors of different dimensions with linear transformations</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1117080"></a>Translating vectors in 2D or 3D with matrices</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1115532"></a><a id="id_2et92p0"></a>In the<a id="marker-1134345"></a> culmination of chapter 4, I stated a big idea: <i class="fm-italics">any</i> linear transformation in 3D can be specified by just three vectors or nine numbers total. By correctly selecting these nine numbers, we can achieve rotation by any angle about any axis, reflection across any plane, projection onto any plane, scaling by any factor in any direction, or any other 3D linear transformation.</p>
+
+  <p class="body"><a id="pgfId-1115535"></a><a id="id_n1dhpcglesa0"></a><a id="id_k6kpfv2ier9u"></a>The transformation expressed as “a rotation counterclockwise by <span class="fm-in-cambria">90°</span> about the z-axis” can equivalently be described by what it does to the standard basis vectors <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0, 0), <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1, 0), and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> = (0, 0, 1). Namely, the results are (0, 1, 0), (−1, 0, 0), and (0, 0, 1). Whether we think of this transformation geometrically or as described by these three vectors (or nine numbers), we’re thinking of the same imaginary machine (figure 5.1) that operates on 3D vectors. The implementations might be different, but the machines still produce indistinguishable results.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1136794"></a>Figure 5.1 Two machines that do the same linear transformation. Geometric reasoning powers the machine on the top, while nine numbers power the one on the bottom.</p>
+
+  <p class="body"><a id="pgfId-1115543"></a>When arranged appropriately in a grid, the numbers that tell us how to execute a linear transformation are called a <i class="fm-italics">matrix</i>. This chapter focuses on using these grids of numbers as computational tools, so there’s more number-crunching in this chapter than in the previous ones. Don’t let this intimidate you! When it comes down to it, we’re still just carrying out vector transformations.</p>
+
+  <p class="body"><a id="pgfId-1115544"></a>A matrix lets us compute a given linear transformation using the data of what that transformation does to standard basis vectors. All of the notation in this chapter serves to organize that process, which we covered in section 4.2, not to introduce any unfamiliar ideas. I know it can feel like a pain to learn a new and complicated notation, but I promise, it will pay off. We are better off being able to think of vectors as geometric objects or as tuples of numbers. Likewise, we’ll expand our mental model by thinking of linear transformations as matrices of numbers.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1115546"></a><a id="id_60dfkcbb1zbf"></a>5.1 Representing linear transformations with matrices</h2>
+
+  <p class="body"><a id="pgfId-1115547"></a>Let’s return<a id="marker-1134350"></a> to a <a id="marker-1134355"></a>concrete<a id="marker-1134360"></a> example of the nine numbers that specify a 3D linear transformation. Suppose <i class="fm-in-times-italic">a</i> is a linear transformation, and we know <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) = (1, 1, 1), <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) = (1, 0, −1), and <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>) = (0, 1, 1). These three vectors having nine components in total contain all of the information required to specify the linear transformation <i class="fm-in-times-italic">a</i>.</p>
+
+  <p class="body"><a id="pgfId-1115548"></a>Because we reuse this concept over and over, it warrants a special notation. We’ll adopt a new notation, called <i class="fm-italics">matrix notation</i> <a id="marker-1115549"></a>, to work with these nine numbers as a representation of <i class="fm-in-times-italic">a</i>.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1115551"></a><a id="id_1b4pm6fmdw4"></a>5.1.1 Writing vectors and linear transformations as matrices</h3>
+
+  <p class="body"><a id="pgfId-1120514"></a>Matrices <a id="marker-1134365"></a>are<a id="marker-1134370"></a> rectangular<a id="marker-1134375"></a> grids of numbers, and their shapes tell us how to interpret them. For instance, we can interpret a matrix that is a single column of numbers as a vector with its entries being the coordinates, ordered top to bottom. In this form, the vectors are called <i class="fm-italics">column vectors</i> <a id="marker-1120515"></a> <i class="fm-italics">.</i> For example, the standard basis for three dimensions can be written as three column vectors like this:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ01.png"/></p>
+
+  <p class="body"><a id="pgfId-1115558"></a>For our purposes, this notation means the same thing as <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0, 0), <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1, 0), and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> = (0, 0, 1). We can indicate how <i class="fm-in-times-italic">a</i> transforms standard basis vectors with this notation as well:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ02.png"/></p>
+
+  <p class="body"><a id="pgfId-1115563"></a>The matrix representing the linear transformation <i class="fm-in-times-italic">a</i> is the 3-by<span class="fm-in-cambria">−</span>3 grid consisting of these vectors squashed together side by side:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ03.png"/></p>
+
+  <p class="body"><a id="pgfId-1115568"></a>In 2D, a column vector consists of two entries, so 2 transformed vectors contain a total of 4 entries. We can look at the linear transformation <i class="fm-in-times-italic">D</i> that scales input vectors by a multiple of 2. First, we write how it works on basis vectors:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ04.png"/></p>
+
+  <p class="body"><a id="pgfId-1115573"></a>Then the matrix for <i class="fm-in-times-italic">D</i> is obtained by putting these columns next to each other:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ05.png"/></p>
+
+  <p class="body"><a id="pgfId-1115578"></a>Matrices can come in other shapes and sizes, but we’ll focus on these two shapes for now: the single column matrices representing vectors and the square matrices representing linear transformations.</p>
+
+  <p class="body"><a id="pgfId-1115579"></a>Remember, there are no new concepts here, only a new way of writing the core idea from section 4.2: a linear transformation is defined by its results acting on the standard basis vectors. The way to get a matrix from a linear transformation is to find the vectors it produces from all of the standard basis vectors and combine the results side by side. Now, we’ll look at the opposite problem: <a id="marker-1134380"></a>how <a id="marker-1134385"></a>to evaluate <a id="marker-1134390"></a><i class="fm-in-times-italic">a</i> linear transformation given its matrix.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1115581"></a><a id="id_v4xueoc9x04x"></a>5.1.2 Multiplying a matrix with a vector</h3>
+
+  <p class="body"><a id="pgfId-1115582"></a>If a linear <a id="marker-1134395"></a>transformation <i class="fm-italics">B</i> is<a id="marker-1134400"></a> represented <a id="marker-1134405"></a>as a matrix, and a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is also represented as a matrix (a column vector), we have all of the numbers required to evaluate <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). For instance, if <i class="fm-italics">B</i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> are given by</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ06.png"/></p>
+
+  <p class="body"><a id="pgfId-1115587"></a>then the vectors <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>), <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>), and <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>) can be read off of <i class="fm-italics">B</i> as the columns of its matrix. From that point, we use the same procedure as before. Because <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = 3<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> − 2<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> + 5<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>, it follows that <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) = 3 <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) − 2 <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) + 5 <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>). Expanding this, we get</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ07.png"/></p>
+
+  <p class="body"><a id="pgfId-1115592"></a>and the result is the vector (1, −2, −2). Treating a square matrix as a function that operates on a column vector is a special case of an operation called <i class="fm-italics">matrix multiplication</i> <a id="marker-1115593"></a>. Again, this has an impact on our notation and terminology, but we are simply doing the same thing: applying a linear transformation to a vector. Written as a matrix multiplication, it looks like this:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ08.png"/></p>
+
+  <p class="body"><a id="pgfId-1115598"></a>As opposed to multiplying numbers, the order matters when you multiply matrices by vectors. In this case, <i class="fm-italics">B</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a valid product but <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> <i class="fm-italics">B</i> is not. Shortly, we’ll see how to multiply matrices of various shapes and a general rule for the order in which matrices can be multiplied. For now, take my word for it and think of this multiplication as valid because it means applying a 3D linear operator to a 3D vector.</p>
+
+  <p class="body"><a id="pgfId-1115599"></a>We can write Python code that multiplies a matrix by a vector. Let’s say we encode the matrix <i class="fm-italics">B</i> as a tuple-of-tuples and the vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> as a tuple as usual:</p>
+  <pre class="programlisting"> <i class="fm-italics">B</i> = (
+    (0,2,1),
+    (0,1,0),
+    (1,0,−1)
+)
+
+v = (3,−2,5)</pre>
+
+  <p class="body"><a id="pgfId-1115601"></a>This is a bit different from how we originally thought about the matrix <i class="fm-italics">B</i>. We originally created it by combining three columns, but here <i class="fm-italics">B</i> is created as a sequence of rows. The advantage of defining a matrix in Python as a tuple of rows is that the numbers are laid out in the same order as we would write them on paper. We can, however, get the columns any time we want by using Python’s <code class="fm-code-in-text">zip</code> function (covered in appendix B):</p>
+  <pre class="programlisting">&gt;&gt;&gt; list(zip(*B))
+[(0, 0, 1), (2, 1, 0), (1, 0, −1)]</pre>
+
+  <p class="body"><a id="pgfId-1115603"></a>The first entry of this list is (0, 0, 1), which is the first column of <i class="fm-italics">B</i>, and so on. What we want is the linear combination of these vectors, where the scalars are the coordinates of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. To get this, we can use the <code class="fm-code-in-text">linear_combination</code> function from the exercise in section 4.2.5. The first argument to <code class="fm-code-in-text">linear_combination</code> should be <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, which serves as the list of scalars, and the subsequent arguments should be the columns of <i class="fm-italics">B</i>. Here’s the complete function:</p>
+  <pre class="programlisting">def multiply_matrix_vector(matrix, vector):
+    return linear_combination(vector, *zip(*matrix))</pre>
+
+  <p class="body"><a id="pgfId-1115605"></a>It confirms the calculation we did by hand with <i class="fm-italics">B</i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> :</p>
+  <pre class="programlisting">&gt;&gt;&gt; multiply_matrix_vector(B,v)
+(1, −2, −2)</pre>
+
+  <p class="body"><a id="pgfId-1115607"></a>There are two other mnemonic recipes for multiplying a matrix by a vector, both of which give the same results. To see these, let’s write a prototypical matrix multiplication:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ09.png"/></p>
+
+  <p class="body"><a id="pgfId-1115612"></a>The result of this calculation is the linear combination of the columns of the matrix with the coordinates <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i> as the scalars:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ10.png"/></p>
+
+  <p class="body"><a id="pgfId-1115617"></a>This is an explicit formula for the product of a 3-by<span class="fm-in-cambria">−</span>3 matrix with a 3D vector. You can write a similar one for a 2D vector:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ11.png"/></p>
+
+  <p class="body"><a id="pgfId-1115622"></a>The first mnemonic is that each coordinate of the output vector is a function of all the coordinates of the input vector. For instance, the first coordinate of the 3D output is a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> + <i class="fm-in-times-italic">cz</i>. Moreover, this is a <i class="fm-italics">linear function</i> <a id="marker-1115623"></a> (in the sense that you used the word in high school algebra); it is a sum of a number times each variable. We originally introduced the term “linear transformation<a id="marker-1115624"></a>” because linear transformations preserve lines. Another reason to use that term: a linear transformation is a collection of linear <i class="fm-italics">functions</i> on the input coordinates that give the respective output coordinates.</p>
+
+  <p class="body"><a id="pgfId-1115625"></a>The second mnemonic presents the same formula differently: the coordinates of the output vector are dot products of the rows of the matrix with the target vector. For instance, the first row of the 3-by<span class="fm-in-cambria">−</span>3 matrix is (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) and the multiplied vector is (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>), so the first coordinate of the output is (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> + <i class="fm-in-times-italic">cz</i>. We can combine our two notations to state this fact in a formula:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ12.png"/></p>
+
+  <p class="body"><a id="pgfId-1115631"></a>If your eyes are starting to glaze over from looking at so many letters and numbers in arrays, don’t worry. The notation can be overwhelming at first, and it takes some time to connect it to your intuition. There are more examples of matrices in this chapter, and the next chapter provides <a id="marker-1134410"></a>more <a id="marker-1134415"></a>review <a id="marker-1134420"></a>and practice as well.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1115633"></a><a id="id_1t3h5sf"></a>5.1.3 Composing linear transformations by matrix multiplication</h3>
+
+  <p class="body"><a id="pgfId-1115634"></a>Some of the <a id="marker-1134425"></a>examples <a id="marker-1134430"></a>of linear <a id="marker-1134435"></a>transformations we’ve seen so far are rotations, reflections, rescalings, and other geometric transformations. What’s more, any number of linear transformations chained together give us a new linear transformation. In math terminology, the <i class="fm-italics">composition</i> of any number of linear transformations is also a linear transformation.</p>
+
+  <p class="body"><a id="pgfId-1115635"></a>Because any linear transformation can be represented by a matrix, any two composed linear transformations can be as well. In fact, if you want to compose linear transformations to build new ones, matrices are the best tools for the job.</p>
+
+  <p class="fm-callout"><a id="pgfId-1115636"></a><span class="fm-callout-head">NOTE</span> Let me take off my mathematician hat and put on my programmer hat for a moment. Suppose you want to compute the result of, say, 1,000 composed linear transformations operating on a vector. This can come up if you are animating an object by applying additional, small transformations within every frame of the animation. In Python, it would be computationally expensive to apply 1,000 sequential functions because there is computational overhead for every function call. However, if you were to find a matrix representing the composition of 1,000 linear transformations, you would boil the whole process down to a handful of numbers and a handful of computations.</p>
+
+  <p class="body"><a id="pgfId-1115637"></a>Let’s look at a composition of two linear transformations: <i class="fm-in-times-italic">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>)), where the matrix representations of <i class="fm-in-times-italic">a</i> and <i class="fm-italics">B</i> are known to be the following:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ13.png"/></p>
+
+  <p class="body"><a id="pgfId-1115642"></a>Here’s how the composition works step by step. First, the transformation <i class="fm-italics">B</i> is applied to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, yielding a new vector <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>), or <i class="fm-italics">B</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> if we’re writing it as a multiplication. Second, this vector becomes the input to the transformation <i class="fm-in-times-italic">a</i>, yielding a final 3D vector as a result: <i class="fm-in-times-italic">a</i>(<i class="fm-italics">B</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). Once again, we’ll drop the parentheses and write <i class="fm-in-times-italic">a</i>(<i class="fm-italics">B</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) as the product <i class="fm-italics">AB</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Writing this product out for <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) gives us a formula that looks like this:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ14.png"/></p>
+
+  <p class="body"><a id="pgfId-1115647"></a>If we work right to left, we know how to evaluate this. Now I’m going to claim that we can work left to right as well and get the same result. Specifically, we can ascribe meaning to the product matrix <i class="fm-italics">AB</i> on its own; it will be a new matrix (to be discovered) representing the composition of the linear transformations <i class="fm-in-times-italic">a</i> and <i class="fm-italics">B</i> :</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ15.png"/></p>
+
+  <p class="body"><a id="pgfId-1115652"></a>Now, what should the entries of this new matrix be? Its purpose is to represent the composition of the transformations <i class="fm-in-times-italic">a</i> and <i class="fm-italics">B</i>, which give us a new linear transformation, <i class="fm-italics">AB</i>. As we saw, the columns of a matrix are the results of applying its transformation to standard basis vectors. The columns of the matrix <i class="fm-italics">AB</i> are the result of applying the transformation <i class="fm-italics">AB</i> to each of <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>.</p>
+
+  <p class="body"><a id="pgfId-1115653"></a>The columns of <i class="fm-italics">AB</i> are, therefore, <i class="fm-italics">AB</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>), <i class="fm-italics">AB</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) and <i class="fm-italics">AB</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>). Let’s look at the first column, for instance, which should be <i class="fm-italics">AB</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) or <i class="fm-in-times-italic">a</i> applied to the vector <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>). In other words, to get the first column of <i class="fm-italics">AB</i>, we multiply a matrix by a vector, an operation that we already practiced:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ16.png"/></p>
+
+  <p class="body"><a id="pgfId-1115658"></a>Similarly, we find that <i class="fm-italics">AB</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) = (3, 2, 1) and <i class="fm-italics">AB</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>) = (1, 0, 0), which are the second and third columns of <i class="fm-italics">AB</i> :</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F01_Orland_EQ17.png"/></p>
+
+  <p class="body"><a id="pgfId-1115663"></a>That’s how we do matrix multiplication. You can see there’s nothing to it besides carefully composing linear operators. Similarly, you can use mnemonics instead of reasoning through this process each time. Because multiplying a 3-by<span class="fm-in-cambria">−</span>3 matrix by a column vector is the same as doing three dot products, multiplying two 3-by<span class="fm-in-cambria">−</span>3 matrices together is the same as doing nine dot products−all possible dot products of rows of the first matrix with columns of the second as shown in figure 5.2.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1136861"></a>Figure 5.2 Each entry of a product matrix is a dot product of a row of the first matrix with a column of the second matrix.</p>
+
+  <p class="body"><a id="pgfId-1115669"></a>Everything we’ve said about 3-by<span class="fm-in-cambria">−</span>3 matrix multiplication applies to 2-by<span class="fm-in-cambria">−</span>2 matrices as well. For instance, to find the product of these 2-by<span class="fm-in-cambria">−</span>2 matrices</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F02_Orland_EQ18.png"/></p>
+
+  <p class="body"><a id="pgfId-1115674"></a>we can take the dot products of the rows of the first with the columns of the second. The dot product of the first row of the first matrix with the first column of the second matrix is (1, 2) <span class="fm-in-cambria">·</span> (0, 1) = 2. This tells us that the entry in the first row and first column of the result matrix is 2:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F02_Orland_EQ19.png"/></p>
+
+  <p class="body"><a id="pgfId-1115679"></a>Repeating this procedure, we can find all the entries of the product matrix:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F02_Orland_EQ20.png"/></p>
+
+  <p class="body"><a id="pgfId-1115684"></a>You can do some matrix multiplication as an exercise to get the hang of it, but you’ll quickly prefer that your computer <a id="marker-1134440"></a>does<a id="marker-1134445"></a> the <a id="marker-1134450"></a>work for you. Let’s implement matrix multiplication in Python to make this possible.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1115686"></a><a id="id_4d34og8"></a>5.1.4 Implementing matrix multiplication</h3>
+
+  <p class="body"><a id="pgfId-1115687"></a>There are<a id="marker-1134455"></a> a few <a id="marker-1134460"></a>ways <a id="marker-1134465"></a>we could write our matrix multiplication function, but I prefer using the dot product trick. Because the result of matrix multiplication should be a tuple of tuples, we can write it as a nested comprehension. It takes in two nested tuples as well, called <code class="fm-code-in-text">a</code> and <code class="fm-code-in-text">b</code>, representing our input matrices <i class="fm-in-times-italic">a</i> and <i class="fm-italics">B</i>. The input matrix <code class="fm-code-in-text">a</code> is already a tuple of rows of the first matrix, and we can pair these up with <code class="fm-code-in-text">zip(*b)</code>, which is a tuple of columns of the second matrix. Finally, for each pair, we should take the dot product and yield it in the inner comprehension. Here’s the implementation:</p>
+  <pre class="programlisting">from vectors import *
+
+def matrix_multiply(a,b):
+    return tuple(
+        tuple(dot(row,col) for col in zip(*b))
+        for row in a
+    )</pre>
+
+  <p class="body"><a id="pgfId-1115689"></a>The outer comprehension builds the rows of the result, and the inner one builds the entries of each row. Because the output rows are formed by the various dot products with rows of <code class="fm-code-in-text">a</code> <a id="id_Hlk43838536"></a>, the outer comprehension iterates over <code class="fm-code-in-text">a</code>.</p>
+
+  <p class="body"><a id="pgfId-1115691"></a>Our <code class="fm-code-in-text">matrix_multiply</code> function doesn’t have any hard-coded dimensions. That means we can use it to do the matrix multiplications from the preceding 2D and 3D examples:</p>
+  <pre class="programlisting">&gt;&gt;&gt; xa = ((1,1,0),(1,0,1),(1,−1,1))
+&gt;&gt;&gt; b = ((0,2,1),(0,1,0),(1,0,−1))
+&gt;&gt;&gt; matrix_multiply(a,b)
+((0, 3, 1), (1, 2, 0), (1, 1, 0))
+&gt;&gt;&gt; xc = ((1,2),(3,4))
+&gt;&gt;&gt; d = ((0,−1),(1,0))
+&gt;&gt;&gt; matrix_multiply(c,d)
+((2, −1), (4, <span class="fm-in-cambria">−</span>3))</pre>
+
+  <p class="body"><a id="pgfId-1115693"></a>Equipped with the <a id="marker-1134470"></a>computational <a id="marker-1134475"></a>tool <a id="marker-1134480"></a>of matrix multiplication, we can now do some easy manipulations of our 3D graphics.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1115695"></a><a id="id_2s8eyo1"></a>5.1.5 3D animation with matrix transformations</h3>
+
+  <p class="body"><a id="pgfId-1115696"></a>To <a id="marker-1134485"></a>animate a <a id="marker-1134490"></a>3D model, <a id="marker-1134495"></a>we redraw a transformed version of the original model in each frame. To make the model appear to move or change over time, we need to use different transformations as time progresses. If these transformations are linear transformations specified by matrices, we need a new matrix for every new frame of the animation.</p>
+
+  <p class="body"><a id="pgfId-1115697"></a>Because PyGame’s built-in clock keeps track of time (in milliseconds), one thing we can do is to generate matrices whose entries depend on time. In other words, instead of thinking of every entry of a matrix as a number, we can think of it as a function that takes the current time, <i class="fm-in-times-italic">t</i>, and returns a number (figure 5.3).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1145229"></a>Figure 5.3 Thinking of matrix entries as functions of time allows the overall matrix to change as time passes.</p>
+
+  <p class="body"><a id="pgfId-1115703"></a>For instance, we could use these nine expressions:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F03_Orland_EQ21.png"/></p>
+
+  <p class="body"><a id="pgfId-1115708"></a>As we covered in chapter 2, cosine and sine are both functions that take a number and return another number as a result. The other five entries happen to not change over time, but if you crave consistency, you can think of these as constant functions (as in <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">t</i>) = 1 in the center entry). Given any value of <i class="fm-in-times-italic">t</i>, this matrix represents the same linear transformation as <code class="fm-code-in-text">rotate_y_by(<i class="fm-char-times-italic">t</i>)</code>. Time moves forward and the value of <i class="fm-in-times-italic">t</i> increases, so if we apply this matrix transformation to each frame, we’ll get a bigger rotation each time.</p>
+
+  <p class="body"><a id="pgfId-1115709"></a>Let’s give our <code class="fm-code-in-text">draw_model</code> function (covered in appendix C and used extensively in chapter 4) a <code class="fm-code-in-text">get_matrix</code> keyword argument, where the value passed to <code class="fm-code-in-text">get_matrix</code> is a function that takes time in milliseconds and returns the transformation matrix that should be applied at that time. In the source code file, animate_teapot.py, I call it like this to animate the rotating teapot from chapter 4:</p>
+  <pre class="programlisting">from teapot import load_triangles
+from draw_model import draw_model
+from math import sin,cos
+ 
+def get_rotation_matrix(t):                   <span class="fm-combinumeral">❶</span>
+    seconds = t/1000                          <span class="fm-combinumeral">❷</span>
+    return (
+        (<span class="fm-in-times1">cos</span>(seconds),0,−<span class="fm-in-times1">sin</span>(seconds)),
+        (0,1,0),
+        (<span class="fm-in-times1">sin</span>(seconds),0,<span class="fm-in-times1">cos</span>(seconds))
+    )
+draw_model(load_triangles(), 
+           get_matrix=get_rotation_matrix)    <span class="fm-combinumeral">❸</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135921"></a><span class="fm-combinumeral">❶</span> Generates a new transformation matrix for any numeric input representing time</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135942"></a><span class="fm-combinumeral">❷</span> Converts the time to seconds so the transformation doesn’t happen too quickly</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135959"></a><span class="fm-combinumeral">❸</span> Passes the function as a keyword argument to draw_model</p>
+
+  <p class="body"><a id="pgfId-1115725"></a>Now, <code class="fm-code-in-text">draw_model</code> is passed the data required to transform the underlying teapot model over time, but we need to use it in the function’s body. Before iterating over the teapot faces, we execute the appropriate matrix transformation:</p>
+  <pre class="programlisting">def draw_model(faces, color_map=blues, light=(1,2,3),
+               camera=Camera("default_camera",[]),
+               glRotatefArgs=None,
+               get_matrix=None):
+        #...                                                <span class="fm-combinumeral">❶</span>
+        def do_matrix_transform(<i class="fm-in-times-italic1">v</i>):                         <span class="fm-combinumeral">❷</span>
+            if get_matrix:                                  <span class="fm-combinumeral">❸</span>
+               m = get_matrix(pygame.time.get_ticks())
+               return multiply_matrix_vector(m, v)
+            else:
+               return <i class="fm-in-times-italic1">v</i>                                      <span class="fm-combinumeral">❹</span>
+        transformed_faces = polygon_map(do_matrix_transform, 
+                                        faces)              <span class="fm-combinumeral">❺</span>
+        for face in transformed_faces:
+        #...                                                <span class="fm-combinumeral">❻</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1115734"></a><span class="fm-combinumeral">❶</span> Most of the function body is unchanged, so we don’t print it here.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1127402"></a><span class="fm-combinumeral">❷</span> Creates a new function inside the main while loop that applies the matrix for this frame</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135437"></a><span class="fm-combinumeral">❸</span> Uses the elapsed milliseconds given by pygame.time.get_ticks() as well as the provided get_matrix function to compute a matrix for this frame</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135475"></a><span class="fm-combinumeral">❹</span> If no get_matrix is specified, doesn’t carry out any transformation and returns the vector unchanged</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135492"></a><span class="fm-combinumeral">❺</span> Applies the function to every polygon using polygon_map</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1135509"></a><span class="fm-combinumeral">❻</span> The rest of the draw_model is the same as described in appendix C.</p>
+
+  <p class="body"><a id="pgfId-1127405"></a>With these changes, you can run the code and see the teapot rotate (figure 5.4).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1115739"></a>Figure 5.4 The teapot is transformed by a new matrix in every frame, depending on the elapsed time when the frame is drawn.</p>
+
+  <p class="body"><a id="pgfId-1115740"></a>Hopefully, I’ve convinced you with the preceding examples that matrices are entirely interchangeable with linear transformations. We’ve managed to transform and animate the teapot the same way, using only nine numbers to specify each transformation. You can practice your matrix skills some more in the following exercises and then I’ll show you there’s even more to learn from the <code class="fm-code-in-text">matrix_multiply</code> function<a id="marker-1134500"></a> we’ve <a id="marker-1134505"></a>already<a id="marker-1134510"></a> implemented.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1128030"></a><a id="id_57acsqey1r6"></a>5.1.6 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1127987"></a><b class="fm-exercise-head">Exercise 5.1</b>: Write <a id="marker-1134532"></a><i class="fm-in-times-italic1">a</i> function <code class="fm-code-in-text1">infer_matrix(n, transformation)</code> that<a id="marker-1134536"></a> takes a dimension (like 2 or 3) and a function that is a vector transformation assumed to be linear. It should return an <i class="fm-in-times-italic1">n</i> -by- <i class="fm-in-times-italic1">n</i> square matrix (an <i class="fm-in-times-italic1">n</i> -tuple of <i class="fm-in-times-italic1">n</i> -tuples of numbers, which is the matrix representing the linear transformation). Of course, the output is only meaningful if the input transformation is linear. Otherwise, it represents an entirely different function!</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1127988"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def infer_matrix(n, transformation):
+    def standard_basis_vector(i):
+        return tuple(1 if i==j else 0 for j in range(1,n+1))         <span class="fm-combinumeral">❶</span>
+    standard_basis = [standard_basis_vector(i) for i in range(1,n+1)]<span class="fm-combinumeral">❷</span>
+    cols = [transformation(<i class="fm-in-times-italic1">v</i>) for <i class="fm-in-times-italic1">v</i>  in standard_basis]               <span class="fm-combinumeral">❸</span>
+    return tuple(zip(*cols))                                         <span class="fm-combinumeral">❹</span></pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1128014"></a><span class="fm-combinumeral">❶</span> Creates the i<sup class="fm-superscript1">th</sup> standard basis vector as a tuple containing a one in the i<sup class="fm-superscript1">th</sup> coordinate and zeroes in all other coordinates</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1128015"></a><span class="fm-combinumeral">❷</span> Creates the standard basis as a list of n vectors</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1128016"></a><span class="fm-combinumeral">❸</span> Defines the columns of a matrix to be the result of applying the corresponding linear transformation to the standard basis vectors</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1128017"></a><span class="fm-combinumeral">❹</span> Reshapes the matrix to be a tuple of rows instead of a list of columns, following our convention</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128018"></a>We can test this on a linear transformation like <code class="fm-code-in-text1">rotate_z_by(pi/2)</code> :</p>
+        <pre class="programlisting">&gt;&gt;&gt; from transforms import rotate_z_by
+&gt;&gt;&gt; from math import pi
+&gt;&gt;&gt; infer_matrix(3,rotate_z_by(pi/2))
+((6.123233995736766e−17, −1.0, 0.0), (1.0, 1.2246467991473532e−16, 0.0), (0, 0, 1))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128022"></a><b class="fm-exercise-head">Exercise 5.2</b>: What is the result of the following product of a 2-by<span class="fm-in-cambria">−</span>2 matrix with a 2D vector?</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_EQ22.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128026"></a><b class="fm-exercise-head">Solution</b>: The dot product of the vector with the first row of the matrix is −2.5 <span class="fm-in-cambria">·</span> 1.3 + 0.3 <span class="fm-in-cambria">·</span> -0.7 = <span class="fm-in-cambria">−</span>3.46. The dot product of the vector with the second row of the matrix is −2.5 <span class="fm-in-cambria">·</span> 6.5 + 0.3 <span class="fm-in-cambria">·</span> 3.2 = −15.29. These are the coordinates of the output vector, so the result is:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_EQ23.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128033"></a><b class="fm-exercise-head">Exercise 5.3-Mini Project</b>: Write a <code class="fm-code-in-text1">random_matrix</code> function that generates matrices of a specified size with random whole number entries. Use the function to generate five pairs of 3-by<span class="fm-in-cambria">−</span>3 matrices. Multiply each of the pairs together by hand (for practice) and then check your work with the <code class="fm-code-in-text1">matrix_multiply</code> function.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128034"></a><b class="fm-exercise-head">Solution</b>: First, we give the <code class="fm-code-in-text1">random_matrix</code> function arguments to specify the number of rows, the number of columns, and the minimum and maximum values for entries:</p>
+        <pre class="programlisting">from random import randint
+def random_matrix(rows,cols,min=−2,max=2):
+    return tuple(
+        tuple(
+        randint(min,max) for j in range(0,cols))
+        for i in range(0,rows)
+    )</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1128036"></a>Next, we can generate a random 3-by<span class="fm-in-cambria">−</span>3 matrix with entries between 0 and 10 as follows:</p>
+        <pre class="programlisting">&gt;&gt;&gt; random_matrix(3,3,0,10)
+((3, 4, 9), (7, 10, 2), (0, 7, 4))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128040"></a><b class="fm-exercise-head">Exercise 5.4</b>: For each of your pairs of matrices from the previous exercise, multiply them in the opposite order. Do you get the same result?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128041"></a><b class="fm-exercise-head">Solution</b>: Unless you get very lucky, your results will all be different. Most pairs of matrices give different results when multiplied in different orders. In math jargon, we say an operation is <i class="fm-italics">commutative</i> <a id="marker-1128042"></a> if it gives the same result regardless of the order of inputs. For instance, multiplying numbers is a commutative operation because <i class="fm-in-times-italic1">xy</i> = <i class="fm-italics">yx</i> for any choice of numbers <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">y</i>. However, matrix multiplication is <i class="fm-italics">not</i> commutative because for two square matrices <i class="fm-in-times-italic1">a</i> and <i class="fm-italics">B</i>, <i class="fm-italics">AB</i> does not always equal <i class="fm-italics">BA</i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128045"></a><b class="fm-exercise-head">Exercise 5.5</b>: In either 2D or 3D, there is a boring but important vector transformation called the <i class="fm-italics">identity transformation</i> <a id="marker-1135223"></a> that takes in a vector and returns the same vector as output. This transformation is linear because it takes any input vector sum, scalar multiple, or linear combination and returns the same thing as output. What are the matrices <a id="marker-1135224"></a>representing <a id="marker-1135225"></a>the identity<a id="marker-1135226"></a> transformation in <a id="marker-1135227"></a>2D and 3D, <a id="marker-1135230"></a>respectively?</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128050"></a><b class="fm-exercise-head">Solution</b>: In 2D or 3D, the identity transformation acts on the standard basis vectors and leaves them unchanged. Therefore, in either dimension, the matrix for this transformation has the standard basis vectors as its columns. In 2D and 3D, these <i class="fm-italics">identity matrices</i> <a id="marker-1128051"></a> are denoted by <i class="fm-italics">I</i><sub class="fm-subscript2">2</sub> and <i class="fm-italics">I</i><sub class="fm-subscript2">3</sub>, respectively, and look like this:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_EQ24.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128077"></a><b class="fm-exercise-head">Exercise 5.6</b>: Apply the matrix <code class="fm-code-in-text1">((2,1,1),(1,2,1),(1,1,2))</code> to all the vectors defining the teapot. What happens to the teapot and why?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128078"></a><b class="fm-exercise-head">Solution</b>: The following function is included in the source file matrix_transform _teapot.py:</p>
+        <pre class="programlisting">def transform(<i class="fm-in-times-italic1">v</i>):
+    m = ((2,1,1),(1,2,1),(1,1,2))
+    return multiply_matrix_vector(m,v)
+draw_model(polygon_map(transform, load_triangles()))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1128081"></a>Running the code, we see that the front of the teapot is stretched out into the region where <i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, and <i class="fm-in-times-italic1">z</i> are all positive.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN01.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1128085"></a>Applying the given matrix to all vertices of the teapot</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128194"></a>This is because all of the standard basis vectors are transformed to vectors with positive coordinates: (2, 1, 1), (1, 2, 1), and (1, 1, 2), respectively.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128220"></a><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_right.png"/><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_left.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1128183"></a>How the linear transformation defined by this matrix affects the standard basis vectors.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128184"></a>A linear combination of these new vectors with positive scalars is stretched further in the +<i class="fm-in-times-italic1">x</i>, +<i class="fm-in-times-italic1">y</i>, and +<i class="fm-in-times-italic1">z</i> directions than the same linear combination of the standard basis.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128234"></a><b class="fm-exercise-head">Exercise 5.7</b>: Implement <code class="fm-code-in-text1">multiply_matrix_vector</code> in a different way by using two nested comprehensions: one traversing the rows of the matrix and one traversing the entries of each row.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128235"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def multiply_matrix_vector(matrix,vector):
+    return tuple(
+        sum(vector_entry * matrix_entry
+            for vector_entry, matrix_entry in zip(row,vector))
+        for row in matrix
+    )</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128266"></a><b class="fm-exercise-head">Exercise 5.8</b>: Implement <code class="fm-code-in-text1">multiply_matrix_vector</code> yet another way using the fact that the output coordinates are the dot products of the input matrix rows with the input vector.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128267"></a><b class="fm-exercise-head">Solution</b>: This is a simplified version of the previous exercise solution:</p>
+        <pre class="programlisting">def multiply_matrix_vector(matrix,vector):
+    return tuple(
+        dot(row,vector)
+        for row in matrix
+    )</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128377"></a><b class="fm-exercise-head">Exercise 5.9−Mini Project</b>: I first told you what a linear transformation was and then showed you that any linear transformation can be represented by a matrix. Let’s prove the converse fact now: all matrices represent linear transformations. Starting with the explicit formulas for multiplying a 2D vector by a 2-by<span class="fm-in-cambria">−</span>2 matrix or multiplying a 3D vector by a 3-by<span class="fm-in-cambria">−</span>3 matrix, prove that algebraically. That is, show that matrix multiplication preserves sums and scalar multiples.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128378"></a><b class="fm-exercise-head">Solution</b>: I’ll show the proof for 2D; the 3D proof has the same structure but with a bit more writing. Suppose we have a 2-by<span class="fm-in-cambria">−</span>2 matrix called <i class="fm-in-times-italic1">a</i> with any four numbers <i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, <i class="fm-in-times-italic1">c</i>, and <i class="fm-in-times-italic1">d</i> as its entries. Let’s see how <i class="fm-in-times-italic1">a</i> operates on two vectors <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> :</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_right_EQ25.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128385"></a>You can do the matrix multiplications explicitly to find <i class="fm-in-times-italic1">a</i> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic1">a</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> :</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_right_EQ26.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128389"></a>And then we can compute <i class="fm-in-times-italic1">a</i> <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1">a</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) and see that the results match:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_right_EQ27.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128403"></a>This tells us that the 2D vector transformation defined by multiplying <i class="fm-italics">any</i> 2-by<span class="fm-in-cambria">−</span>2 matrix preserves vector sums. Likewise, for any number <i class="fm-in-times-italic1">s</i>, we have</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_right_EQ28.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128460"></a>So <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic1">a</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) and <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1">s</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) give the same results, and we see that multiplying by the matrix <i class="fm-in-times-italic1">a</i> preserves scalar multiples as well. These two facts mean that multiplying by any 2-by<span class="fm-in-cambria">−</span>2 matrix is a linear transformation of 2D vectors.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128492"></a><b class="fm-exercise-head">Exercise 5.10</b>: Once again, let’s use the two matrices from section 5.1.3:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_right_EQ29.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128493"></a>Write a function <code class="fm-code-in-text1">compose_a_b</code> that executes the composition of the linear transformation for <i class="fm-in-times-italic1">a</i> and the linear transformation for <i class="fm-italics">B</i>. Then use the <code class="fm-code-in-text1">infer _matrix</code> function from a previous exercise in this section to show that <code class="fm-code-in-text1">infer_matrix(3, compose_a_b)</code> is the same as the matrix product <i class="fm-italics">AB</i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128494"></a><b class="fm-exercise-head">Solution</b>: First, we implement two functions <code class="fm-code-in-text1">transform_a</code> and <code class="fm-code-in-text1">transform_b</code> that do the linear transformations defined by the matrices <i class="fm-in-times-italic1">a</i> and <i class="fm-italics">B</i>. Then, we combine these using our <code class="fm-code-in-text1">compose</code> function:</p>
+        <pre class="programlisting">from transforms import compose
+
+a = ((1,1,0),(1,0,1),(1,−1,1))
+b = ((0,2,1),(0,1,0),(1,0,−1))
+
+def transform_a(<i class="fm-in-times-italic1">v</i>):
+    return multiply_matrix_vector(a,v)
+
+def transform_b(<i class="fm-in-times-italic1">v</i>):
+    return multiply_matrix_vector(b,v)
+
+compose_a_b = compose(transform_a, transform_b)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1128496"></a>Now we can use our <code class="fm-code-in-text1">infer_matrix</code> function to find the matrix corresponding to this composition of linear transformations and compare it to the matrix product <i class="fm-italics">AB</i> :</p>
+        <pre class="programlisting">&gt;&gt;&gt; infer_matrix(3, compose_a_b)
+((0, 3, 1), (1, 2, 0), (1, 1, 0))
+&gt;&gt;&gt; matrix_multiply(a,b)
+((0, 3, 1), (1, 2, 0), (1, 1, 0))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128572"></a><b class="fm-exercise-head">Exercise 5.11-Mini Project</b>: Find two, 2-by<span class="fm-in-cambria">−</span>2 matrices, neither of which is the identity matrix <i class="fm-italics">I</i><sub class="fm-subscript2">2</sub>, but whose product <i class="fm-italics">is</i> the identity matrix.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128573"></a><b class="fm-exercise-head">Solution</b>: One way to do this is to write two matrices and play with their entries until you get the identity matrix as a product. Another way is to think of the problem in terms of linear transformations. If two matrices multiplied together produce the identity matrix, then the composition of their corresponding linear transformations should produce the identity transformation.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128574"></a>With that in mind, what are two 2D linear transformations whose composition is the identity transformation? When applied in sequence to a given 2D vector, these linear transformations should return the original vector as output. One such pair of transformations is rotation by <span class="fm-in-cambria">90°</span> clockwise, then rotation by 270° clockwise. Applying both of these executes a <span class="fm-in-cambria">3<span class="fm-in-cambria">60°</span></span> rotation that brings any vector back to its original position. The matrices for a 270° rotation and a <span class="fm-in-cambria">90°</span> rotation are as follows, and their product is the identity matrix:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F04_Orland_UN02_right_EQ30.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1128606"></a><b class="fm-exercise-head">Exercise 5.12</b>: We can multiply a square matrix by itself any number of times. We can then think of successive matrix multiplications as “raising a matrix to a power.” For a square matrix <i class="fm-in-times-italic1">a</i>, we can write AA as <i class="fm-in-times-italic1">a</i><sup class="fm-superscript1">2</sup> ; we can write AAA as <i class="fm-in-times-italic1">a</i><sup class="fm-superscript1">3</sup> ; and so on. Write a <code class="fm-code-in-text1">matrix_power(power,matrix)</code> function that raises a matrix to the specified (whole number) power.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1128607"></a><b class="fm-exercise-head">Solution</b>: Here is an implementation that works for whole number powers greater than or equal to 1:</p>
+        <pre class="programlisting">def matrix_power(power,matrix):
+    result = matrix
+    for _ in range(1,power):
+        result = matrix_multiply(result,matrix)
+    return result</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_10"><a id="pgfId-1115869"></a><a id="id_9c6lkfkx8p5j"></a>5.2 Interpreting matrices of different shapes</h2>
+
+  <p class="body"><a id="pgfId-1115870"></a>The <code class="fm-code-in-text">matrix_multiply</code> function <a id="marker-1134566"></a>doesn’t hard-code the size of the input matrices, so we can use it to multiply either 2-by<span class="fm-in-cambria">−</span>2 or 3-by<span class="fm-in-cambria">−</span>3 matrices together. As it turns out, it can also handle matrices of other sizes as well. For instance, it can handle these two 5-by<span class="fm-in-cambria">−</span>5 matrices:</p>
+  <pre class="programlisting">&gt;&gt;&gt; xa = ((−1, 0, −1, −2, −2), (0, 0, 2, −2, 1), (−2, −1, −2, 0, 1), (0, 2, −2,
+−1, 0), (1, 1, −1, −1, 0))
+&gt;&gt;&gt; b = ((−1, 0, −1, −2, −2), (0, 0, 2, −2, 1), (−2, −1, −2, 0, 1), (0, 2, −2,
+−1, 0), (1, 1, −1, −1, 0))
+&gt;&gt;&gt; matrix_multiply(a,b)
+((−10, −1, 2, <span class="fm-in-cambria">−</span>7, 4), (−2, 5, 5, 4, <span class="fm-in-cambria">−</span>6), (−1, 1, <span class="fm-in-cambria">−</span>4, 2, −2), (−4, <span class="fm-in-cambria">−</span>5, <span class="fm-in-cambria">−</span>5, -9,
+4), (−1, −2, −2, <span class="fm-in-cambria">−</span>6, 4))</pre>
+
+  <p class="body"><a id="pgfId-1115872"></a>There’s no reason we shouldn’t take this result seriously−our functions for vector addition, scalar multiplication, dot products, and, therefore, matrix multiplication don’t depend on the dimension of the vectors we use. Even though we can’t picture a 5D vector, we can do all the same algebra on five tuples of numbers that we did on pairs and triples of numbers in 2D and 3D, respectively. In this 5D product, the entries of the resulting matrix are still dot products of rows of the first matrix with columns of the second (figure 5.5):</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1115877"></a>Figure 5.5 The dot product of a row of the first matrix with a column of the second matrix produces one entry of the matrix product.</p>
+
+  <p class="body"><a id="pgfId-1115878"></a>You can’t visualize it in the same way, but you can show algebraically that a 5-by<span class="fm-in-cambria">−</span>5 matrix specifies a linear transformation of 5D vectors. We spend time talking about what kind of objects live in four, five, or more dimensions in the next chapter.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1115880"></a>5.2.1 <a id="id_e3t2hhdyig7f"></a>Column vectors as matrices</h3>
+
+  <p class="body"><a id="pgfId-1115881"></a>Let’s return<a id="marker-1134571"></a> to the <a id="marker-1134576"></a>example of multiplying a matrix by a column vector. I already showed you how to do a multiplication like this, but we treated it as its own case with the <code class="fm-code-in-text">multiply_matrix_vector</code> function. It turns out <code class="fm-code-in-text">matrix_multiply</code> is capable of doing these products as well, but we have to write the column vector as a matrix. As an example, let’s pass the following square matrix and single-column matrix to our <code class="fm-code-in-text">matrix_multiply</code> function:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F05_Orland_EQ31.png"/></p>
+
+  <p class="body"><a id="pgfId-1115886"></a>I claimed before that you can think of a vector and a single-column matrix interchangeably, so we might encode <code class="fm-code-in-text">d</code> as a vector <code class="fm-code-in-text">(1,1,1)</code>. But this time, let’s force ourselves to think of it as a matrix, having three rows with one entry each. Note that we have to write (1,) instead of (1) to make Python think of it as a 1-tuple instead of as a number.</p>
+  <pre class="programlisting">&gt;&gt;&gt; xc = ((−1, −1, 0), (−2, 1, 2), (1, 0, −1))
+&gt;&gt;&gt; d = ((1,),(1,),(1,))
+&gt;&gt;&gt; matrix_multiply(c,d)
+((−2,), (1,), (0,))</pre>
+
+  <p class="body"><a id="pgfId-1115889"></a>The result has three rows with one entry each, so it is a single-column matrix as well. Here’s what this product looks like in matrix notation:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F05_Orland_EQ32.png"/></p>
+
+  <p class="body"><a id="pgfId-1115894"></a>Our <code class="fm-code-in-text">multiply_matrix_vector</code> function can evaluate the same product but in a different format:</p>
+  <pre class="programlisting">&gt;&gt;&gt; multiply_matrix_vector(c,(1,1,1))
+(−2, 1, 0)</pre>
+
+  <p class="body"><a id="pgfId-1115896"></a>This demonstrates that multiplying a matrix and a column vector is a special case of matrix multiplication. We don’t need a separate function <code class="fm-code-in-text">multiply_matrix _vector</code> after all. We can further see that the entries of the output are dot products of the rows of the first matrix with the single column of the second (figure 5.6).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1136962"></a>Figure 5.6 An entry of the resulting vector computed as a dot product</p>
+
+  <p class="body"><a id="pgfId-1128828"></a>On paper, you’ll see vectors represented interchangeably as tuples (with commas) or as column vectors. But for the Python functions we’ve written, the distinction is critical. The tuple (−2, 1, 0) can’t be used interchangeably with the tuple-of-tuples ((−2,), (1,), (0,)). Yet another way of writing the same vector would be as a <i class="fm-italics">row vector</i> <a id="marker-1128829"></a>, or a matrix with one row. Here are the three notations for comparison:</p>
+
+  <p class="fm-table-caption"><a id="pgfId-1129278"></a>Table 5.1 Comparison of mathematical notations for vectors with corresponding Python representations</p>
+
+  <table border="1" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1128973"></a>Representation</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1128848"></a>In math notation</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1128850"></a>In Python</p>
+      </th>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1129084"></a>Ordered triple (ordered tuple)</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1128853"></a><img alt="" class="calibre14" src="../Images/CH05_F06_Orland_tableEQ01.png"/></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1128855"></a><code class="fm-code-in-text1">v = (−2,1,0)</code></p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1129111"></a>Column vector</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1128860"></a><img alt="" class="calibre14" src="../Images/CH05_F06_Orland_tableEQ02.png"/></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1128862"></a><code class="fm-code-in-text1">v = ((−2,),(1,),(0,))</code></p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1128979"></a>Row vector</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1128865"></a><img alt="" class="calibre14" src="../Images/CH05_F06_Orland_tableEQ01.png"/></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1128867"></a><code class="fm-code-in-text1">v = ((−2,1,0),)</code></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1115940"></a>If you’ve seen this comparison in math class, you may have thought it was a pedantic notational distinction. Once we represent these in Python, however, we see that they are really three distinct objects that need to be treated differently. While these all represent the same geometric data, which is a 3D arrow or point in space, only one of these, the column vector, can be multiplied by a 3-by<span class="fm-in-cambria">−</span>3 matrix. The row vector doesn’t work because, as shown in figure 5.7, we can’t take the dot product of a row of the first matrix with a column of the second.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F07_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137005"></a>Figure 5.7 Two matrices that cannot be multiplied together</p>
+
+  <p class="body"><a id="pgfId-1115946"></a>For our definition of matrix multiplication to be consistent, we can only multiply a matrix on the left of a <i class="fm-italics">column</i> vector<a id="marker-1134599"></a>. This <a id="marker-1134600"></a>prompts <a id="marker-1134605"></a>the general question posed by the next section.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1115949"></a><a id="id_ol6xmzbx8xqn"></a>5.2.2 What pairs of matrices can be multiplied?</h3>
+
+  <p class="body"><a id="pgfId-1115950"></a>We can <a id="marker-1134610"></a>make <a id="marker-1134615"></a>grids of numbers of any dimension. When can our matrix multiplication formula work, and what does it mean when it does?</p>
+
+  <p class="body"><a id="pgfId-1115951"></a>The answer is that the number of columns of the first matrix has to match the number of rows of the second. This is clear when we do the matrix multiplication in terms of dot products. For instance, we can multiply any matrix with three columns by a second matrix with three rows. This means that rows of the first matrix and columns of the second each have three entries, so we can take their dot products. Figure 5.8 shows the dot product of the first row of the first matrix with the first column of the second matrix gives us an entry of the product matrix.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F08_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1115956"></a>Figure 5.8 Finding the first entry of the product matrix</p>
+
+  <p class="body"><a id="pgfId-1115957"></a>We can complete this matrix product by taking the remaining seven dot products. Figure 5.9 shows another entry, computed from a dot product.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F09_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1115962"></a>Figure 5.9 Finding another entry of the product matrix</p>
+
+  <p class="body"><a id="pgfId-1129391"></a>This constraint also makes sense in terms of our original definition of matrix multiplication: the columns of the output are each linear combinations of the columns of the first matrix with scalars given by a row of the second matrix (figure 5.10).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F10_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1129395"></a>Figure 5.10 Each column of the result is a linear combination of the columns of the first matrix.</p>
+
+  <p class="body"><a id="pgfId-1115969"></a>I was calling the previous square matrices 2-by<span class="fm-in-cambria">−</span>2 and 3-by<span class="fm-in-cambria">−</span>3 matrices. The last example (figure 5.10) was the product of a 2-by<span class="fm-in-cambria">−</span>3 and a 3-by<span class="fm-in-cambria">−</span>4 matrix. When we describe the <i class="fm-italics">dimensions</i> <a id="marker-1115970"></a> of a matrix like this, we say the number of rows first and then the number of columns. For instance, a 3D column vector would be a 3-by−1 matrix.</p>
+
+  <p class="fm-callout"><a id="pgfId-1115971"></a><span class="fm-callout-head">Note</span> Sometimes you’ll see matrix dimensions written with a multiplication sign as in a 3<span class="fm-in-cambria">×</span>3 matrix or a 3<span class="fm-in-cambria">×</span>1 matrix.</p>
+
+  <p class="body"><a id="pgfId-1115972"></a>In this language, we can make a general statement about the shapes of matrices that can be multiplied: you can only multiply an <i class="fm-italics">n-</i> by <i class="fm-italics">-m</i> matrix by a <i class="fm-in-times-italic">p</i> -by- <i class="fm-in-times-italic">q</i> matrix if <i class="fm-italics">m = p</i>. When that is true, the resulting matrix will be a <i class="fm-in-times-italic">n</i> -by- <i class="fm-in-times-italic">q</i> matrix. For instance, a 17<span class="fm-in-cambria">×</span>9 matrix cannot be multiplied by a 6<span class="fm-in-cambria">×</span>11 matrix. However, a 5<span class="fm-in-cambria">×</span>8 matrix can be multiplied by an 8<span class="fm-in-cambria">×</span>10 matrix. Figure 5.11 shows the result of the latter, which is a 5<span class="fm-in-cambria">×</span>10 matrix.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F11_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1115980"></a>Figure 5.11 Each of the five rows of the first matrix can be paired with one of the ten columns of the second matrix to produce one of the 5 <span class="fm-in-cambria">×</span> 10 = 50 entries of the product matrix. I used stars instead of numbers to show you that any matrices of these sizes are compatible.</p>
+
+  <p class="body"><a id="pgfId-1115981"></a>By contrast, you couldn’t multiply these matrices in the opposite order: a 10<span class="fm-in-cambria">×</span>8 matrix can’t be multiplied by a 5<span class="fm-in-cambria">×</span>8 matrix. Now it’s clear how to multiply bigger matrices, but what do the results mean? It turns out we can learn something from the result: <i class="fm-italics">all</i> matrices represent vector functions, and all valid matrix products can be interpreted as composition of these functions. Let’s see <a id="marker-1134620"></a>how <a id="marker-1134625"></a>this works.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1115983"></a><a id="id_cpxp7hcj8bxi"></a>5.2.3 Viewing square and non-square matrices as vector functions</h3>
+
+  <p class="body"><a id="pgfId-1115984"></a>We can <a id="marker-1134630"></a>think <a id="marker-1134635"></a>of a 2<span class="fm-in-cambria">×</span>2 matrix <a id="marker-1134640"></a>as the data required to do a given linear transformation of a 2D vector. Pictured as a machine in figure 5.12, this transformation takes a 2D vector into its input slot and produces a 2D vector out of its output slot as a result.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F12_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137096"></a>Figure 5.12 Visualizing a matrix as a machine that takes vectors as inputs and produces vectors as outputs</p>
+
+  <p class="body"><a id="pgfId-1115990"></a>Under the hood, our machine does this matrix multiplication:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F12_Orland_EQ33_Orland.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1115995"></a>It’s fair to think of matrices as machines that take vectors as inputs and produce vectors as outputs. Figure 5.13, however, shows a matrix can’t take just any vector as input; it is a 2<span class="fm-in-cambria">×</span>2 matrix so it does a linear transformation of 2D vectors. Correspondingly, this matrix can only be multiplied by a column vector with two entries. Let’s split up the machine’s input and output slots to suggest that these take and produce 2D vectors or pairs of numbers.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F13_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137140"></a>Figure 5.13 Refining our mental model by redrawing the machine’s input and output slots to indicate that its inputs and outputs are pairs of numbers</p>
+
+  <p class="body"><a id="pgfId-1116001"></a>Likewise, a linear transformation machine (figure 5.14) powered by a 3<span class="fm-in-cambria">×</span>3 matrix can only take in 3D vectors and produce 3D vectors as a result.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F14_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137184"></a>Figure 5.14 A linear transformation machine powered by a 3<span class="fm-in-cambria">×</span>3 matrix takes in 3D vectors and outputs 3D vectors.</p>
+
+  <p class="body"><a id="pgfId-1116007"></a>Now we can ask ourselves, what would a machine look like if it were powered by a non-square matrix? Perhaps the matrix would look something like this:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F14_Orland_EQ34.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1116012"></a>As a specific example, what kinds of vectors could this 2<span class="fm-in-cambria">×</span>3 matrix act on? If we’re going to multiply this matrix with a column vector, the column vector must have three entries to match the size of the rows of this matrix. Multiplying our 2<span class="fm-in-cambria">×</span>3 matrix by a 3<span class="fm-in-cambria">×</span>1 column vector gives us a 2<span class="fm-in-cambria">×</span>1 matrix as a result, or a 2D column vector. For example,</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F14_Orland_EQ35.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1116017"></a>This tells us that this 2<span class="fm-in-cambria">×</span>3 matrix represents a function taking 3D vectors to 2D vectors. If we were to draw it as a machine, like in figure 5.15, it would accept 3D vectors in its input slot and produce 2D vectors from its output slot.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F15_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137228"></a>Figure 5.15 A machine that takes in 3D vectors and outputs 2D vectors, powered by a 2<span class="fm-in-cambria">×</span>3 matrix</p>
+
+  <p class="body"><a id="pgfId-1116025"></a>In general, an <i class="fm-in-times-italic">m</i> -by- <i class="fm-in-times-italic">n</i> matrix<a id="marker-1116023"></a> defines a function taking <i class="fm-in-times-italic">n</i> -dimensional vectors<a id="marker-1116024"></a> as inputs and returning <i class="fm-in-times-italic">m</i> -dimensional vectors as outputs. Any such function is linear in the sense that it preserves vector sums and scalar multiples. It’s not a transformation because it doesn’t just modify input, it returns an entirely different kind of output: a vector living in a different number of dimensions. For this reason, we’ll use a more general terminology; we’ll call it a <i class="fm-italics">linear function</i> <a id="marker-1116026"></a> or a <i class="fm-italics">linear map</i>. Let’s <a id="marker-1134645"></a>consider <a id="marker-1134650"></a>an in-depth <a id="marker-1134655"></a>example of a familiar linear map from 3D to 2D.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1116028"></a><a id="id_6yg2tet3rmc5"></a>5.2.4 Projection as a linear map from 3D to 2D</h3>
+
+  <p class="body"><a id="pgfId-1116029"></a>We <a id="marker-1134665"></a>already <a id="marker-1134660"></a>saw a vector function that accepts 3D vectors and produces 2D vectors: a projection of a 3D vector onto the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane (section 3.5.2). This transformation (we can call it <i class="fm-in-times-italic">P</i>) takes vectors of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) and returns these with their <i class="fm-in-times-italic">z</i> component deleted: (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). I’ll spend some time carefully showing why this is a linear map and how it preserves vector addition and scalar multiplication.</p>
+
+  <p class="body"><a id="pgfId-1116030"></a>First of all, let’s write <i class="fm-in-times-italic">P</i> as a matrix. To accept 3D vectors and return 2D vectors, it should be a 2<span class="fm-in-cambria">×</span>3 matrix. Let’s follow our trusty formula for finding a matrix by testing the action of <i class="fm-in-times-italic">P</i> on standard basis vectors. Remember, in 3D the standard basis vectors are defined as <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0, 0), <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1, 0), and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> = (0, 0, 1), and when we apply the projection to these three vectors, we get (1, 0), (0, 1), and (0, 0), respectively. We can write these as column vectors</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F15_Orland_EQ36.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1116035"></a>and then stick them together side by side to get a matrix:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F15_Orland_EQ37.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1116040"></a>To check this, let’s multiply it by a test vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>). The dot product of (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) with (1, 0, 0) is <i class="fm-in-times-italic">a</i>, so that’s the first entry of the result. The second entry is the dot product of (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) with (0, 1, 0), or <i class="fm-in-times-italic">b</i>. You can picture this matrix as grabbing <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> from (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) and ignoring <i class="fm-in-times-italic">c</i>(figure 5.16).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F16_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137278"></a>Figure 5.16 Only 1 <span class="fm-in-cambria">·</span> a contributes to the first entry of the product, and only 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">b</i> contributes to the second entry. The other entries are zeroed out (in gray in the figure).</p>
+
+  <p class="body"><a id="pgfId-1116046"></a>This matrix does what we want; it deletes the third coordinate of a 3D vector, leaving us with only the first two coordinates. It’s good news that we can write this projection as a matrix, but let’s also give an algebraic <i class="fm-italics">proof</i> that this is a linear map. To do this, we have to show that the two key conditions of linearity are satisfied.</p>
+
+  <p class="fm-head2"><a id="pgfId-1116049"></a><a id="id_ku17sw640bs6"></a>Proving that projection preserves vector sums</p>
+
+  <p class="body"><a id="pgfId-1116050"></a>If <i class="fm-in-times-italic">P</i> is <a id="marker-1134670"></a>linear, <a id="marker-1134675"></a>any vector sum <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> should be respected by <i class="fm-in-times-italic">P</i>. That is, <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) + <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) should equal <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">w</b></i>) as well. Let’s confirm this using these equations: <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (<i class="fm-in-times-italic">u</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">u</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">u</i><sub class="fm-subscript">3</sub>) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic">v</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">v</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">v</i><sub class="fm-subscript">3</sub>). Then <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> so that</p>
+
+  <p class="fm-equation"><a id="pgfId-1116051"></a>w = (<i class="fm-in-times-italic2">u</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic2">u</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic2">u</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">3</sub>)</p>
+
+  <p class="body"><a id="pgfId-1116052"></a>Executing <i class="fm-in-times-italic">P</i> on all of these vectors is simple because we only need to remove the third coordinate:</p>
+
+  <p class="fm-equation"><a id="pgfId-1116053"></a><i class="fm-in-times-italic2">P</i>(<i class="fm-in-times-italic2">u</i>) = (<i class="fm-in-times-italic2">u</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic2">u</i><sub class="fm-subscript">2</sub>)</p>
+
+  <p class="fm-equation"><a id="pgfId-1116054"></a><i class="fm-in-times-italic2">P</i>(<i class="fm-in-times-italic2">v</i>) = (<i class="fm-in-times-italic2">v</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">2</sub>)</p>
+
+  <p class="body"><a id="pgfId-1116055"></a>so</p>
+
+  <p class="fm-equation"><a id="pgfId-1116056"></a><i class="fm-in-times-italic2">P</i>(<i class="fm-in-times-italic2">w</i>) = (<i class="fm-in-times-italic2">u</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic2">u</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">2</sub>)</p>
+
+  <p class="body"><a id="pgfId-1116057"></a>Adding <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) and <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>), we get (<i class="fm-in-times-italic">u</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic">v</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">u</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic">v</i><sub class="fm-subscript">2</sub>), which is the same as <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">w</b></i>). For any three 3D vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, we, <a id="marker-1134680"></a>therefore, <a id="marker-1134685"></a>also have <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) + <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) = <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">w</b></i>). This validates our first condition.</p>
+
+  <p class="fm-head2"><a id="pgfId-1116059"></a><a id="id_3l7i1jqh19sm"></a>Proving projection preserves scalar multiples</p>
+
+  <p class="body"><a id="pgfId-1116060"></a>The <a id="marker-1134690"></a>second <a id="marker-1134695"></a>thing we need to show is that <i class="fm-in-times-italic">P</i> preserves scalar multiples. Letting <i class="fm-in-times-italic">s</i> stand for <i class="fm-italics">any</i> real number and letting <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (<i class="fm-in-times-italic">u</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">u</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">u</i><sub class="fm-subscript">3</sub>), we want to demonstrate that <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic">s</i> u) is the same as <i class="fm-italics">sP</i>(<i class="fm-in-times-italic">u</i>).</p>
+
+  <p class="body"><a id="pgfId-1116061"></a>Deleting the third coordinate and doing the scalar multiplication give the same result regardless of which order these operations are carried out. The result of <i class="fm-in-times-italic">s</i> <i class="fm-in-times-italic">z</i> is (<i class="fm-italics">su</i><sub class="fm-subscript">1</sub>, <i class="fm-italics">su</i><sub class="fm-subscript">2</sub>, <i class="fm-italics">su</i><sub class="fm-subscript">3</sub>), so <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic">s</i> u) = (<i class="fm-italics">su</i><sub class="fm-subscript">1</sub>, <i class="fm-italics">su</i><sub class="fm-subscript">2</sub>). The result of <i class="fm-in-times-italic">P</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) is (<i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub>), so <i class="fm-italics">sP</i>(<i class="fm-in-times-italic">u</i>) = (<i class="fm-italics">su</i><sub class="fm-subscript">1</sub>, <i class="fm-italics">su</i><sub class="fm-subscript">2</sub>). This validates the second condition and confirms that <i class="fm-in-times-italic">P</i> satisfies the definition of linearity.</p>
+
+  <p class="body"><a id="pgfId-1116062"></a>These kinds of proofs are usually easier to do than to follow, so I’ve given you another one as an exercise. In the exercise, you can check that a function from 2D to 3D, specified by a given matrix, is linear using the same approach.</p>
+
+  <p class="body"><a id="pgfId-1129556"></a>More illustrative than an algebraic proof is an example. What does it look like when we project a 3D vector sum down to 2D? We can see it in three steps. First, we can draw a vector sum of two vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> in 3D as shown in figure 5.17.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F17_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137321"></a>Figure 5.17 A vector sum of two arbitrary vectors <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">v</i> in 3D</p>
+
+  <p class="body"><a id="pgfId-1116069"></a>Then, we can trace a line from each vector to the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane to show where these vectors end up after projection (figure 5.18).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F18_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137365"></a>Figure 5.18 Visualizing where <i class="fm-in-times-italic">u</i>, <i class="fm-in-times-italic">v</i>, and <i class="fm-in-times-italic">z</i> + <i class="fm-in-times-italic">v</i> end up after projection to the x,y plane</p>
+
+  <p class="body"><a id="pgfId-1116075"></a>Finally, we can look at these new vectors and see that they <i class="fm-italics">still</i> constitute a vector sum (figure 5.19).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F19_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137409"></a>Figure 5.19 The projected vectors form a sum: P(<i class="fm-in-times-italic">v</i>) + P(<i class="fm-in-times-italic">v</i>) = P(<i class="fm-in-times-italic">u + v</i>).</p>
+
+  <p class="body"><a id="pgfId-1116081"></a> In other words, if three vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> form a vector sum <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, then their “shadows” in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane also form a vector sum. Now that you’ve got some insight into linear transformation from 3D to 2D and a matrix <a id="marker-1134700"></a>that <a id="marker-1134705"></a>represents <a id="marker-1134710"></a>it, <a id="marker-1134715"></a>let’s return to our discussion of linear maps in general.</p>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1116083"></a><a id="id_q2s160l4grio"></a>5.2.5 Composing linear maps</h3>
+
+  <p class="body"><a id="pgfId-1116084"></a>The <a id="marker-1134720"></a>beauty <a id="marker-1134725"></a>of matrices is that they store all of the data required to evaluate a linear function on a given vector. What’s more, the dimensions of a matrix tell us the dimensions of input vectors and output vectors for the underlying function. We captured that visually in figure 5.20 by drawing machines for matrices of varying dimensions, whose input and output slots have different shapes. Here are four examples we’ve seen, labeled with letters so we can refer back to them.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F20_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1116089"></a>Figure 5.20 Four linear functions represented as machines with input and output slots. The shape of a slot tells us what dimension of vector it accepts or produces.</p>
+
+  <p class="body"><a id="pgfId-1116090"></a>Drawn like this, it’s easy to pick out which pairs of linear function machines could be welded together to build a new one. For instance, the output slot of <i class="fm-italics">M</i> has the same shape as the input slot of <i class="fm-in-times-italic">P</i>, so we could make the composition <i class="fm-in-times-italic">P</i>(<i class="fm-italics">M</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>)) for a 3D vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. The output of <i class="fm-italics">M</i> is a 3D vector that can be passed right along into the input slot of <i class="fm-in-times-italic">P</i>(figure 5.21).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F21_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1116095"></a>Figure 5.21 The composition of P and M. A vector is passed into the input slot of M, the output M(<i class="fm-in-times-italic">v</i>) passes invisibly through the plumbing and into P, and the output P(M(<i class="fm-in-times-italic">v</i>)) emerges from the other end.</p>
+
+  <p class="body"><a id="pgfId-1116096"></a>By contrast, figure 5.22 shows that we can’t compose <i class="fm-italics">N</i> and <i class="fm-italics">M</i> because <i class="fm-italics">N</i> doesn’t have enough output slots to fill every input of <i class="fm-italics">M</i>.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F22_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137483"></a>Figure 5.22 The composition of N and M is not possible because outputs of N are 2D vectors, while inputs to M are 3D vectors.</p>
+
+  <p class="body"><a id="pgfId-1116102"></a>I’m making this idea visual now by talking about slots, but hidden underneath is the same reasoning we use to decide if two matrices can be multiplied together. The count of the columns of the first matrix has to match the count of rows of the second. When the dimensions match in this way, so do the slots, and we can compose the linear functions and multiply their matrices.</p>
+
+  <p class="body"><a id="pgfId-1116103"></a>Thinking of <i class="fm-in-times-italic">P</i> and <i class="fm-italics">M</i> as matrices, the composition of <i class="fm-in-times-italic">P</i> and <i class="fm-italics">M</i> is written <i class="fm-italics">PM</i> as a matrix product. (Remember, if <i class="fm-italics">PM</i> acts on a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> as <i class="fm-italics">PM</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, <i class="fm-italics">M</i> is applied first and then <i class="fm-in-times-italic">P</i>.) When <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (1, 1, 1), the product <i class="fm-italics">PM</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a product of two matrices and a column vector, and it can be simplified into a single matrix times a column vector if we evaluate <i class="fm-italics">PM (</i> figure 5.23).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F23_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1116108"></a>Figure 5.23 Applying M and then P is equivalent to applying the composition PM. We consolidate the composition into a single matrix by doing the matrix multiplication.</p>
+
+  <p class="body"><a id="pgfId-1116109"></a>As a programmer, you’re used to thinking of functions in terms of the types of data they consume and produce. I’ve given you a lot of notation and terminology to digest thus far in this chapter, but as long as you grasp this core concept, you’ll get the hang of it eventually.</p>
+
+  <p class="body"><a id="pgfId-1129723"></a>I strongly encourage you to work through the following exercises to make sure you understand the language of matrices. For the rest of this chapter and the next, there won’t be many big new concepts, only applications of what we’ve seen so far. These applications will give you even more practice with <a id="marker-1134730"></a>matrix<a id="marker-1134735"></a> and vector computations.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1129725"></a><a id="id_71wfqqjvfwt3"></a>5.2.6 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1129839"></a><b class="fm-exercise-head">Exercise 5.13</b>: What <a id="marker-1134740"></a>are the dimensions of this matrix?</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_EQ38.png"/></p>
+
+        <ul class="calibre22">
+          <li class="fm-exercise-list-num"><a id="pgfId-1129840"></a>5<span class="fm-in-cambria">×</span>3</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1129746"></a>3<span class="fm-in-cambria">×</span>5</li>
+        </ul>
+
+        <p class="fm-sidebar"><a id="pgfId-1129747"></a><b class="fm-exercise-head">Solution</b>: This is a 3<span class="fm-in-cambria">×</span>5 matrix because it has three rows and five columns.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1129874"></a><b class="fm-exercise-head">Exercise 5.14</b>: What are the dimensions of a 2D column vector considered as a matrix? What about a 2D row vector? A 3D column vector? A 3D row vector?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1129875"></a><b class="fm-exercise-head">Solution</b>: A 2D column vector has two rows and one column, so it is a 2<span class="fm-in-cambria">×</span>1 matrix. A 2D row vector has one row with two columns, so it is a 1<span class="fm-in-cambria">×</span>2 matrix. Likewise, a 3D column and row vector have the dimensions 3<span class="fm-in-cambria">×</span>1 and 1<span class="fm-in-cambria">×</span>3 as matrices, respectively.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1129898"></a><b class="fm-exercise-head">Exercise 5.15-Mini Project</b>: Many of our vector and matrix operations make use of the Python <code class="fm-code-in-text1">zip</code> function. When given input lists of different sizes, this function truncates the longer of the two rather than failing. This means that when we pass invalid inputs, we get meaningless results back. For instance, there is no such thing as a dot product between a 2D vector and a 3D vector, but our <code class="fm-code-in-text1">dot</code> function returns something anyway:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from vectors import dot
+&gt;&gt;&gt; dot((1,1),(1,1,1))
+2</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1129900"></a>Add safeguards to all of the vector arithmetic functions so that they throw exceptions rather than returning values for vectors of invalid sizes. Once you’ve done that, show that <code class="fm-code-in-text1">matrix_multiply</code> no longer accepts a product of a 3<span class="fm-in-cambria">×</span>2 and a 4<span class="fm-in-cambria">×</span>5 matrix.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1129987"></a><b class="fm-exercise-head">Exercise 5.16</b>: Which of the following are valid matrix products? For those that are valid, what dimension is the product matrix?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1129991"></a>A.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_EQ39.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1129997"></a>B.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_EQ40.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130003"></a>C.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_EQ41.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130009"></a>D.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_EQ42.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130012"></a><b class="fm-exercise-head">Solution</b>:</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130013"></a>A. This product of a 2<span class="fm-in-cambria">×</span>2 matrix and a 4<span class="fm-in-cambria">×</span>4 matrix is not valid; the first matrix has two columns but the second matrix has four rows.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130014"></a>B. This product of a 2<span class="fm-in-cambria">×</span>4 matrix and a 4<span class="fm-in-cambria">×</span>2 matrix <i class="fm-italics">is</i> valid; the four columns of the first matrix match the four rows of the second matrix. The result is a 2<span class="fm-in-cambria">×</span>2 matrix.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130015"></a>C. This product of a 3<span class="fm-in-cambria">×</span>1 matrix and a 1<span class="fm-in-cambria">×</span>8 matrix <i class="fm-italics">is</i> valid; the single column of the first matrix matches the single row of the second. The result is a 3<span class="fm-in-cambria">×</span>8 matrix.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130016"></a>D. This product of a 3<span class="fm-in-cambria">×</span>3 matrix and a 2<span class="fm-in-cambria">×</span>3 matrix is not valid; the three columns of the first matrix do not match the two rows of the second.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130084"></a><b class="fm-exercise-head">Exercise 5.17</b>: A matrix with 15 total entries is multiplied by a matrix with 6 total entries. What are the dimensions of the two matrices, and what is the dimension of the product matrix?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130138"></a><b class="fm-exercise-head">Solution</b>: Let’s call the dimensions of the matrices <i class="fm-in-times-italic1">m</i> -by- <i class="fm-in-times-italic1">n</i> <a id="marker-1130136"></a> and <i class="fm-in-times-italic1">n</i> -by- <i class="fm-italics">k</i> because the number of columns of the first matrix has to match the number of rows of the second. Then <i class="fm-italics">mn</i> = 15 and <i class="fm-italics">nk</i> = 6. There are actually two possibilities:</p>
+
+        <ul class="calibre22">
+          <li class="fm-exercise-list-num">
+            <p class="list-s"><a id="pgfId-1130139"></a>The first possibility is that <i class="fm-in-times-italic3">m</i> = 5, <i class="fm-in-times-italic3">n</i> = 3, and <i class="fm-italics">k</i> = 2. Then this would be a 5<span class="fm-in-cambria">×</span>3 matrix multiplied by a 3<span class="fm-in-cambria">×</span>2 matrix resulting in a 5<span class="fm-in-cambria">×</span>2 matrix.</p>
+          </li>
+
+          <li class="fm-exercise-list-num">
+            <p class="list-s"><a id="pgfId-1130140"></a>The second possibility is that <i class="fm-in-times-italic3">m</i> = 15, <i class="fm-in-times-italic3">n</i> = 1, and <i class="fm-italics">k</i> = 6. Then this would be a 15<span class="fm-in-cambria">×</span>1 matrix times a 1<span class="fm-in-cambria">×</span>6 matrix, resulting in a 15<span class="fm-in-cambria">×</span>6 matrix.</p>
+          </li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130196"></a><b class="fm-exercise-head">Exercise 5.18</b>: Write a function that turns a column vector into a row vector, or vice versa. Flipping a matrix on its side like this is called <i class="fm-italics">transposition</i> <a id="marker-1130197"></a> and the resulting matrix is called the <i class="fm-italics">transpose</i> of the original.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130199"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def transpose(matrix):
+    return tuple(zip(*matrix))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1130201"></a>The call to <code class="fm-code-in-text1">zip(*matrix)</code> returns a list of columns of the matrix and then we tuple them. This has the effect of swapping rows and columns of any input matrix, specifically turning column vectors into row vectors and vice versa:</p>
+        <pre class="programlisting">&gt;&gt;&gt; transpose(((1,),(2,),(3,)))
+((1, 2, 3),)
+&gt;&gt;&gt; transpose(((1, 2, 3),))
+((1,), (2,), (3,))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130225"></a><b class="fm-exercise-head">Exercise 5.19</b>: Draw a picture that shows that a 10<span class="fm-in-cambria">×</span>8 and a 5<span class="fm-in-cambria">×</span>8 matrix <i class="fm-italics">can’t</i> be multiplied in that order.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130229"></a><b class="fm-exercise-head">Solution</b>:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre25" src="../Images/w_gifs_326.gif"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130264"></a>The rows of the first matrix have ten entries but the columns of the second have five, meaning we can’t evaluate this matrix product.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130384"></a><b class="fm-exercise-head">Exercise 5.20</b>: We want to multiply three matrices together: <i class="fm-in-times-italic1">a</i> is 5<span class="fm-in-cambria">×</span>7, <i class="fm-italics">B</i> is 2<span class="fm-in-cambria">×</span>3, and <i class="fm-italics">C</i> is 3<span class="fm-in-cambria">×</span>5. What order can they be multiplied in and what is the size of the result?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130385"></a><b class="fm-exercise-head">Solution</b>: One valid product is <i class="fm-italics">BC</i>, a 2x3 times a 3<span class="fm-in-cambria">×</span>5 matrix yielding a 2<span class="fm-in-cambria">×</span>5 matrix. Another is <i class="fm-italics">CA</i>, a 3<span class="fm-in-cambria">×</span>5 matrix times a 5<span class="fm-in-cambria">×</span>7 matrix yielding a 3<span class="fm-in-cambria">×</span>7 matrix. The product of three matrices, <i class="fm-italics">BCA</i>, is valid regardless of the order you use. (<i class="fm-italics">BC</i>) <i class="fm-in-times-italic1">a</i> is a 2<span class="fm-in-cambria">×</span>5 matrix times a 5<span class="fm-in-cambria">×</span>7 matrix, while <i class="fm-italics">B</i>(<i class="fm-italics">CA</i>) is a 2<span class="fm-in-cambria">×</span>3 matrix times a 3<span class="fm-in-cambria">×</span>7 matrix. Each yields the same 2<span class="fm-in-cambria">×</span>7 matrix as a result.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_UN04.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1130391"></a>Multiplying three matrices in different orders</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130431"></a><b class="fm-exercise-head">Exercise 5.21</b>: Projection onto the <i class="fm-in-times-italic1">y</i>,<i class="fm-in-times-italic1">z</i> plane and onto the <i class="fm-in-times-italic1">x</i>,<i class="fm-in-times-italic1">z</i> plane are also linear maps from 3D to 2D. What are their matrices?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130432"></a><b class="fm-exercise-head">Solution</b>: Projection onto the <i class="fm-in-times-italic1">y</i>,<i class="fm-in-times-italic1">z</i> plane deletes the <i class="fm-in-times-italic1">x</i>-coordinate. The matrix for this operation is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_UN04_EQ43.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130439"></a>Likewise, projection onto the <i class="fm-in-times-italic1">x</i>,<i class="fm-in-times-italic1">z</i> plane deletes the <i class="fm-in-times-italic1">y</i>-coordinate:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_UN04_EQ44.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130443"></a>For example,</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_UN04_EQ45.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130501"></a><b class="fm-exercise-head">Exercise 5.22</b>: Show by example that the <code class="fm-code-in-text1">infer_matrix</code> function from a previous exercise can create matrices for linear functions whose inputs and outputs have different dimensions.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130502"></a><b class="fm-exercise-head">Solution</b>: One function we could test would be projection onto the <i class="fm-in-times-italic1">x</i>,<i class="fm-in-times-italic1">y</i> plane, which takes in 3D vectors and returns 2D vectors. We can implement this linear transformation as a Python function and then infer its 2<span class="fm-in-cambria">×</span>3 matrix:</p>
+        <pre class="programlisting">&gt;&gt;&gt; def project_xy(<i class="fm-in-times-italic1">v</i>):
+...     x,y,z = v
+...     return (x,y)
+...
+&gt;&gt;&gt; infer_matrix(3,project_xy)
+((1, 0, 0), (0, 1, 0))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1130505"></a>Note that we had to supply the dimension of <i class="fm-italics">input</i> vectors<a id="marker-1130504"></a> as an argument, so that we can build the correct standard basis vectors to test under the action of <code class="fm-code-in-text1">project_xy</code>. Once <code class="fm-code-in-text1">project_xy</code> is passed the 3D standard basis vectors, it automatically outputs 2D vectors to supply the columns of the matrix.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130528"></a><b class="fm-exercise-head">Exercise 5.23</b>: Write a 4<span class="fm-in-cambria">×</span>5 matrix that acts on a 5D vector by deleting the third of its five entries, thereby producing a 4D vector. For instance, multiplying it with the column vector form of (1, 2, 3, 4, 5) should return (1, 2, 4, 5).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130532"></a><b class="fm-exercise-head">Solution</b>: The matrix is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_UN04_EQ46.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130533"></a>You can see that the first, second, fourth, and fifth coordinates of an input vector form the four coordinates of the output vector:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_UN05.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1137549"></a>The 1s in the matrix indicate where coordinates of the input vector end up in the output vector.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130678"></a><b class="fm-exercise-head">Exercise 5.24−Mini Project</b>: Consider the vector of six variables (<i class="fm-in-times-italic1">l</i>, <i class="fm-in-times-italic1">e</i>, <i class="fm-in-times-italic1">m</i>, <i class="fm-italics">o</i>, <i class="fm-in-times-italic1">n</i>, <i class="fm-in-times-italic1">s</i>). Find the matrix for the linear transformation that acts on this vector to produce the vector (<i class="fm-in-times-italic1">s</i>, <i class="fm-italics">o</i>, <i class="fm-in-times-italic1">l</i>, <i class="fm-in-times-italic1">e</i>, <i class="fm-in-times-italic1">m</i>, <i class="fm-in-times-italic1">n</i>) as a result.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130679"></a><b class="fm-exercise-head">Hint</b>: The third coordinate of the output equals the first coordinate of the input, so the transformation must send the standard basis vector (1, 0, 0, 0, 0, 0) to (0, 0, 1, 0, 0, 0).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130683"></a><b class="fm-exercise-head">Solution</b>:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F23_Orland_UN05_EQ47.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1130684"></a>This matrix reorders the entries of a 6D vector in the specified way.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1130718"></a><b class="fm-exercise-head">Exercise 5.25</b>: What valid products can be made from the matrices <i class="fm-italics">M</i>, <i class="fm-italics">N</i>, <i class="fm-in-times-italic1">P</i>, and <i class="fm-italics">Q</i> from section 5.2.5? Include in your consideration the products of matrices with themselves. For those products that are valid, what are the dimensions of the matrix products?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1130719"></a><b class="fm-exercise-head">Solution</b>: <i class="fm-italics">M</i> is 3<span class="fm-in-cambria">×</span>3, <i class="fm-italics">N</i> is 2<span class="fm-in-cambria">×</span>2, and <i class="fm-in-times-italic1">P</i> and <i class="fm-italics">Q</i> are both 2<span class="fm-in-cambria">×</span>3. The product of <i class="fm-italics">M</i> with itself, <i class="fm-italics">MM</i> = <i class="fm-italics">M</i><sup class="fm-superscript1">2</sup> is <a id="marker-1134745"></a>valid <a id="marker-1134750"></a>and a 3<span class="fm-in-cambria">×</span>3 matrix, so is <i class="fm-italics">NN</i> = <i class="fm-italics">N</i><sup class="fm-superscript1">2</sup> which is a 2<span class="fm-in-cambria">×</span>2 matrix. Apart from that, <i class="fm-italics">PM</i>, <i class="fm-italics">QM</i>, <i class="fm-italics">NP</i>, and <i class="fm-italics">NQ</i> are all 3<span class="fm-in-cambria">×</span>2 matrices.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_17"><a id="pgfId-1116246"></a><a id="id_uvcj9ldi4ivk"></a>5.3 Translating vectors with matrices</h2>
+
+  <p class="body"><a id="pgfId-1116247"></a>One advantage <a id="marker-1134760"></a>of matrices is that <a id="marker-1134770"></a>computations look the same in any number of dimensions. We don’t need to worry about picturing the configurations of vectors in 2D or 3D; we can simply plug them into the formulas for matrix multiplication or use them as inputs to our Python <code class="fm-code-in-text">matrix_multiply</code>. This is especially useful when we want to do computations in more than three dimensions.</p>
+
+  <p class="body"><a id="pgfId-1116248"></a>The human brain isn’t wired to picture vectors in four or five dimensions, let alone 100, but we already saw we can do computations with vectors in higher dimensions. In this section, we’ll cover a computation that <i class="fm-italics">requires</i> doing computation in higher dimensions: translating vectors using a matrix.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1116250"></a><a id="id_8wgo31am17zu"></a>5.3.1 Making plane translations linear</h3>
+
+  <p class="body"><a id="pgfId-1116251"></a>In the last <a id="marker-1134818"></a>chapter, we <a id="marker-1135237"></a>showed that translations are not linear transformations. When we move every point in the plane by a given vector, the origin moves and vector sums are not preserved. How can we hope to execute a 2D transformation with a matrix if it is not a linear transformation?</p>
+
+  <p class="body"><a id="pgfId-1116252"></a>The trick is that we can think of our 2D points to translate as living in 3D. Let’s return to our dinosaur from chapter 2. The dinosaur was composed of 21 points, and we could connect these in order to create the outline of the figure:</p>
+  <pre class="programlisting">from vector_drawing import *
+ 
+dino_vectors = [(6,4), (3,1), (1,2), (−1,5), (−2,5), (−3,4), (−4,4),
+    (−5,3), (−5,2), (−2,2), (−5,1), (−4,0), (−2,1), (−1,0), (0,<span class="fm-in-cambria">−</span>3),
+    (−1,<span class="fm-in-cambria">−</span>4), (1,<span class="fm-in-cambria">−</span>4), (2,<span class="fm-in-cambria">−</span>3), (1,−2), (3,−1), (5,1)
+]
+ 
+draw(
+    Points(*dino_vectors),
+    Polygon(*dino_vectors)
+)</pre>
+
+  <p class="body"><a id="pgfId-1116264"></a>The result is the familiar 2D dinosaur (figure 5.24).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F24_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137591"></a>Figure 5.24 The familiar 2D dinosaur from chapter 2</p>
+
+  <p class="body"><a id="pgfId-1116270"></a>If we want to translate the dinosaur to the right by 3 units and up by 1 unit, we could simply add the vector (3, 1) to each of the dinosaur’s vertices. But this isn’t a linear map, so we can’t produce a 2<span class="fm-in-cambria">×</span>2 matrix that does this translation. If we think of the dinosaur as an inhabitant of 3D space instead of the 2D plane, it turns out we <i class="fm-italics">can</i> formulate the translation as a matrix.</p>
+
+  <p class="body"><a id="pgfId-1116271"></a>Bear with me for a moment while I show you the trick; I’ll explain how it works shortly. Let’s give every point of the dinosaur a z-coordinate of 1. Then we can draw it in 3D by connecting each of the points with segments and see that the resulting polygon lies on the plane where <i class="fm-in-times-italic">z</i> = 1 (figure 5.25). I’ve created a helper function called <code class="fm-code-in-text">polygon_segments_3d</code> to get the segments of the dinosaur polygon in 3D<a id="id_Hlk43064342"></a>.</p>
+  <pre class="programlisting">from draw3d import *
+def polygon_segments_3d(points,color='blue'):
+    count = len(points)
+    return [Segment3D(points[i], points[(i+1) % count],color=color) for i in range(0,count)]
+
+dino_3d = [(x,y,1) for x,y in dino_vectors]
+
+draw3d(
+    Points3D(*dino_3d, color='blue'),
+    *polygon_segments_3d(dino_3d)
+)</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F25_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137635"></a>Figure 5.25 The same dinosaur with each of its vertices given a z-coordinate of 1</p>
+
+  <p class="body"><a id="pgfId-1116290"></a>Figure 5.26 shows a matrix that “skews” 3D space, so that the origin stays put, but the plane where <i class="fm-in-times-italic">z</i> = 1 is translated as desired. Trust me for now! I’ve highlighted the numbers relating to the translation that you should pay attention to.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F26_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137679"></a>Figure 5.26 A magic matrix that moves the plane z = 1 by +3 in the <i class="fm-in-times-italic">x</i> direction and by +1 in the <i class="fm-in-times-italic">y</i> direction</p>
+
+  <p class="body"><a id="pgfId-1116296"></a>We can apply this matrix to each vertex of the dinosaur and then voila! The dinosaur is translated by (3, 1) in its plane (figure 5.27).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F27_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137723"></a>Figure 5.27 Applying the matrix to every point keeps the dinosaur in the same plane, but translates it within the plane by (3, 1)..</p>
+
+  <p class="body"><a id="pgfId-1116302"></a>Here’s the code:</p>
+  <pre class="programlisting">magic_matrix = (
+    (1,0,3),
+    (0,1,1),
+    (0,0,1))
+
+translated = [multiply_matrix_vector(magic_matrix, v) for <i class="fm-in-times-italic1">v</i>  in dino_vectors_3d]</pre>
+
+  <p class="body"><a id="pgfId-1130915"></a>For clarity, we could then delete the z-coordinates again and show the translated dinosaur in the plane with the original one (figure 5.28).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F28_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137787"></a>Figure 5.28 Dropping the translated dinosaur back into 2D</p>
+
+  <p class="body"><a id="pgfId-1130912"></a>You can reproduce the code and check the coordinates to see that the dinosaur was indeed translated by (3, 1) in the <a id="marker-1134827"></a>final picture. <a id="marker-1134837"></a>Now let me show you how the trick works.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1116312"></a><a id="id_52xfozlg7qcq"></a>5.3.2 Finding a 3D matrix for a 2D translation</h3>
+
+  <p class="body"><a id="pgfId-1116313"></a>The columns of our <a id="marker-1134878"></a>“magic” <a id="marker-1134888"></a>matrix, like the columns of any matrix, tell us where the standard basis vectors end up after being transformed. Calling this matrix <i class="fm-in-times-italic">T</i>, the vectors <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> would be transformed into the vectors <i class="fm-in-times-italic">T</i> <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0, 0), <i class="fm-in-times-italic">T</i> <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1, 0), and <i class="fm-in-times-italic">T</i> <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> = (3, 1, 1). This means <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> are unaffected, and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> changes only its <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i> -components (figure 5.29).</p>
+
+  <p class="body"><a id="pgfId-1116319"></a></p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F29_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137838"></a>Figure 5.29 This matrix doesn’t move e1 or e2, but it does move e3.</p>
+
+  <p class="body"><a id="pgfId-1137832"></a>Any point in 3D and, therefore, any point on our dinosaur is built as a linear combination of <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>. For instance, the tip of the dinosaur’s tail is at (6, 4, 1), which is 6<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> + 4<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>. Because <i class="fm-in-times-italic">T</i> doesn’t move <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> or <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, only the effect on <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> moves the point, <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>) = <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> + (3, 1, 0), so that the point is translated by +3 in the <i class="fm-in-times-italic">x</i> direction and +1 in the <i class="fm-in-times-italic">y</i> direction. You can also see this algebraically. Any vector (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, 1) is translated by (3, 1, 0) by this matrix:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F29_Orland_EQ48.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1116325"></a>If you want to translate a collection of 2D vectors by some vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>), the general steps are as follows:</p>
+
+  <ol class="calibre12">
+    <li class="fm-list-numbered">
+      <p class="list"><a id="pgfId-1116326"></a>Move the 2D vectors into the plane in 3D space, where <i class="fm-in-times-italic">z</i> = 1 and each has a z-coordinate of 1.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <a class="calibre10" id="pgfId-1116327"></a>
+
+      <p class="list">Multiply the vectors by the matrix with your given choices of <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> plugged in:</p>
+
+      <p class="fm-figure"><span class="calibre26"><img alt="" class="calibre1" src="../Images/CH05_F29_Orland_EQ49.png"/></span></p>
+    </li>
+
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-1116332"></a>Delete the z-coordinate of all of the vectors so you are left with 2D vectors as a result.</p>
+    </li>
+  </ol>
+
+  <p class="body"><a id="pgfId-1116333"></a>Now that we can do translations with matrices, <a id="marker-1134933"></a>we can creatively <a id="marker-1134948"></a>combine them with other linear transformations.</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1116335"></a><a id="id_cdq9fu25l30o"></a>5.3.3 Combining translation with other linear transformations<a id="marker-1135314"></a></h3>
+
+  <p class="body"><a id="pgfId-1116336"></a>In the <a id="marker-1134958"></a>previous <a id="marker-1134963"></a>matrix, the first two columns are exactly <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, meaning that only the change in <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> moves a figure. We don’t want <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) or <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) to have any z-component because that would move the figure out of the plane <i class="fm-in-times-italic">z</i> = 1. But we can modify or interchange the other components (figure 5.30).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F30_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137888"></a>Figure 5.30 Let’s see what happens when we move T(e1) and T(e2) in the x,y plane.</p>
+
+  <p class="body"><a id="pgfId-1116342"></a>It turns out you can put any 2<span class="fm-in-cambria">×</span>2 matrix in the top left (as shown by figure 5.30) by doing the corresponding linear transformation <i class="fm-italics">in addition</i> to the translation specified in the third column. For instance, this matrix</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F30_Orland_EQ50.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1131118"></a>produces a <span class="fm-in-cambria">90°</span> counterclockwise rotation. Inserting it in the translation matrix, we get a new matrix that rotates the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane by <span class="fm-in-cambria">90°</span> and then translates it by (3, 1) as shown in figure 5.31.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F31_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137932"></a>Figure 5.31 A matrix that rotates e1 and e3 by <span class="fm-in-cambria">90°</span> and translates e3 by (3, 1). Any figure in the plane where z = 1 experiences both transformations.</p>
+
+  <p class="body"><a id="pgfId-1116353"></a>To show this works, we can carry out this transformation on all of the 3D dinosaur vertices in Python. Figure 5.32 shows the output of the following code:</p>
+  <pre class="programlisting">rotate_and_translate = ((0,−1,3),(1,0,1),(0,0,1))
+rotated_translated_dino = [
+    multiply_matrix_vector(rotate_and_translate, v) 
+    for v  in dino_vectors_3d]</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F32b_Orland.png"/><img alt="" class="calibre1" src="../Images/CH05_F32a_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1116363"></a>Figure 5.32 The original dinosaur (left) and a second dinosaur (right) that is both rotated and translated by a single matrix</p>
+
+  <p class="body"><a id="pgfId-1116364"></a>Once you get the hang of doing 2D translations with a matrix, you can apply the same approach to doing a 3D translation. To<a id="marker-1134893"></a> do <a id="marker-1134898"></a>that, you’ll have to use a 4<span class="fm-in-cambria">×</span>4 matrix and enter the mysterious world of 4D.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1116366"></a><a id="id_2ul2ortj6qao"></a>5.3.4 Translating 3D objects in a 4D world</h3>
+
+  <p class="body"><a id="pgfId-1116367"></a>What<a id="marker-1134913"></a> is the <a id="marker-1134928"></a>fourth <a id="marker-1134970"></a>dimension? A 4D vector would be an arrow with some length, width, depth, and one other dimension. When we built 3D space from 2D space, we added a z-coordinate. That means that 3D vectors can live in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane, where <i class="fm-in-times-italic">z</i> = 0, or they can live in any other parallel plane, where <i class="fm-in-times-italic">z</i> takes a different value. Figure 5.33 shows some of these parallel planes.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F33_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1137995"></a>Figure 5.33 Building 3D space out of a stack of parallel planes, each looking like the x,y plane but at different z-coordinates</p>
+
+  <p class="body"><a id="pgfId-1116373"></a>We can think of four dimensions in analogy to this model: a collection of 3D spaces that are indexed by some fourth coordinate. One way to interpret the fourth coordinate is “time.” Each snapshot at a given time is a 3D space, but the collection of all of the snapshots is a fourth dimension called a <i class="fm-italics">spacetime</i> <a id="marker-1116374"></a>. The origin of the spacetime is the origin of the space at the moment when time, <i class="fm-in-times-italic">t</i>, is equal to 0 (figure 5.34).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F34_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1116379"></a>Figure 5.34 An illustration of 4D spacetime, similar to how a slice of 3D space at a given z value is a 2D plane and a slice of 4D spacetime at a given t value is a 3D space</p>
+
+  <p class="body"><a id="pgfId-1116380"></a>This is the starting point for Einstein’s theory of relativity. (In fact, you are now qualified to go read about this theory because it is based on 4D spacetime and linear transformations given by 4<span class="fm-in-cambria">×</span>4 matrices.)</p>
+
+  <p class="body"><a id="pgfId-1116381"></a>Vector math is indispensable in higher dimensions because we quickly run out of good analogies. For five, six, seven, or more dimensions, I have a hard time picturing them, but the coordinate math is no harder than in two or three dimensions. For our current purposes, it’s sufficient to think of a 4D vector as a four-tuple of numbers.</p>
+
+  <p class="body"><a id="pgfId-1116382"></a>Let’s replicate the trick that worked for translating 2D vectors in 3D. If we start with a 3D vector like (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) and we want to translate it by a vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>), we can attach a fourth coordinate of 1 to the target vector and use an analogous 4D matrix to do the translation. Doing the matrix multiplication confirms that we get the desired result (figure 5.35).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F35_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1138051"></a>Figure 5.35 Giving the vector (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) a fourth coordinate of 1, we can translate the vector by (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) using this matrix.</p>
+
+  <p class="body"><a id="pgfId-1116388"></a>This matrix increases the <i class="fm-in-times-italic">x</i>-coordinate by <i class="fm-in-times-italic">a</i>, the <i class="fm-in-times-italic">y</i>-coordinate by <i class="fm-in-times-italic">b</i>, and the z-coordinate by <i class="fm-in-times-italic">c</i>, so it does the transformation required to translate by the vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>). We can package in a Python function the work of adding a fourth coordinate, applying this 4<span class="fm-in-cambria">×</span>4 matrix, and then deleting the fourth coordinate:</p>
+  <pre class="programlisting">def translate_3d(translation):
+    def new_function(target):                    <span class="fm-combinumeral">❶</span>
+        a,b,<i class="fm-in-times-italic1">c</i> = translation
+        x,y,z = target
+        matrix = ((1,0,0,a),
+            0,1,0,b),
+            (0,0,1,c),
+            (0,0,0,1))                           <span class="fm-combinumeral">❷</span>
+        vector = (x,y,z,1)
+        x_out, y_out, z_out, _ =\
+          multiply_matrix_vector(matrix,vector)  <span class="fm-combinumeral">❸</span>
+        return (x_out,y_out,z_out)
+    return new_function</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1136457"></a><span class="fm-combinumeral">❶</span> The translate_3d function takes a translation vector and returns a new function that applies that translation to a 3D vector.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1136478"></a><span class="fm-combinumeral">❷</span> Builds the 4<span class="fm-in-cambria">×</span>4 matrix for the translation, and on the next line, turns (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, <i class="fm-in-times-italic1">z</i>) into a 4D vector with a fourth coordinate 1</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1136495"></a><span class="fm-combinumeral">❸</span> Does the 4D matrix transformation</p>
+
+  <p class="body"><a id="pgfId-1116397"></a>Finally, drawing the teapot as well as the teapot translated by (2, 2, <span class="fm-in-cambria">−</span>3), we can see that the teapot moves appropriately. You can confirm this by running matrix_translate _teapot.py. You should see the same image as in figure 5.36.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH05_F36b_Orland.png"/><img alt="" class="calibre1" src="../Images/CH05_F36a_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1116406"></a>Figure 5.36 The untranslated teapot (left) and a translated teapot (right). As expected, the translated teapot moves up and to the right, and away from our viewpoint.</p>
+
+  <p class="body"><a id="pgfId-1116407"></a>With translation packaged as a matrix operation, we can now combine that operation with other 3D linear transformations and do them in one step. It turns out you <i class="fm-italics">can</i> interpret the artificial fourth-coordinate in this setup as time, <i class="fm-in-times-italic">t</i>.</p>
+
+  <p class="body"><a id="pgfId-1116408"></a>The two images in figure 5.36 could be snapshots of a teapot at <i class="fm-in-times-italic">t</i> = 0 and <i class="fm-in-times-italic">t</i> = 1, which is moving in the direction (2, 2, <span class="fm-in-cambria">−</span>3) at a constant speed. If you’re looking for a fun challenge, you can replace the vector (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>, 1) in this implementation with vectors of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>, <i class="fm-in-times-italic">t</i>), where the coordinate <i class="fm-in-times-italic">t</i> changes over time. With <i class="fm-in-times-italic">t</i> = 0 and <i class="fm-in-times-italic">t</i> = 1, the teapot should match the frames in figure 5.36, and at the time between the two, it should move smoothly between the two positions. If you can figure out how this works, you’ll catch up with Einstein!</p>
+
+  <p class="body"><a id="pgfId-1116409"></a>So far, we’ve focused exclusively on vectors as points in space that we can render to a computer screen. This is clearly an important use case, but it only scratches the surface of what we can do with vectors and matrices. The study of how vectors and linear transformations work together in general is called <i class="fm-italics">linear algebra</i> <a id="marker-1134993"></a>, and I’ll give you a broader picture of this subject in the<a id="marker-1134994"></a> next chapter, <a id="marker-1135002"></a>along <a id="marker-1135007"></a>with some fresh examples that are relevant to programmers.</p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1116412"></a><a id="id_o0vimge892pb"></a>5.3.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1131446"></a><b class="fm-exercise-head">Exercise 5.26</b>: Show that <a id="marker-1135017"></a>the <a id="marker-1135022"></a>3D “magic” matrix transformation does not work if you move a 2D figure such as the dinosaur we have been using to the plane <i class="fm-in-times-italic1">z</i> = 2. What happens instead?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131447"></a><b class="fm-exercise-head">Solution</b>: Using <code class="fm-code-in-text1">[(x,y,2) for x,y in dino_vectors]</code> and applying the same 3<span class="fm-in-cambria">×</span>3 matrix, the dinosaur is translated twice as far by the vector (6, 2) instead of (3, 1). This is because the vector (0, 0, 1) is translated by (3, 1), and the transformation is linear.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN06.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1131451"></a>A dinosaur in the plane where z = 2 is translated twice as far by the same matrix.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1131551"></a><b class="fm-exercise-head">Exercise 5.27</b>: Come up with a matrix to translate the dinosaur by −2 units in the <i class="fm-in-times-italic1">x</i> direction and −2 units in the <i class="fm-in-times-italic1">y</i> direction. Execute the transformation and show the result.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131555"></a><b class="fm-exercise-head">Solution</b>: Replacing the values 3 and 1 in the original matrix with −2 and −2, we get</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN06_EQ51b.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131577"></a>The dinosaur, indeed, translates down and to the left by the vector (−2, −2).</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN07.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1131610"></a><b class="fm-exercise-head">Exercise 5.28</b>: Show that any matrix of the form</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN07_EQ52.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131611"></a>doesn’t affect the z-coordinate of a 3D column vector it is multiplied by.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131612"></a><b class="fm-exercise-head">Solution</b>: If the initial z-coordinate of a 3D vector is a number <i class="fm-in-times-italic1">z</i>, this matrix leaves that coordinate unchanged:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN07_EQ53.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1131643"></a><b class="fm-exercise-head">Exercise 5.29−Mini Project</b>: Find a 3<span class="fm-in-cambria">×</span>3 matrix that rotates a 2D figure in the plane <i class="fm-in-times-italic1">z</i> = 1 by <span class="fm-in-cambria">45°</span>, decreases its size by a factor of 2, and translates it by the vector (2, 2). Demonstrate that it works by applying it to the vertices of the dinosaur.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131644"></a><b class="fm-exercise-head">Solution</b>: First, let’s find a 2<span class="fm-in-cambria">×</span>2 matrix for rotating a 2D vector by <span class="fm-in-cambria">45°</span>:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from vectors import rotate2d
+&gt;&gt;&gt; from transforms import *
+&gt;&gt;&gt; from math import pi
+&gt;&gt;&gt; rotate_45_degrees = curry2(rotate2d)(pi/4)          <span class="fm-combinumeral">❶</span>
+&gt;&gt;&gt; rotation_matrix = infer_matrix(2,rotate_45_degrees)
+&gt;&gt;&gt; rotation_matrix
+((0.7071067811865476, -0.7071067811865475), (0.7071067811865475, 0.7071067811865476))</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1136674"></a><span class="fm-combinumeral">❶</span> Builds a function that executes rotate2d with an angle of <span class="fm-in-cambria">45°</span> (or with 4 radians) for an input 2D vector</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131650"></a>This matrix is approximately:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN07_EQ54.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131654"></a>Similarly, we can find a matrix to scale by a factor of <span class="fm-in-cambria">½</span>:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN07_EQ55.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131655"></a>Multiplying these matrices together, we accomplish both transformations at once with this code:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from matrices import *
+&gt;&gt;&gt; scale_matrix = ((0.5,0),(0,0.5))
+&gt;&gt;&gt; rotate_and_scale = matrix_multiply(scale_matrix,rotation_matrix)
+&gt;&gt;&gt; rotate_and_scale
+((0.3535533905932738, -0.35355339059327373), (0.35355339059327373, 0.3535533905932738))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1131660"></a>And this is a 3<span class="fm-in-cambria">×</span>3 matrix that translates the dinosaur by (2, 2) in the plane where <i class="fm-in-times-italic1">z</i> = 1:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN07_EQ56.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131748"></a>We can plug our 2<span class="fm-in-cambria">×</span>2 rotation and scaling matrix into the top left of this matrix, giving us the final matrix that we want:</p>
+        <pre class="programlisting">&gt;&gt;&gt; ((a,b),(c,d)) = rotate_and_scale
+&gt;&gt;&gt; final_matrix = ((a,b,2),(c,d,2),(0,0,1))
+&gt;&gt;&gt; final_matrix
+((0.3535533905932738, -0.35355339059327373, 2), (0.35355339059327373, 0.3535533905932738, 2), (0, 0, 1))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1131790"></a>Moving the dinosaur to the plane <i class="fm-in-times-italic1">z</i> = 1, applying this matrix in 3D, and then projecting back to 2D gives us the rotated, scaled, and translated dinosaur, using only one matrix multiplication as shown here:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN08.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1131862"></a><b class="fm-exercise-head">Exercise 5.30</b>: The matrix in the preceding exercise rotates the dinosaur by <span class="fm-in-cambria">45°</span> and then translates it by (3, 1). Using matrix multiplication, build a matrix that does this in the opposite order.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131863"></a><b class="fm-exercise-head">Solution</b>: If the dinosaur is in the plane where <i class="fm-in-times-italic1">z</i> = 1, then the following matrix does a rotation by <span class="fm-in-cambria">90°</span> with <i class="fm-italics">no</i> translation:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN08_EQ57.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131867"></a>We want to translate first and then rotate, so we multiply this rotation matrix by the translation matrix:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH05_F36b_Orland_UN08_EQ58.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131897"></a>This is different from the other matrix, which rotates before the translation. In this case, we see that the translation vector (3, 1) is affected by the <span class="fm-in-cambria">90°</span> rotation. The new effective translation is (−1, 3).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1131923"></a><b class="fm-exercise-head">Exercise 5.31</b>: Write a function analogous to <code class="fm-code-in-text1">translate_3d</code> called <code class="fm-code-in-text1">translate_4d</code> that uses a 5<span class="fm-in-cambria">×</span>5 matrix to translate a 4D vector by another 4D vector. Run an example to show that the coordinates are translated.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1131924"></a><b class="fm-exercise-head">Solution</b>: The setup is the same, except that we lift the 4D vector to 5D by giving it a fifth coordinate of 1:</p>
+        <pre class="programlisting">def translate_4d(translation):
+    def new_function(target):
+        a,b,c,d = translation
+        x,y,z,w = target
+        matrix = (
+            (1,0,0,0,a),
+            (0,1,0,0,b),
+            (0,0,1,0,c),
+            (0,0,0,1,d),
+            (0,0,0,0,1))
+        vector = (x,y,z,w,1)
+        x_out,y_out,z_out,w_out,_ = multiply_matrix_vector(matrix,vector)
+        return (x_out,y_out,z_out,w_out)
+    return new_function</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1131926"></a>We can see that the translation works (the effect is the same as adding the two vectors):</p>
+        <pre class="programlisting">&gt;&gt;&gt; translate_4d((1,2,3,4))((10,20,30,40))
+(11, 22, 33, 44)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1116501"></a>In the previous chapters, we used visual examples in 2D and 3D to motivate vector and matrix arithmetic. As we’ve gone along, we’ve put more emphasis on computation. At the end of this chapter, we calculated vector transformations in higher dimensions where we didn’t have any physical insight. This is one of the benefits of linear algebra: it gives you the tools to solve geometric problems that are too complicated <a id="marker-1135032"></a>to picture. <a id="marker-1135037"></a>We’ll survey the broad range of this application <a id="marker-1135047"></a>in the<a id="marker-1135052"></a> next chapter.</p>
+
+  <h2 class="fm-head" id="heading_id_23"><a id="pgfId-1116502"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116503"></a>A linear transformation is defined by what it does to standard basis vectors. When you apply a linear transformation to the standard basis, the resulting vectors contain all the data required to do the transformation. This means that only nine numbers are required to specify a 3D linear transformation of any kind (the three coordinates of each of these three resulting vectors). For a 2D linear transformation, four numbers are required.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116504"></a>In matrix notation, we represent a linear transformation by putting these numbers in a rectangular grid. By convention, you build a matrix by applying a transformation to the standard basis vectors and putting the resulting coordinate vectors side by side as columns.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116505"></a>Using a matrix to evaluate the result of the linear transformation it represents on a given vector is called <i class="fm-italics">multiplying the matrix by the vector</i>. When you do this multiplication, the vector is typically written as a column of its coordinates from top to bottom rather than as a tuple.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116506"></a>Two square matrices can also be multiplied together. The resulting matrix represents the composition of the linear transformations of the original two matrices.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116507"></a>To calculate the product of two matrices, you take the dot products of the rows of the first with the columns of the second. For instance, the dot product of row <i class="fm-in-times-italic">i</i> of the first matrix and column <i class="fm-in-times-italic">j</i> of the second matrix gives you the value in row <i class="fm-in-times-italic">i</i> and column <i class="fm-in-times-italic">j</i> of the product.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116508"></a>As square matrices represent linear transformations, non-square matrices represent linear functions from vectors of one dimension to vectors of another dimension. That is, these functions send vector sums to vector sums and scalar multiples to scalar multiples.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116509"></a>The dimension of a matrix tells you what kind of vectors its corresponding linear function accepts and returns. A matrix with <i class="fm-in-times-italic">m</i> rows and <i class="fm-in-times-italic">n</i> columns is called an <i class="fm-in-times-italic">m</i> -by- <i class="fm-in-times-italic">n</i> matrix (sometimes written <i class="fm-in-times-italic">m</i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic">n</i>). It defines a linear function from <i class="fm-in-times-italic">n</i> -dimensional space to <i class="fm-in-times-italic">m</i> -dimensional space.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1116510"></a>Translation is <i class="fm-italics">not</i> a linear function, but it can be made linear if you perform it in a higher dimension. This observation allows us to do translations (simultaneously with other linear transformations) by matrix<a id="marker-1135057"></a> multiplication.</p>
+    </li>
+  </ul>
+</body>
+</html>

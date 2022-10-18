@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Part 3</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1079531"></a><a id="pgfId-1107438"></a><a id="id_vkac9x82ali"></a>Part 3. Machine learning applications</h1>
+  </div>
+
+  <p class="body"><a id="pgfId-1107439"></a><span class="fm-part-initial-cap">I</span>n part 3, we apply what you’ve learned about mathematical functions, vectors, and calculus to implement some machine learning algorithms. We hear a lot of hype around machine learning, so it’s worth being precise about what it actually is. Machine learning is part of the field of <i class="fm-italics">artificial intelligence</i>, or AI, which studies how to write computer programs to accomplish tasks intelligently. If you’ve ever played a video game against a computer adversary, you’ve interacted with an artificial intelligence. Such an adversary is programmed (usually) with a set of rules which help it destroy you, outmaneuver you, or otherwise defeat you.</p>
+
+  <p class="body"><a id="pgfId-1107440"></a>For an algorithm to be classified as <i class="fm-italics">machine learning</i>, it must not only operate autonomously and intelligently, but it must learn from experience. That means that the more data it receives, the better it performs at the task at hand. The next three chapters focus on a specific kind of machine learning called <i class="fm-italics">supervised learning</i>. When we write supervised learning algorithms, we give them <i class="fm-italics">training</i> data sets with pairs of inputs and corresponding outputs, and the algorithms should then be able to look at new inputs and come up with correct outputs on their own. In this sense, the result of training a machine learning algorithm is a new mathematical function that can effectively map some kind of input data to some kind of decision as an output.</p>
+
+  <p class="body"><a id="pgfId-1107441"></a>In chapter 14, we cover a simple supervised learning algorithm called <i class="fm-italics">linear regression</i> and use it to predict the price of a used car based on its mileage. The training data set consists of the known mileage and price for many used cars and, without any prior knowledge about how cars are valued, our algorithm learns to put a price on a car based on its mileage. The linear regression algorithm works by taking pairs (<i class="fm-in-times-italic">x</i>, <i class="fm-italics">p</i>) of a mileage <i class="fm-in-times-italic">x</i> and a price <i class="fm-italics">p</i> and finding the linear function that best approximates them. This amounts to finding the equation of the line that comes closest to all of the known (<i class="fm-in-times-italic">x</i>, <i class="fm-italics">p</i>) points in 2D. Much of our work is figuring out what the word “closest” should mean!</p>
+
+  <p class="body"><a id="pgfId-1107442"></a>In chapters 15 and 16, we cover a different type of supervised learning problem called <i class="fm-italics">classification</i>. For any numeric input data point, we want to answer a yes/no or multiple-choice question about it. In chapter 15, we create an algorithm that looks at mileage and price data for two different models of cars, and it will try to correctly identify the model of car based on new data it sees. Again, this amounts to finding a function that comes “closest” to the values in a training data set, and we have to decide what closeness means for a function answering a yes or no question.</p>
+
+  <p class="body"><a id="pgfId-1107443"></a>In chapter 16, the classification problem is harder. The input data set are images of hand-drawn digits (from 0 to 9), and the desired output will be the digit that is drawn. As we saw in chapter 6, an image is made up of a lot of data; we can think of images as living in vector spaces with a lot of different dimensions. To deal with this complexity, we use a special kind of mathematical function called a <i class="fm-italics">multilayer perceptron</i>. This is a specific kind of artificial neural network, one of the most talked-about machine learning algorithms today.</p>
+
+  <p class="body"><a id="pgfId-1107444"></a>While you may not be a machine learning expert by the end of these three short chapters, I hope you’ll have a solid foundation for further exploration in the subject. Specifically, these chapters should demystify the subject of machine learning for you. We won’t magically imbue our computers with human-like sentience. Instead we’ll process real-world data in Python and then creatively apply the math we’ve seen so far.</p>
+</body>
+</html>

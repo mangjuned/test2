@@ -1,0 +1,1447 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>7</title>
+    
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1131478"></a>7 <a id="id_4cwx06g7tma4"></a>Solving systems of linear equations</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1133057"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1133058"></a>Detecting collisions of objects in a 2D video game</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1133059"></a>Writing equations to represent lines and finding where lines intersect in the plane</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1133060"></a>Picturing and solving systems of linear equations in 3D or beyond</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1133061"></a>Rewriting vectors as linear combinations of other vectors</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1131484"></a>When you<a id="marker-1149430"></a> think <a id="marker-1149435"></a>of algebra, you probably think of problems that require “solving for <i class="fm-in-times-italic">x</i>.” For instance, you probably spent quite a bit of time in algebra class learning to solve equations like 3<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + 2<i class="fm-in-times-italic">x</i> + 4 = 0; that is, figuring out what value or values of <i class="fm-in-times-italic">x</i> make the equation true.</p>
+
+  <p class="body"><a id="pgfId-1131485"></a>Linear algebra, being a branch of algebra, has the same kinds of computational questions. The difference is that what you want to solve for may be a vector or matrix rather than a number. If you take a traditional linear algebra course, you might cover a lot of algorithms to solve these kinds of problems. But because you have Python at your disposal, you only need to know how to recognize the problem you’re facing and choose the right library to find the answer for you.</p>
+
+  <p class="body"><a id="pgfId-1131486"></a>I’m going to cover the most important class of linear algebra problems you’ll see in the wild: <i class="fm-italics">systems of linear equations</i>. These problems boil down to finding points where lines, planes, or their higher dimensional analogies intersect. One example is the infamous high school math problem involving two trains leaving Boston and New York at different times and speeds. But because I don’t assume railroad operation interests you, I’ll use a more entertaining example.</p>
+
+  <p class="body"><a id="pgfId-1131487"></a>In this chapter, we build a simple remake of the classic Asteroids arcade game (figure 7.1). In this game, the player controls a triangle representing a spaceship and fires a laser at polygons floating around it, which represent asteroids. The player must destroy the asteroids to prevent them from hitting and destroying the spaceship.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152022"></a>Figure 7.1 Setup of the classic Asteroids arcade game</p>
+
+  <p class="body"><a id="pgfId-1131493"></a>One of the key mechanics in this game is deciding whether the laser hits an asteroid. This requires us to figure out whether the line defining the laser beam intersects with the line segments outlining the asteroids. If these lines intersect, the asteroid is destroyed. We’ll set up the game first, and then we’ll see how to solve the underlying linear algebra problem.</p>
+
+  <p class="body"><a id="pgfId-1131494"></a>After we implement our game, I’ll show you how this 2D example generalizes to 3D or any number of dimensions. The latter half of this chapter covers a bit more theory, but it will round out your linear algebra education. We’ll have covered many of the major concepts you’d find in a college-level linear algebra class, albeit in less depth. After completing this chapter, you should be well prepared to crack open a denser textbook on linear algebra and fill in the details. But for now, let’s focus on building our game.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1131496"></a><a id="id_x0gpkhllzmda"></a>7.1 Designing an arcade game</h2>
+
+  <p class="body"><a id="pgfId-1131497"></a>In this <a id="marker-1149440"></a>chapter, I<a id="marker-1149445"></a> focus on a<a id="marker-1149450"></a> simplified version of the asteroid game where the ship and asteroids are static. In the source code, you’ll see that I already made the asteroids move, and we’ll cover how to make them move according to the laws of physics in part</p>
+
+  <p class="body"><a id="pgfId-1136738"></a>2 of this book. To get started, we model the entities of the game−the spaceship, the laser, and the asteroids−and show how to render them onscreen.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1131499"></a><a id="id_ctqybrnlkq2"></a>7.1.1 Modeling the game</h3>
+
+  <p class="body"><a id="pgfId-1131500"></a>In this <a id="marker-1149455"></a>section, <a id="marker-1149460"></a>we display <a id="marker-1149465"></a>the spaceship and the asteroids as polygons in the game. As before, we model these as collections of vectors. For instance, we can represent an eight-sided asteroid by eight vectors (indicated by arrows in figure 7.2), and we can connect them to draw its outline.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152075"></a>Figure 7.2 An eight-sided polygon representing an asteroid</p>
+
+  <p class="body"><a id="pgfId-1131506"></a>The asteroid or spaceship translates or rotates as it travels through space, but its shape remains the same. Therefore, we store the vectors representing this shape separately from the <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates of its center, which can change over time. We also store an angle, indicating the rotation of the object at the<a id="marker-1131507"></a> current moment. The <code class="fm-code-in-text">PolygonModel</code> class represents a game entity (the ship or an asteroid) that keeps its shape but can translate or rotate. It’s initialized with a set of vector points that define the outline of the asteroid, and by default, its center <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates and its angle of rotation are set to zero:</p>
+  <pre class="programlisting">class PolygonModel():
+    def __init__(self,points):
+        self.points = points
+        self.rotation_angle = 0
+        self.x = 0
+        self.y = 0</pre>
+
+  <p class="body"><a id="pgfId-1131509"></a>When the spaceship or asteroid moves, we need to apply the translation by <code class="fm-code-in-text">self .x,self.y</code> and the rotation by <code class="fm-code-in-text">self.rotation_angle</code> to find out its actual location. As an exercise, you can give <code class="fm-code-in-text">PolygonModel</code> a method to compute the actual, transformed vectors outlining it.</p>
+
+  <p class="body"><a id="pgfId-1131511"></a>The spaceship and asteroids are specific cases of <code class="fm-code-in-text">PolygonModel</code> that initialize<a id="marker-1131510"></a> automatically with their respective shapes. For instance, the ship has a fixed triangular shape, given by three points:</p>
+  <pre class="programlisting">class Ship(PolygonModel):
+    def __init__(self):
+        super().__init__([(0.5,0), (−0.25,0.25), (−0.25,-0.25)])</pre>
+
+  <p class="body"><a id="pgfId-1131513"></a>For the asteroid, we initialize it with somewhere between 5 and 9 vectors at equally spaced angles and random lengths between 0.5 and 1.0. This randomness gives the asteroids some character:</p>
+  <pre class="programlisting">class Asteroid(PolygonModel):
+    def __init__(self):
+        sides = randint(5,9)                                          <span class="fm-combinumeral">❶</span>
+        vs = [vectors.to_cartesian((uniform(0.5,1.0), 2*pi*i/sides)) 
+                for i in range(0,sides)]                              <span class="fm-combinumeral">❷</span>
+        super().__init__(vs)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150492"></a><span class="fm-combinumeral">❶</span> An asteroid has a random number of sides between 5 and 9.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150509"></a><span class="fm-combinumeral">❷</span> Lengths are randomly selected between 0.5 and 1.0, and the angles are multiples of 2<i class="fm-in-cambria2">π</i>/n, where n is the number of sides.</p>
+
+  <p class="body"><a id="pgfId-1136813"></a>With these objects defined, we <a id="marker-1149470"></a>can turn<a id="marker-1149475"></a> our attention <a id="marker-1149480"></a>to instantiating them and rendering them onscreen.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1131519"></a><a id="id_udyoz9lv8rcs"></a>7.1.2 Rendering the game</h3>
+
+  <p class="body"><a id="pgfId-1131520"></a>For the<a id="marker-1149485"></a> initial <a id="marker-1149490"></a>state of <a id="marker-1149495"></a>the game, we need a ship and several asteroids. The ship can begin at the center of the screen, but the asteroids should be randomly spread out over the screen. We can show an area of the plane ranging from −10 to 10 in the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> directions like this:</p>
+  <pre class="programlisting">ship = Ship()
+
+asteroid_count = 10
+asteroids = [Asteroid() for _ in range(0,asteroid_count)]   <span class="fm-combinumeral">❶</span>
+
+for ast in asteroids:                                       <span class="fm-combinumeral">❷</span>
+    ast.x = randint(−9,9)
+    ast.y = randint(−9,9)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150727"></a><span class="fm-combinumeral">❶</span> Creates a list of a specified number of Asteroid objects, in this case, 10</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150744"></a><span class="fm-combinumeral">❷</span> Sets the position of each object to a random point with coordinates between −10 and 10 so it shows up onscreen</p>
+
+  <p class="body"><a id="pgfId-1137016"></a>I use a 400<span class="fm-in-cambria">×</span>400 pixel screen, which requires transforming the <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates before rendering them. Using PyGame’s built-in 2D graphics instead of OpenGL, the top left pixel on the screen has the coordinate (0, 0) and the bottom right has the coordinate (400, 400). These coordinates are not only bigger, they’re also translated and upside down, so we need to write a <code class="fm-code-in-text">to_pixels</code> function (illustrated in figure 7.3) that does the transformation from our coordinate system to PyGame’s pixels.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152140"></a>Figure 7.3 The <code class="fm-code-in-text">to_pixels</code> function maps an object from the center of our coordinate system to the center of the PyGame screen.</p>
+
+  <p class="body"><a id="pgfId-1131530"></a>With the <code class="fm-code-in-text">to_pixels</code> function implemented, we can write a function to draw a polygon defined by points to the PyGame screen. First, we take the transformed points (translated and rotated) that define the polygon and convert them to pixels. Then we draw them with a PyGame function:</p>
+  <pre class="programlisting">GREEN = (0, 255, 0)
+def draw_poly(screen, polygon_model, color=GREEN):
+    pixel_points = [to_pixels(x,y) for x,y in polygon_model.transformed()]
+    pygame.draw.aalines(screen, color, True, pixel_points, 10)            <span class="fm-combinumeral">❶</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150879"></a><span class="fm-combinumeral">❶</span> Draws lines connecting given points to a specified PyGame object. The True parameter connects the first and last points to create a closed polygon.</p>
+
+  <p class="body"><a id="pgfId-1131534"></a>You can see the whole game loop in the source code, but it basically calls <code class="fm-code-in-text">draw_poly</code> for the ship and each asteroid every time a frame is rendered. The result is our simple triangular spaceship surrounded <a id="marker-1149500"></a>by an <a id="marker-1149505"></a>asteroid field in a PyGame <a id="marker-1149510"></a>window (figure 7.4).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152183"></a>Figure 7.4 The game rendered in a PyGame window</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1131541"></a><a id="id_1mwh61zg3b3x"></a>7.1.3 Shooting the laser</h3>
+
+  <p class="body"><a id="pgfId-1131542"></a>Now it’s<a id="marker-1149515"></a> time<a id="marker-1149520"></a> for the <a id="marker-1149525"></a>most important part: giving our ship a way to defend itself! The player should be able to aim the ship using the left and right arrow keys and then shoot a laser by pressing the spacebar. The laser beam should come out of the tip of the spaceship and extend to the edge of the screen.</p>
+
+  <p class="body"><a id="pgfId-1131543"></a>In the 2D world we’ve invented, the laser beam should be a line segment starting at the <i class="fm-italics">transformed</i> tip of the spaceship and extending in whatever direction the ship is pointed. We can make sure it reaches the end of the screen by making it sufficiently long. Because the laser’s line segment is associated with the state of the <code class="fm-code-in-text">Ship</code> object, we can make a method<a id="marker-1131544"></a> on the <code class="fm-code-in-text">Ship</code> class to compute it:</p>
+  <pre class="programlisting">class Ship(PolygonModel):
+    ...
+   def laser_segment(self):
+        dist = 20. * sqrt(2)                        <span class="fm-combinumeral">❶</span>
+        x,y = self.transformed()[0]                 <span class="fm-combinumeral">❷</span>
+        return ((x,y), 
+            (<i class="fm-in-times-italic1">x</i> + dist * <span class="fm-in-times1">cos</span>(self.rotation_angle), 
+             y + dist*<span class="fm-in-times1">sin</span>(self.rotation_angle)))    <span class="fm-combinumeral">❸</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150948"></a><span class="fm-combinumeral">❶</span> Uses the Pythagorean theorem to find the longest segment that fits onscreen</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150969"></a><span class="fm-combinumeral">❷</span> Gets the value of the first of the definition points (the tip of the ship)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1150986"></a><span class="fm-combinumeral">❸</span> Uses trigonometry to find an endpoint for the laser if it extends dist units from the tip (x,y) at a self.rotation_angle (figure 7.5)</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152232"></a> Figure 7.5 Using trigonometry to find the off-screen point where the laser beam ends</p>
+
+  <p class="body"><a id="pgfId-1131559"></a>In the source code, you can see how to make PyGame respond to keystrokes and draw the laser as a line segment only if the spacebar is pressed. Finally, if the player fires the laser and hits an asteroid, we want to know something happened. In every iteration of the game loop, we want to check each asteroid to see if it is currently hit by the laser. We do this with a <code class="fm-code-in-text">does_intersect(segment)</code> method on the <code class="fm-code-in-text">PolygonModel</code> class, which computes<a id="marker-1131561"></a> whether the input segment intersects any segment of the given <code class="fm-code-in-text">PolygonModel</code>. The final code includes some lines like the following:</p>
+  <pre class="programlisting">laser = ship.laser_segment()                  <span class="fm-combinumeral">❶</span>
+keys = pygame.key.get_pressed()               <span class="fm-combinumeral">❷</span>
+    if keys[pygame.K_SPACE]:
+    draw_segment(*laser)
+
+    for asteroid in asteroids:
+        if asteroid.does_intersect(laser):    <span class="fm-combinumeral">❸</span>
+            asteroids.remove(asteroid)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151152"></a><span class="fm-combinumeral">❶</span> Calculates the line segment representing the laser beam based on the ship’s current position and orientation</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151180"></a><span class="fm-combinumeral">❷</span> Detects which keys are pressed. If the spacebar is pressed, renders the laser beam to the screen with a helper function draw_segment (similar to draw_poly).</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151197"></a><span class="fm-combinumeral">❸</span> For every asteroid, checks whether the laser line segment intersects it. If so, destroys the given asteroid by removing it from the list of asteroids.</p>
+
+  <p class="body"><a id="pgfId-1137388"></a>The work that remains is implementing the <code class="fm-code-in-text">does_intersect(segment)</code> method. In the next section, <a id="marker-1149530"></a>we <a id="marker-1149535"></a>cover the <a id="marker-1149540"></a>math to do so.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1137391"></a><a id="id_9qhj73b5dvpe"></a>7.1.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1137406"></a><b class="fm-exercise-head">Exercise 7.1</b>: <a id="marker-1151380"></a>Implement <a id="marker-1151381"></a><i class="fm-in-times-italic1">a</i> <code class="fm-code-in-text1">transformed()</code> method <a id="marker-1151382"></a>on the <code class="fm-code-in-text1">PolygonModel</code> that returns the points<a id="marker-1151384"></a> of the model translated by the object’s <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">y</i> attributes and rotated by its <code class="fm-code-in-text1">rotation_angle</code> attribute.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1137408"></a><b class="fm-exercise-head">Solution</b>: Make sure to apply the rotation first; otherwise, the translation vector is rotated by the angle as well; for example,</p>
+        <pre class="programlisting">class PolygonModel():
+    ...
+    def transformed(self):
+        rotated = [vectors.rotate2d(self.rotation_angle, v) for <i class="fm-in-times-italic1">v</i>  in self.points]
+        return [vectors.add((self.x,self.y),v) for <i class="fm-in-times-italic1">v</i>  in rotated]</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1137432"></a><b class="fm-exercise-head">Exercise 7.2</b>: Write a function <code class="fm-code-in-text1">to_pixels(x,y)</code> that takes a pair of <i class="fm-in-times-italic1">x</i> − and <i class="fm-in-times-italic1">y</i>-coordinates in the square where −10 &lt; <i class="fm-in-times-italic1">x</i> &lt; 10 and −10 &lt; <i class="fm-in-times-italic1">y</i> &lt; 10 and maps them to the corresponding PyGame <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">y</i> pixel <a id="marker-1151390"></a>coordinates, <a id="marker-1151391"></a>each<a id="marker-1151392"></a> ranging from 0 to 400.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1137451"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">width, height = 400, 400
+def to_pixels(x,y):
+    return (width/2 + width * <i class="fm-in-times-italic1">x</i>/ 20, height/2 − height * y / 20)</pre>
+      </td>
+    </tr>
+  </table>
+
+  
+
+
+<h2 class="fm-head" id="heading_id_8"><a id="pgfId-1131583"></a><a id="id_gp22u3302k2i"></a>7.2 Finding intersection points of lines</h2>
+
+  <p class="body"><a id="pgfId-1131584"></a>The problem<a id="marker-1152289"></a> at <a id="marker-1152290"></a>hand is<a id="marker-1152291"></a> to decide whether the laser beam hits the asteroid. To do this, we’ll look at each line segment defining the asteroid and decide whether it intersects with the segment defining the laser beam. There are a few algorithms we could use, but we’ll solve this as a <i class="fm-italics">system of linear equations in two variables</i>. Geometrically, this means looking at the lines defined by an edge of the asteroid and the laser beam and seeing where they intersect (figure 7.6).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152311"></a>Figure 7.6 The laser hitting an edge of an asteroid (left) and the corresponding system of linear equations (right)</p>
+
+  <p class="body"><a id="pgfId-1131590"></a>Once we know the location of the intersection, we can see whether it lies within the bounds of both segments. If so, the segments collide and the asteroid is hit. We first review equations for lines in the plane, then cover how to find where pairs of lines intersect. Finally, we write<a id="marker-1152300"></a> the code for the <code class="fm-code-in-text">does_intersect</code> method for our game.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1131593"></a><a id="id_oj5eimk6fyar"></a>7.2.1 Choosing the right formula for a line</h3>
+
+  <p class="body"><a id="pgfId-1131594"></a>In the<a id="marker-1149595"></a> previous <a id="marker-1149600"></a>chapter, we <a id="marker-1149605"></a>saw that 1D subspaces of the 2D plane are lines. These subspaces consist of all of the scalar multiples <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> for a single chosen vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Because one such scalar multiple is 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, these lines always pass through the origin, so <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is not quite a general formula for any line we encounter.</p>
+
+  <p class="body"><a id="pgfId-1131595"></a>If we start with a line through the origin and translate it by another vector <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, we can get any possible line. The points on this line have the form <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> for some scalar <i class="fm-in-times-italic">t</i>. For instance, take <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (2, −1). Points of the form <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> (2, −1) lie on a line through the</p>
+
+  <p class="body"><a id="pgfId-1137618"></a>origin. But if we translate by a second vector, <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (2, 3), the points are now (2, 3) + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> (2, −1), which constitute a line that <i class="fm-italics">doesn’t</i> pass through the origin (figure 7.7).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152380"></a>Figure 7.7 Vectors <i class="fm-in-times-italic">z</i> = (2, 3) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (2, −1). Points of the form <i class="fm-in-times-italic">z</i> + t <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">v</i> lie on a straight line.</p>
+
+  <p class="body"><a id="pgfId-1131601"></a>Any line can be described as the points <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> for some selection of vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-italics">all</i> possible scalar multiples <i class="fm-in-times-italic">t</i>. This is probably not the general formula for a line you’re used to. Instead of writing <i class="fm-in-times-italic">y</i> as a function of <i class="fm-in-times-italic">x</i>, we’ve given both the <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates of points on the line as functions of another parameter <i class="fm-in-times-italic">t</i>. Sometimes, you’ll see the line written r(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> to indicate that this line is a vector valued function r of the scalar parameter <i class="fm-in-times-italic">t</i>. The input <i class="fm-in-times-italic">t</i> decides how many units of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> you go from the starting point <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> to get the output r(<i class="fm-in-times-italic">t</i>).</p>
+
+  <p class="body"><a id="pgfId-1131602"></a> The advantage of this kind of formula for a line is that it’s dead simple to find if you have two points on the line. If your points are <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, then you can use <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> as the translation vector, and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> as the vector that is scaled (figure 7.8).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152423"></a>Figure 7.8 Given <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">w</i>, the line that connects them is r(<i class="fm-char-times-italic1">t</i>) = <i class="fm-in-times-italic">z</i> + t <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic">w</i> − u).</p>
+
+  <p class="body"><a id="pgfId-1131608"></a>The formula r(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> also has its downside. As you’ll see in the exercises, there are multiple ways to write the same line in this form. The extra parameter <i class="fm-in-times-italic">t</i> also makes it harder to solve equations because there is one extra unknown variable. Let’s look at some alternative formulas with other advantages.</p>
+
+  <p class="body"><a id="pgfId-1131609"></a>If you recall any formula for a line from high school, it is probably <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">m</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">b</i>. This formula is useful because it gives you a <i class="fm-in-times-italic">y</i>-coordinate explicitly as a function of the <i class="fm-in-times-italic">x</i>-coordinate. In this form, it’s easy to graph a line; you go through a bunch of <i class="fm-in-times-italic">x</i> values, compute the corresponding <i class="fm-in-times-italic">y</i> values, and put dots at the resulting (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) points. But this formula also has some limitations. Most importantly, you can’t represent a vertical line like r(<i class="fm-in-times-italic">t</i>) = (3, 0) + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> (0, 1). This is the line consisting of vectors where <i class="fm-in-times-italic">x</i> = 3.</p>
+
+  <p class="body"><a id="pgfId-1131610"></a>We’ll continue to use the <i class="fm-italics">parametric</i> formula r(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> because it avoids this problem, but it would be great to have a formula with no extra parameter <i class="fm-in-times-italic">t</i> that can represent any line. The one we use is <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>. As an example, the line we’re looking at in the last few images can be written as <i class="fm-in-times-italic">x</i> + 2<i class="fm-in-times-italic">y</i> = 8 (figure 7.9). It is the set of (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) points in the plane satisfying that equation.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152474"></a>Figure 7.9 All (<i class="fm-in-times-italic">x, y</i>) points on the line satisfy <i class="fm-in-times-italic">x</i> + 2y = 8.</p>
+
+  <p class="body"><a id="pgfId-1138345"></a>The form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i> has no extra parameters and can represent any line. Even a vertical line can be written in this form; for instance, <i class="fm-in-times-italic">x</i> = 3 is the same as 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">y</i> = 3. Any equation representing a line is called a <i class="fm-italics">linear</i> <i class="fm-italics">equation</i> and this, in particular, is called<a id="marker-1138346"></a> the <i class="fm-italics">standard form</i> for a linear equation. We prefer <a id="marker-1149610"></a>to use <a id="marker-1149615"></a>it in this <a id="marker-1149620"></a>chapter because it makes it easy to organize our computations.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1138175"></a><a id="id_qnq4xl7slk8n"></a>7.2.2 Finding the standard form equation for a line</h3>
+
+  <p class="body"><a id="pgfId-1138179"></a>The<a id="marker-1149625"></a> formula <i class="fm-in-times-italic">x</i> + 2<i class="fm-in-times-italic">y</i> = 8 is<a id="marker-1149630"></a> the<a id="marker-1149635"></a> equation for a line containing one of the segments on the example asteroid. Next, we’ll look at another one (figure 7.10) and then try to systematize finding the standard form for linear equations. Brace yourself for a bit of algebra! I’ll explain each of the steps carefully, but it may be a bit dry to read. You’ll have a better time if you follow along on your own with a pencil and paper.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152518"></a>Figure 7.10 The points (1, 5) and (2, 3) define a second segment of the asteroid.</p>
+
+  <p class="body"><a id="pgfId-1131626"></a>The vector (1, 5) − (2, 3) is (−1, 2), which is parallel to the line. Because (2, 3) lies on the line, a parametric equation for the line is <i class="fm-in-times-italic">r</i>(<i class="fm-in-times-italic">t</i>) = (2, 3) + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> (−1, 2). Knowing that all points on the line have the form (2, 3) + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> (−1, 2) for some <i class="fm-in-times-italic">t</i>, how can we rewrite this condition to be a standard form equation? We need to do some algebra and, particularly, get rid of <i class="fm-in-times-italic">t</i>. Because (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (2, 3) + <i class="fm-in-times-italic">t</i> <span class="fm-in-cambria">·</span> (−1, 2), we really have two equations to start with:</p>
+
+  <p class="fm-equation"><a id="pgfId-1137968"></a><i class="fm-in-times-italic2">x</i> = 2 − <i class="fm-in-times-italic2">t</i></p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">y</i> = 3 + 2<i class="fm-in-times-italic2">t</i></p>
+
+  <p class="body"><a id="pgfId-1138014"></a>We can manipulate both of them to get two new equations that have the same value (2<i class="fm-in-times-italic">t</i>):</p>
+
+  <p class="fm-equation"><a id="pgfId-1138015"></a>4 − 2<i class="fm-in-times-italic2">x</i> = 2<i class="fm-in-times-italic2">t</i></p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">y</i> − 3 = 2<i class="fm-in-times-italic2">t</i></p>
+
+  <p class="body"><a id="pgfId-1138092"></a>Because both of the expressions on the left-hand sides equal 2<i class="fm-in-times-italic">t</i>, they equal each other:</p>
+
+  <p class="fm-equation">4 - 2<i class="fm-in-times-italic2">x</i> = <i class="fm-in-times-italic2">y</i> - 3</p>
+
+  <p class="body"><a id="pgfId-1138094"></a>We’ve now gotten rid of <i class="fm-in-times-italic">t</i> ! Finally, pulling the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> terms to one side, we get the standard form equation:</p>
+
+  <p class="fm-equation">2<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i> = 7</p>
+
+  <p class="body"><a id="pgfId-1131636"></a>This process isn’t too hard, but we need to be more precise about how to do it if we want to convert it to code. Let’s try to solve the general problem: given two points (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub>) and (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub>), what is the equation of the line that passes through them (see figure 7.11)?</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152562"></a>Figure 7.11 The general problem of finding the equation of the line that passes through two known points</p>
+
+  <p class="body"><a id="pgfId-1138490"></a>Using the parametric formula, the points on the line have the following form:</p>
+
+  <p class="fm-equation">(<i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>) = (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) + t <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> - <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> - <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="body"><a id="pgfId-1138492"></a>There are a lot of <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> variables here, but remember that <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub>, and <i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub> are all constants for the purpose of this discussion. We assume we have two points with known coordinates, and we could have called them (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>) and (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) just as easily. The variables are <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i>(with no subscripts), which stand for coordinates of <i class="fm-italics">any</i> point on the line. As before, we can break this equation into two pieces:</p>
+
+  <p class="fm-equation"><a id="pgfId-1138707"></a><i class="fm-in-times-italic2">x</i> = <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">t</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i><sup class="fm-superscript">2</sup> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">y</i> = <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">t</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">y</i><sup class="fm-superscript">2</sup> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="body"><a id="pgfId-1138728"></a>We can move <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub> to the left-hand side of their respective equations:</p>
+
+  <p class="fm-equation"><a id="pgfId-1138733"></a><i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> = <i class="fm-in-times-italic2">t</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="fm-equation"><i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> = <i class="fm-in-times-italic2">t</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="body"><a id="pgfId-1138779"></a>Our next goal is to make the right-hand side of both equations look the same, so we can set the left-hand sides equal to each other. Multiplying both sides of the first equation by (<i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub>) and both sides of the second equation by (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>) gives us</p>
+
+  <p class="fm-equation"><a id="pgfId-1148371"></a>(<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) = <i class="fm-in-times-italic2">t</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="fm-equation"><a id="pgfId-1148372"></a>(<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) = <i class="fm-in-times-italic2">t</i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="body"><a id="pgfId-1138782"></a>Because the right-hand sides are identical, we know that the first and second equations’ left-hand sides equal each other too. That lets us create a new equation with no <i class="fm-in-times-italic">t</i> in it:</p>
+
+  <p class="fm-equation"><a id="pgfId-1148386"></a>(<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) = (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>)</p>
+
+  <p class="body"><a id="pgfId-1148407"></a>Remember, we want an equation of the form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>, so we need to get <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> on the same side and the constants on the other side. The first thing we can do is expand both sides:</p>
+
+  <p class="fm-equation"><a id="pgfId-1148415"></a>(<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> − (<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> = (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> y − (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub></p>
+
+  <p class="body"><a id="pgfId-1148408"></a>Then we can move the constants to the left and the variables to the right:</p>
+
+  <p class="fm-equation"><a id="pgfId-1148409"></a>(<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> − (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> y = (<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> − (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub></p>
+
+  <p class="body"><a id="pgfId-1139149"></a>Expanding the right side, we see some of the terms cancel out:</p>
+
+  <p class="fm-equation"><a id="pgfId-1139150"></a>(<i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> − (<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">·</span> y = <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub>x1 − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> = <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub></p>
+
+  <p class="body"><a id="pgfId-1139322"></a>We’ve done it! This is the linear equation in standard form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>, where <i class="fm-in-times-italic">a</i> = (<i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub>), <i class="fm-italics">b </i> = −(<i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>), or in other words, (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>), and <i class="fm-in-times-italic">c</i> = (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> <i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub>). Let’s check this with the previous example we did, using the two points (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">1</sub>) = (2, 3) and (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">2</sub>) = (1, 5). In this case,</p>
+
+  <p class="fm-equation"><a id="pgfId-1139699"></a><i class="fm-in-times-italic2">a</i> = <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> = 5 − 3 = 2</p>
+
+  <p class="fm-equation"><a id="pgfId-1139700"></a><i class="fm-in-times-italic2">b</i> = −(<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) = −(1 − 2) = 1</p>
+
+  <p class="fm-equation"><a id="pgfId-1139293"></a>and</p>
+
+  <p class="fm-equation"><a id="pgfId-1139854"></a><i class="fm-in-times-italic2">c</i> = <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> = 2 <span class="fm-in-cambria">·</span> 5 − 3 <span class="fm-in-cambria">·</span> 1 = 7</p>
+
+  <p class="fm-equation"><a id="pgfId-1131666"></a>As expected, this means the standard form equation is 2<i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i> = 7. This formula seems trustworthy! As one final application, let’s find the standard form equation for the line defined by the laser. It looks like it passes through (2, 2) and (4, 4) as I drew it before (figure 7.12).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152606"></a>Figure 7.12 The laser passes through the points (2, 2) and (4, 4).</p>
+
+  <p class="body"><a id="pgfId-1131672"></a>In our asteroid game, we have exact start and end points for the laser line segment, but these numbers are nice for an example. Plugging into the formula, we find</p>
+
+  <p class="fm-equation"><a id="pgfId-1139991"></a><i class="fm-in-times-italic2">a</i> = <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> = 4 − 2 = 2</p>
+
+  <p class="fm-equation"><a id="pgfId-1140015"></a><i class="fm-in-times-italic2">b</i> = −(<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub>) = −(4 − 2) = −2</p>
+
+  <p class="body"><a id="pgfId-1131675"></a>and</p>
+
+  <p class="fm-equation"><a id="pgfId-1140095"></a><i class="fm-in-times-italic2">c</i> = <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">2</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">y</i><sub class="fm-subscript">1</sub> = 2 <span class="fm-in-cambria">·</span> 4 − 2 <span class="fm-in-cambria">·</span> 4 = 0</p>
+
+  <p class="body"><a id="pgfId-1131677"></a>This means the line is 2<i class="fm-in-times-italic">y</i> − 2<i class="fm-in-times-italic">x</i> = 0, which is equivalent to saying <i class="fm-in-times-italic">x</i> − <i class="fm-in-times-italic">y</i> = 0 (or simply <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">y</i>). To decide whether the laser hits the asteroid, we’ll have to find where the line <i class="fm-in-times-italic">x</i> − <i class="fm-in-times-italic">y</i> = 0 intersects the line <i class="fm-in-times-italic">x</i> + 2<i class="fm-in-times-italic">y</i> = 8, the line 2<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">y</i> = 7, or <a id="marker-1149640"></a>any of <a id="marker-1149645"></a>the other <a id="marker-1149650"></a>lines bounding the asteroid.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1131679"></a>7.2.3 <a id="id_t4mlt0mw1eo4"></a>Linear equations in matrix notation</h3>
+
+  <p class="body"><a id="pgfId-1131680"></a>Let’s<a id="marker-1149655"></a> focus <a id="marker-1149660"></a>on an<a id="marker-1149665"></a> intersection <a id="marker-1149670"></a>we can see: the laser clearly hits the closest edge of the asteroid, whose line has equation <i class="fm-in-times-italic">x</i> + 2<i class="fm-in-times-italic">y</i> = 8 (figure 7.13).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152650"></a>Figure 7.13 The laser hits the asteroid where the lines <i class="fm-in-times-italic">x</i> − y = 0 and <i class="fm-in-times-italic">x</i> + 2y = 8 intersect.</p>
+
+  <p class="body"><a id="pgfId-1131686"></a>After quite a bit of build-up, we’ve met our first real system of linear equations. It’s customary to write systems of linear equations in a grid like the following, so that the variables <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> line up:</p>
+
+  <p class="fm-equation"><a id="pgfId-1140208"></a><i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">y</i> = 0</p>
+
+  <p class="fm-equation"><a id="pgfId-1140209"></a><i class="fm-in-times-italic2">x</i> + 2<i class="fm-in-times-italic2">y</i> = 8</p>
+
+  <p class="body"><a id="pgfId-1131689"></a>Thinking back to chapter 5, we can organize these two equations into a single matrix equation. One way to do this is to write a linear combination of column vectors, where <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> are coefficients:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F13_Orland_EQ15.png"/></p>
+
+  <p class="body"><a id="pgfId-1131694"></a>Another way is to consolidate this even further and write it as a matrix multiplication. The linear combination of (1,−1) and (−1,−2) with coefficients <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> is the same as a matrix product:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F13_Orland_EQ16.png"/></p>
+
+  <p class="body"><a id="pgfId-1131699"></a>When we write it this way, the task of solving the system of linear equations looks like solving for a vector in a matrix multiplication problem. If we call the 2-by<span class="fm-in-cambria">−</span>2 matrix <i class="fm-in-times-italic">a</i>, the problem becomes what vector (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is multiplied by the matrix <i class="fm-in-times-italic">a</i> to yield (0, 8)? In other words, we know that an output of the linear transformation <i class="fm-in-times-italic">a</i> is (0, 8) and we want to know what input yields it (figure 7.14).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1131704"></a>Figure 7.14 Framing the problem as finding an input vector that yields the desired output vector</p>
+
+  <p class="body"><a id="pgfId-1131705"></a>These different notations show new ways to look at the same problem. Solving a system of linear equations is equivalent to finding a linear combination of some vectors that produces another given vector. It’s also equivalent to finding an input vector to a linear transformation that produces a given output. Thus, we're about <a id="marker-1149675"></a>to see <a id="marker-1149680"></a>how to<a id="marker-1149685"></a> solve all <a id="marker-1149690"></a>of these problems at once.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1131707"></a><a id="id_2nod3l75jdu4"></a>7.2.4 Solving linear equations with NumPy</h3>
+
+  <p class="body"><a id="pgfId-1140434"></a>Finding <a id="marker-1149695"></a>the intersection <a id="marker-1149700"></a>of <i class="fm-in-times-italic">x</i> − <i class="fm-in-times-italic">y</i> = 0 and <i class="fm-in-times-italic">x</i> + 2<i class="fm-in-times-italic">y</i> = 8 is the same as finding the vector (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) that<a id="marker-1149705"></a> satisfies <a id="marker-1149710"></a>the matrix multiplication equation:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F14_Orland_EQ17.png"/></p>
+
+  <p class="body"><a id="pgfId-1140439"></a>This is only a notational difference, but framing the problem in this form allows us to use pre-built tools to solve it. Specifically, Python’s NumPy library has a linear algebra module and a function that solves this kind of equation. Here’s an example:</p>
+  <pre class="programlisting">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; matrix = np.array(((1,−1),(1,2)))       <span class="fm-combinumeral">❶</span>
+&gt;&gt;&gt; output = np.array((0,8))                <span class="fm-combinumeral">❷</span>
+
+&gt;&gt;&gt; np.linalg.solve(matrix,output)          <span class="fm-combinumeral">❸</span>
+array([2.66666667, 2.66666667])             <span class="fm-combinumeral">❹</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1131720"></a><span class="fm-combinumeral">❶</span> Packages the matrix as a NumPy array object</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151432"></a><span class="fm-combinumeral">❷</span> Packages the output vector as a NumPy array (although it needn’t be reshaped to a column vector)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151449"></a><span class="fm-combinumeral">❸</span> The numpy.linalg.solve function takes a matrix and an output vector and finds the input vector that produces it.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151466"></a><span class="fm-combinumeral">❹</span> The result is (<i class="fm-in-times-italic1">x, y</i>) = (2.66..., 2.66...).</p>
+
+  <p class="body"><a id="pgfId-1140603"></a>NumPy has told us that the <i class="fm-in-times-italic">x</i>- and <i class="fm-in-times-italic">y</i>-coordinates of the intersection are approximately 22/3or 8/3 each, which looks about right geometrically. Eyeballing the diagram, it looks like both coordinates of the intersection point should be between 2 and 3. We can check to see that this point lies on both lines by plugging it in to both equations:</p>
+
+  <p class="fm-equation">1<i class="fm-in-times-italic2">x</i> − 1<i class="fm-in-times-italic2">y</i> = 1 ⋅ (2.66666667) − 1 <span class="fm-in-cambria">⋅</span> (2.66666667) = 0</p>
+
+  <p class="fm-equation">1<i class="fm-in-times-italic2">x</i> + 2<i class="fm-in-times-italic2">y</i> = 1 <span class="fm-in-cambria">⋅</span> (2.66666667) + 2 <span class="fm-in-cambria">⋅</span> (2.66666667) = 8.00000001</p>
+
+  <p class="body"><a id="pgfId-1131723"></a>These results are close enough to (0, 8) and, indeed, make an exact solution. This solution vector, roughly (8/3, 8/3) is also the vector that satisfies the matrix equation 7.1.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F14_Orland_EQ20.png"/></p>
+
+  <p class="body"><a id="pgfId-1131728"></a>As figure 7.15 shows, we can picture (8/3, 8/3) as the vector we pass into the linear transformation machine defined by the matrix that gives us the desired output vector.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1131733"></a>Figure 7.15 The vector (8/3, 8/3) when passed to the linear transformation produces the desired output (0, 8).</p>
+
+  <p class="body"><a id="pgfId-1131734"></a>We can think of the Python function <code class="fm-code-in-text">numpy.linalg.solve</code> as a differently shaped machine that takes in matrices and output vectors, and returns the “solution” vectors for the linear equation they represent (figure 7.16).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1131739"></a>Figure 7.16 The <code class="fm-code-in-text">numpy.linalg.solve</code> function takes a matrix and a vector and outputs the solution vector to the linear system they represent.</p>
+
+  <p class="body"><a id="pgfId-1131740"></a>This is perhaps the most important computational task in linear algebra; starting with a matrix <i class="fm-in-times-italic">a</i>, and a vector <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, and finding the vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> such that <i class="fm-in-times-italic">a</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. Such a vector gives the solution to a system of linear equations represented by <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. We’re lucky to have a Python function that can do this for us so we don’t have to worry about the tedious algebra required to do it by hand. We <a id="marker-1149715"></a>can <a id="marker-1149720"></a>now use <a id="marker-1149725"></a>this function <a id="marker-1149730"></a>to find out when our laser hits asteroids.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1131742"></a><a id="id_17lnqjxidrh"></a>7.2.5 Deciding whether the laser hits an asteroid</h3>
+
+  <p class="body"><a id="pgfId-1131744"></a>The <a id="marker-1149735"></a>missing <a id="marker-1149740"></a>piece of<a id="marker-1149745"></a> our game was an implementation<a id="marker-1131743"></a> for the <code class="fm-code-in-text">does_intersect</code> method on the <code class="fm-code-in-text">PolygonModel</code> class. For any instance<a id="marker-1131745"></a> of this class, which represents a polygon-shaped object living in our 2D game world, this method should return <code class="fm-code-in-text">True</code> if an input line segment intersects any line segment of the polygon.</p>
+
+  <p class="body"><a id="pgfId-1131746"></a>For this, we need a few helper functions. First, we need to convert the given line segments from pairs of endpoint vectors to linear equations in standard form. At the end of the section, I give you an exercise to implement the function <code class="fm-code-in-text">standard_form</code>, which takes two input vectors and returns a tuple (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) where <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i> is the line on which the segment lies.</p>
+
+  <p class="body"><a id="pgfId-1131747"></a>Next, given two segments, each represented by its pair of endpoint vectors, we want to find out where their lines intersect. If <i class="fm-in-times-italic">u</i> 1 and <i class="fm-in-times-italic">u</i> 2 are endpoints of the first segment, and <i class="fm-in-times-italic">v</i> 1 and <i class="fm-in-times-italic">v</i> 2 are endpoints of the second, we need to first find the standard form equations and then pass them to NumPy to solve. For example,</p>
+  <pre class="programlisting">def intersection(u1,u2,v1,v2):
+    a1, b1, c1 = standard_form(u1,u2)
+    a2, b2, c2 = standard_form(v1,v2)
+    m = np.array(((a1,b1),(a2,b2)))
+    c = np.array((c1,c2))
+    return np.linalg.solve(m,c)</pre>
+
+  <p class="body"><a id="pgfId-1131749"></a>The output is the point where the two lines on which the segments lie intersect. But this point might not lie on either of the segments as shown in figure 7.17.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152766"></a>Figure 7.17 One segment connects <i class="fm-in-times-italic">u</i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic">u</i><sub class="fm-subscript">2</sub> and the other connects points <i class="fm-in-times-italic">v</i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic">v</i><sub class="fm-subscript">2</sub>. The lines extending the segments intersect, but the segments themselves don’t.</p>
+
+  <p class="body"><a id="pgfId-1131755"></a>To detect whether the two segments intersect, we need to check that the intersection point of their lines lies between the two pairs of endpoints. We can check that using distances. In figure 7.17, the intersection point is further from point <i class="fm-in-times-italic">v</i><sub class="fm-subscript">2</sub> than point <i class="fm-in-times-italic">v</i><sub class="fm-subscript">1</sub>. Likewise, it’s further from <i class="fm-in-times-italic">u</i><sub class="fm-subscript">1</sub> than <i class="fm-in-times-italic">u</i><sub class="fm-subscript">2</sub>. This indicates that the point is on neither segment. With four total distance checks, we can confirm whether the intersection point of the lines (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is an intersection point of the segments as well:</p>
+  <pre class="programlisting">def do_segments_intersect(s1,s2):
+    u1,u2 = s1
+    v1,v2 = s2
+    d1, d2 = distance(*s1), distance(*s2)         <span class="fm-combinumeral">❶</span>
+    x,y = intersection(u1,u2,v1,v2)               <span class="fm-combinumeral">❷</span>
+    return (distance(u1, (x,y)) &lt;= d1 and         <span class="fm-combinumeral">❸</span>
+            distance(u2, (x,y)) &lt;= d1 and
+            distance(v1, (x,y)) &lt;= d2 and
+            distance(v2, (x,y)) &lt;= d2)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151673"></a><span class="fm-combinumeral">❶</span> Stores the lengths of the first and second segments as d1 and d2, respectively</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151701"></a><span class="fm-combinumeral">❷</span> Finds the intersection point (<i class="fm-in-times-italic1">x, y</i>) of the lines on which the segments lie</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1151718"></a><span class="fm-combinumeral">❸</span> Does four checks to ensure the intersection point lies between the four endpoints of the line segments, confirming the segments intersect</p>
+
+  <p class="body"><a id="pgfId-1141064"></a>Finally, we can write<a id="marker-1131760"></a> the <code class="fm-code-in-text">does_intersect</code> method by checking whether <code class="fm-code-in-text">do _segments_intersect</code> returns <code class="fm-code-in-text">True</code> for the input segment and any of the edges of the (transformed) polygon:</p>
+  <pre class="programlisting">class PolygonModel():
+    ...
+    def does_intersect(self, other_segment):
+        for segment in self.segments():
+            if do_segments_intersect(other_segment,segment):
+                return True                                  <span class="fm-combinumeral">❶</span>
+        return False</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1131768"></a><span class="fm-combinumeral">❶</span> If any of the segments of the polygon intersect other_segment, the method returns True.</p>
+
+  <p class="body"><a id="pgfId-1140963"></a>In the exercises that follow, you can confirm that this actually works by building an asteroid with known coordinate points and a laser beam with a known start and end point. With <code class="fm-code-in-text">does_intersect</code> implemented as in the source code, you should be able to rotate the spaceship<a id="u5UKvhmaMUNpsY6PzYovNdF"></a> to aim<a id="uxbPqfHmRUnrXqN7h6DPNB7"></a> at asteroids <a id="uMcFBb77jYbiO9HQoxuS6aE"></a>and destroy them.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1131771"></a><a id="id_l1ybv49nlupd"></a>7.2.6 Identifying unsolvable systems</h3>
+
+  <p class="body"><a id="pgfId-1141118"></a>Let me leave you with one final admonition: not every system of linear equations in 2D can be solved! It’s rare in an application like the asteroid game, but some pairs of linear equations in 2D don’t have unique solutions or even solutions at all. If we pass NumPy a system of linear equations with no solution, we get an exception, so we need to handle this case.</p>
+
+  <p class="body"><a id="pgfId-1141124"></a>When a pair of lines in 2D are not parallel, they intersect somewhere. Even the two lines in figure 7.18 that are nearly parallel (but not quite) intersect somewhere off in the distance.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F18_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152828"></a>Figure 7.18 Two lines that are not quite parallel intersect somewhere in the distance.</p>
+
+  <p class="body"><a id="pgfId-1131779"></a>Where we run into trouble is when the lines are parallel, meaning the lines never intersect (or they’re the same line!) as shown in figure 7.19.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F19_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1131784"></a>Figure 7.19 A pair of parallel lines that never intersect and a pair of parallel lines that are, in fact, the same line despite having different equations</p>
+
+  <p class="body"><a id="pgfId-1131785"></a>In the first case, there are zero intersection points, while in the second, there are <i class="fm-italics">infinitely</i> many intersection points−every point on the line is an intersection point. Both of these cases are problematic computationally because our code demands a single, unique result. If we try to solve either of these systems with NumPy, for instance, the system consisting of 2<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">y</i> = 6 and 4<i class="fm-in-times-italic">x</i> + 2<i class="fm-in-times-italic">y</i> = 8, we get an exception:</p>
+  <pre class="programlisting">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; m = np.array(((2,1),(4,2)))
+&gt;&gt;&gt; v  = np.array((6,4))
+&gt;&gt;&gt; np.linalg.solve(m,v)
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+...
+numpy.linalg.linalg.LinAlgError: Singular matrix</pre>
+
+  <p class="body"><a id="pgfId-1131787"></a>NumPy points to the matrix as the source of the error. The matrix</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F19_Orland_EQ21.png"/></p>
+
+  <p class="body"><a id="pgfId-1131792"></a>is called a <i class="fm-italics">singular</i> matrix, meaning there is no unique solution to the linear system. A system of linear equations is defined by a matrix and a vector, but the matrix on its own is enough to tell us whether the lines are parallel and whether the system has a unique solution. For any non-zero <i class="fm-in-times-italic">w</i> we pick, there won’t be a unique <i class="fm-in-times-italic">v</i> that solves the system.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F19_Orland_EQ22.png"/></p>
+
+  <p class="body"><a id="pgfId-1131797"></a>We’ll philosophize more about singular matrices later, but for now you can see that the rows (2, 1) and (4, 2) and the columns (2, 4) and (1, 2) are both parallel and, therefore, linearly dependent. This is the key clue that tells us the lines are parallel and that the system does not have a unique solution. Solvability of linear systems is one of the central concepts in linear algebra; it closely relates to the notions of linear independence and dimension. We discuss that in the last two sections of this chapter.</p>
+
+  <p class="body"><a id="pgfId-1131798"></a>For the purpose of our asteroid game, we can make the simplifying assumption that any parallel line segments don’t intersect. Given that we’re building the game with random floats, it’s highly unlikely that any two segments are exactly parallel. Even if the laser lined up exactly with the edge of an asteroid, this would be a glancing hit and the player doesn’t deserve to have the asteroid destroyed. We can modify <code class="fm-code-in-text">do_segments_intersect</code> to<a id="u5XFFVDqGe5gcaARmSNh939"></a> catch the exception and return the default result of <code class="fm-code-in-text">False</code> :</p>
+  <pre class="programlisting">def do_segments_intersect(s1,s2):
+    u1,u2 = s1
+    v1,v2 = s2
+    l1, l2 = distance(*s1), distance(*s2)
+    try:
+        x,y = intersection(u1,u2,v1,v2)
+        return (distance(u1, (x,y)) &lt;= l1 and
+                distance(u2, (x,y)) &lt;= l1 and
+                distance(v1, (x,y)) &lt;= l2 and
+                distance(v2, (x,y)) &lt;= l2)
+    except np.linalg.linalg.LinAlgError:
+        return False</pre>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1131801"></a><a id="id_8vtyhsiqeff8"></a>7.2.7 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141371"></a><b class="fm-exercise-head">Exercise 7.3</b>: It’s possible that <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> can be a line through the origin. In this case, what can you say about the vectors <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> ?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141372"></a><b class="fm-exercise-head">Solution</b>: One possibility is that <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> = <b class="fm-bold1">0</b> = (0, 0); in which case, the line automatically passes through the origin. The point <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is the origin in this case, regardless of what <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is. Otherwise, if <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> are scalar multiples, say <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> = <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, then the line passes through the origin as well because <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> − <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <b class="fm-bold1">0</b> is on the line.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141403"></a><b class="fm-exercise-head">Exercise 7.4</b>: If <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <b class="fm-bold1">0</b> = (0, 0), do points of the form <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> represent a line?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141404"></a><b class="fm-exercise-head">Solution</b>: No, regardless of the value of <i class="fm-in-times-italic1">t</i>, we have <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> (0, 0) = <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i>. Every point of this form is equal to <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141440"></a><b class="fm-exercise-head">Exercise 7.5</b>: It turns out that the formula <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is not unique; that is, you can pick different values of <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> to represent the same line. What is another line representing (2, 2) + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> (−1, 3)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141441"></a><b class="fm-exercise-head">Solution</b>: One possibility is to replace <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (−1, 3) with a scalar multiple of itself such as (2, <span class="fm-in-cambria">−</span>6). The points of the form (2, 2) + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> (−1, 3) agree with the points (2, 2) + <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> (2, <span class="fm-in-cambria">−</span>6) when <i class="fm-in-times-italic1">t</i> = −2 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">s</i>. You can also replace <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> with any point on the line. Because (2, 2) + 1 <span class="fm-in-cambria">·</span> (−1, 3) = (1, 5) is on the line, (1, 5) + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> (2, <span class="fm-in-cambria">−</span>6) is a valid equation for the same line as well.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141468"></a><b class="fm-exercise-head">Exercise 7.6</b>: Does <i class="fm-in-times-italic1">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">y</i> = <i class="fm-in-times-italic1">c</i> represent a line for <i class="fm-italics">any</i> values of <i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, and <i class="fm-in-times-italic1">c</i> ?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141469"></a><b class="fm-exercise-head">Solution</b>: No, if both <i class="fm-in-times-italic1">a</i> and <i class="fm-in-times-italic1">b</i> are zero, the equation does not describe a line. In that case, the formula would be 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">x</i> + 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">y</i> = <i class="fm-in-times-italic1">c</i>. If <i class="fm-in-times-italic1">c</i> = 0, this would always be true, and if <i class="fm-in-times-italic1">c</i> ≠ 0, it would never be true. Either way, it establishes no relationship between <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">y</i> and, therefore, it would not describe a line.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141497"></a><b class="fm-exercise-head">Exercise 7.7</b>: Find another equation for the line 2<i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> = 3, showing that the choices of <i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, and <i class="fm-in-times-italic1">c</i> are not unique.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141498"></a><b class="fm-exercise-head">Solution</b>: One example of another equation is 6<i class="fm-in-times-italic1">x</i> + 3<i class="fm-in-times-italic1">y</i> = 9. In fact, multiplying both sides of the equation by the same non-zero number gives you a different equation for the same line.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141525"></a><b class="fm-exercise-head">Exercise 7.8</b>: The equation <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> = <i class="fm-in-times-italic1">c</i> is equivalent to an equation involving a dot product of two 2D vectors: (<i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">c</i>. You could, therefore, say that a line is a set of vectors whose dot product with a given vector is constant. What is the geometric interpretation of this statement?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141526"></a><b class="fm-exercise-head">Solution</b>: See the discussion in section 7.3.1.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141555"></a><b class="fm-exercise-head">Exercise 7.9</b>: Confirm that the vectors (0, 7) and (3.5, 0) both satisfy the equation 2<i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> = 7.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141556"></a><b class="fm-exercise-head">Solution</b>: 2 <span class="fm-in-cambria">·</span> 0 + 7 = 7 and 2 <span class="fm-in-cambria">·</span> (3.5) + 0 = 7.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141586"></a><b class="fm-exercise-head">Exercise 7.10</b>: Draw a graph for (3, 0) + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> (0, 1) and convert it to the standard form using the formula.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141590"></a><b class="fm-exercise-head">Solution</b>: (3, 0) + <i class="fm-in-times-italic1">t</i> <span class="fm-in-cambria">·</span> (0, 1) yields a vertical line, where <i class="fm-in-times-italic1">x</i> = 3:</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141591"></a>The formula <i class="fm-in-times-italic1">x</i> = 3 is already the equation of a line in standard form, but we can confirm this with the formulas. The first point on our line is already given: (<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">y</i><sub class="fm-subscript2">1</sub>) = (3, 0). A second point on the line is (3, 0) + (0, 1) = (3, 1) = (<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">y</i><sub class="fm-subscript2">2</sub>). We have <i class="fm-in-times-italic1">a</i> = <i class="fm-in-times-italic1">y</i><sub class="fm-subscript2">2</sub> − <i class="fm-in-times-italic1">y</i><sub class="fm-subscript2">1</sub> = 1, <i class="fm-in-times-italic1">b</i> = <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub> − <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub> = 0, and <i class="fm-in-times-italic1">c</i> = <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub> <i class="fm-in-times-italic1">y</i><sub class="fm-subscript2">2</sub> − <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub><i class="fm-in-times-italic1">y</i><sub class="fm-subscript2">1</sub> = 3 <span class="fm-in-cambria">·</span> 1 − 1 <span class="fm-in-cambria">·</span> 0 = 3. This gives us 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">x</i> + 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">y</i> = 3 or simply <i class="fm-in-times-italic1">x</i> = 3.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F19_Orland_UN01.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141617"></a><b class="fm-exercise-head">Exercise 7.11</b>: Write a Python function <code class="fm-code-in-text1">standard_form</code> that takes two vectors <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> 1 and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> 2 and finds the line <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> = <i class="fm-in-times-italic1">c</i> passing through both of them. Specifically, it should output the tuple of constants (<i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, <i class="fm-in-times-italic1">c</i>).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141618"></a><b class="fm-exercise-head">Solution</b>: All you need to do is translate the formulas you wrote in Python:</p>
+        <pre class="programlisting">def standard_form(v1, v2):
+    x1, y1 = v1
+    x2, y2 = v2
+    <i class="fm-in-times-italic1">a</i> = y2 − y1
+    b = x1 − x2
+    c = x1 * y2 − y1 * x2
+    return a,b,c</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141642"></a><b class="fm-exercise-head">Exercise 7.12-Mini Project</b>: For each of the four distance checks in <code class="fm-code-in-text1">do _segments_intersect</code>, find a pair of line segments that fail one of the checks but pass the other three checks.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141751"></a><b class="fm-exercise-head">Solution</b>: To make it easier to run experiments, we can create a modified version of <code class="fm-code-in-text1">do_segments_intersect</code> that returns a list of the True/False values returned by each of the four checks:</p>
+        <pre class="programlisting">def segment_checks(s1,s2):
+    u1,u2 = s1
+    v1,v2 = s2
+    l1, l2 = distance(*s1), distance(*s2)
+    x,y = intersection(u1,u2,v1,v2)
+    return [
+        distance(u1, (x,y)) &lt;= l1,
+        distance(u2, (x,y)) &lt;= l1,
+        distance(v1, (x,y)) &lt;= l2,
+        distance(v2, (x,y)) &lt;= l2
+    ]</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1141701"></a>In general, these checks fail when one endpoint of a segment is closer to the other endpoint than to the intersection point.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141702"></a>Here are some other solutions I found using segments on the lines <i class="fm-in-times-italic1">y</i> = 0 and <i class="fm-in-times-italic1">x</i> = 0, which intersect at the origin. Each of these fails exactly one of the four checks. If in doubt, draw them yourself to see what’s going on.</p>
+        <pre class="programlisting">&gt;&gt;&gt; segment_checks(((−3,0),(−1,0)),((0,−1),(0,1)))
+[False, True, True, True]
+&gt;&gt;&gt; segment_checks(((1,0),(3,0)),((0,−1),(0,1)))
+[True, False, True, True]
+&gt;&gt;&gt; segment_checks(((−1,0),(1,0)),((0,<span class="fm-in-cambria">−</span>3),(0,−1)))
+[True, True, False, True]
+&gt;&gt;&gt; segment_checks(((−1,0),(1,0)),((0,1),(0,3)))
+[True, True, True, False]</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141726"></a><b class="fm-exercise-head">Exercise 7.13</b>: For the example laser line and asteroid, confirm the <code class="fm-code-in-text1">does_intersect</code> function returns <code class="fm-code-in-text1">True</code>. (Hint: use grid lines to find the vertices of the asteroid<a id="marker-1141727"></a> and build a <code class="fm-code-in-text1">PolygonModel</code> object representing it.)</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F19_Orland_UN02.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1152892"></a>The laser hits the asteroid.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141810"></a><b class="fm-exercise-head">Solution</b>: In counterclockwise order, starting with the topmost point, the vertices are (2, 7), (1, 5), (2, 3), (4, 2), (6, 2), (7, 4), (6, 6), and (4, 6). We can assume the endpoints of the laser beam are (1, 1) and (7, 7):</p>
+        <pre class="programlisting">&gt;&gt;&gt; from asteroids import PolygonModel
+&gt;&gt;&gt; asteroid = PolygonModel([(2,7), (1,5), (2,3), (4,2), (6,2), (7,4), (6,6), (4,6)])
+&gt;&gt;&gt; asteroid.does_intersect([(0,0),(7,7)])
+True</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1141848"></a>This confirms the laser hits the asteroid! By contrast, a shot directly up the y-axis from (0, 0) to (0, 7) does not hit:</p>
+        <pre class="programlisting">&gt;&gt;&gt; asteroid.does_intersect([(0,0),(0,7)])
+False</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141881"></a><b class="fm-exercise-head">Exercise 7.14</b>: Write a <code class="fm-code-in-text1">does_collide(other_polygon)</code> method to decide whether the current <code class="fm-code-in-text1">PolygonModel</code> object collides with another <code class="fm-code-in-text1">other_polygon</code> by checking whether any of the segments that define the two are intersecting. This could help us decide whether an asteroid has hit the ship or another asteroid.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141883"></a><b class="fm-exercise-head">Solution</b>: First, it’s convenient<a id="marker-1141882"></a> to add a <code class="fm-code-in-text1">segments()</code> method to <code class="fm-code-in-text1">PolygonModel</code> to avoid duplication of the work of returning the (transformed) line segments that constitute the polygon. Then, we can check every segment of the other polygon to see if it returns true for <code class="fm-code-in-text1">does_intersect</code> with the current one:</p>
+        <pre class="programlisting">class PolygonModel():
+    ...
+    def segments(self):
+        point_count = len(self.points)
+        points = self.transformed()
+        return [(points[i], points[(i+1)%point_count])
+                for i in range(0,point_count)]
+
+    def does_collide(self, other_poly):
+        for other_segment in other_poly.segments():
+            if self.does_intersect(other_segment):
+                return True
+        return False</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1141885"></a>We can test this by building some squares that should and shouldn’t overlap, and seeing whether<a id="marker-1141886"></a> the <code class="fm-code-in-text1">does_collide</code> method correctly detects which is which. Indeed, it does:</p>
+        <pre class="programlisting">&gt;&gt;&gt; square1 = PolygonModel([(0,0), (3,0), (3,3), (0,3)])
+&gt;&gt;&gt; square2 = PolygonModel([(1,1), (4,1), (4,4), (1,4)])
+&gt;&gt;&gt; square1.does_collide(square2)
+True
+&gt;&gt;&gt; square3 = PolygonModel([(−3,<span class="fm-in-cambria">−</span>3),(−2,<span class="fm-in-cambria">−</span>3),(−2,−2),(−3,−2)])
+&gt;&gt;&gt; square1.does_collide(square3)
+False</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1141929"></a><b class="fm-exercise-head">Exercise 7.15-Mini Project</b>: We can’t pick a vector <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> so that the following system has a unique solution <i class="fm-in-times-italic1">v</i>.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F19_Orland_UN02_EQ23.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141934"></a>Find a vector <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> such that there are <i class="fm-italics">infinitely</i> many solutions to the system; <a id="ugitwPaKOexEwbi5NCYyohA"></a>that is, infinitely many values of <i class="fm-in-times-italic1">v</i> that satisfy the equation.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1141970"></a><b class="fm-exercise-head">Solution</b>: If <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> = (0, 0), for example, the two lines represented by the system are identical. (Graph them if you are skeptical!) The solutions have the form <i class="fm-in-times-italic1">v</i> = (<i class="fm-in-times-italic1">a</i>, −2<i class="fm-in-times-italic1">a</i>) for any real number <i class="fm-in-times-italic1">a</i>. Here are some of the infinite possibilities for <i class="fm-in-times-italic1">v</i> when <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> = (0, 0):</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F19_Orland_UN02_EQ24.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_16"><a id="pgfId-1131899"></a><a id="id_28d8jun3ecv1"></a>7.3 Generalizing linear equations to higher dimensions</h2>
+
+  <p class="body"><a id="pgfId-1131900"></a>Now that we’ve <a id="id-startrange-generalizing"></a>built a functional (albeit minimal) game, let’s broaden our perspective. We can represent a wide variety of problems as systems of linear equations, not just arcade games. Linear equations in the wild often have more than two “unknown” variables, <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i>. Such equations describe collections of points in more than two dimensions. In more than three dimensions, it’s hard to picture much of anything, but the 3D case can be a useful mental model. Planes in 3D end up being the analogy of lines in 2D, and they are also represented by linear equations.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1131902"></a><a id="id_qyehg5yxz68e"></a>7.3.1 Representing planes in 3D</h3>
+
+  <p class="body"><a id="pgfId-1131903"></a>To see why lines <a id="id-startrange-planes"></a>and planes are analogous, it’s useful to think of lines in terms of dot products. As you saw in a previous exercise, or may have noticed yourself, the equation <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i> is the set of points (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) in the 2D plane where the dot product with a fixed vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>) is equal to a fixed number <i class="fm-in-times-italic">c</i>. That is, the equation <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i> is equivalent to the equation (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = <i class="fm-in-times-italic">c</i>. In case you didn’t figure out how to interpret this geometrically in the exercise, let’s go through it here.</p>
+
+  <p class="body"><a id="pgfId-1131904"></a>If we have a point and a (non-zero) vector in 2D, there’s a unique line that is perpendicular to the vector and also passes through the point as shown in figure 7.20.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F20_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157645"></a>Figure 7.20 A unique line passing through a given point and perpendicular to a given vector</p>
+
+  <p class="body"><a id="pgfId-1131910"></a>If we call the given point (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>) and the given vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>), we can write a criterion for a point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) to lie on the line. Specifically, if (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) lies on the line, then (<i class="fm-in-times-italic">x</i> − <i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i> − <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>) is parallel to the line and perpendicular to (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>) as shown in figure 7.21.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F21_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152943"></a>Figure 7.21 The vector (<i class="fm-in-times-italic">x</i> − <i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i> − <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>) is parallel to the line and, therefore, perpendicular to (<i class="fm-in-times-italic">a, b</i>).</p>
+
+  <p class="body"><a id="pgfId-1131916"></a>Because two perpendicular vectors have a zero dot product, that’s equivalent to the algebraic statement:</p>
+
+  <p class="fm-equation"><a id="pgfId-1131917"></a>(<i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">0</sub>) = 0</p>
+
+  <p class="body"><a id="pgfId-1131918"></a>That dot product expands to</p>
+
+  <p class="fm-equation"><a id="pgfId-1131919"></a> <i class="fm-in-times-italic2">a</i>(<i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">0</sub>) + <i class="fm-in-times-italic2">b</i>(<i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">0</sub>) = 0</p>
+
+  <p class="body"><a id="pgfId-1131920"></a>or</p>
+
+  <p class="fm-equation"><a id="pgfId-1131921"></a> <i class="fm-in-times-italic2">ax</i> + <i class="fm-in-times-italic2">by</i> = <i class="fm-in-times-italic2">ax</i><sub class="fm-subscript">0</sub> + <i class="fm-in-times-italic2">by</i><sub class="fm-subscript">0</sub></p>
+
+  <p class="body"><a id="pgfId-1131922"></a>The quantity on the right-hand side of this equation is a constant, so we can rename it <i class="fm-in-times-italic">c</i>, giving us the general form equation for a line: <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>. This is a handy geometric interpretation of the formula <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>, and one that we can generalize to 3D.</p>
+
+  <p class="body"><a id="pgfId-1131923"></a>Given a point and a vector in 3D, there is a unique <i class="fm-italics">plane</i> perpendicular to the vector and passing through that point. If the vector is (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) and the point is (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">0</sub>), we can conclude that if a vector (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) lies in the plane, then (<i class="fm-in-times-italic">x</i> − <i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i> -y<sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">z</i> − <i class="fm-in-times-italic">z</i><sub class="fm-subscript">0</sub>) is perpendicular to (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>). Figure 7.22 shows this logic.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F22_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152987"></a>Figure 7.22 A plane parallel to the vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) passes through the point (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">0</sub> ).</p>
+
+  <p class="body"><a id="pgfId-1131929"></a>Every point on the plane gives us such a perpendicular vector to (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>), and every vector perpendicular to (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) leads us to a point in the plane. We can express this perpendicularity as a dot product of the two vectors, so the equation satisfied by every point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) in the plane is</p>
+
+  <p class="fm-equation"><a id="pgfId-1131930"></a>(<i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i>, <i class="fm-in-times-italic2">c</i>) <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">x</i> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">y</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic2">z</i> − <i class="fm-in-times-italic2">z</i><sub class="fm-subscript">0</sub>) = 0</p>
+
+  <p class="body"><a id="pgfId-1131931"></a>This expands to</p>
+
+  <p class="fm-equation"><a id="pgfId-1131932"></a> <i class="fm-in-times-italic2">ax</i> + <i class="fm-in-times-italic2">by</i> + <i class="fm-in-times-italic2">cz</i> = <i class="fm-in-times-italic2">ax</i><sub class="fm-subscript">0</sub> + <i class="fm-in-times-italic2">by</i><sub class="fm-subscript">0</sub> + <i class="fm-in-times-italic2">cz</i><sub class="fm-subscript">0</sub></p>
+
+  <p class="body"><a id="pgfId-1131933"></a>And because the right-hand side of the equation is a constant, we can conclude that every plane in 3D has an equation of the form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> + <i class="fm-in-times-italic">cz</i> = <i class="fm-in-times-italic">d</i>. In 3D, the computational problem is to decide where the planes intersect or which values of (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) simultaneously satisfy <a id="uMMraqLgifDFzDwpnRHGce9"></a>multiple <a id="id-endrange-planes"></a>linear <a id="id-endrange-generalizing"></a>equations like this.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1131935"></a><a id="id_n744tyi73gvj"></a>7.3.2 Solving linear equations in 3D</h3>
+
+  <p class="body"><a id="pgfId-1131936"></a>A pair of non-parallel lines in the plane intersects at exactly one point. Is that single intersection point true for planes as well? If we draw a pair of intersecting planes, we can see that it’s possible for non-parallel planes to intersect at many points. In fact, figure 7.23 shows there is a whole <i class="fm-italics">line</i>, consisting of an infinite number of points where two non-parallel planes intersect.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F23_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153038"></a>Figure 7.23 Two non-parallel planes intersect along a line.</p>
+
+  <p class="body"><a id="pgfId-1131942"></a>If you add a third plane that is not parallel to this intersection line, you can find a unique intersection point. Figure 7.24 shows that each pair among the three planes intersects along a line and the lines share a single point.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F24_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153089"></a>Figure 7.24 Two non-parallel planes intersect along a line.</p>
+
+  <p class="body"><a id="pgfId-1131948"></a>Finding this point algebraically requires finding a common solution to three linear equations in three variables, each representing one of the planes and having the form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> + <i class="fm-in-times-italic">cz</i> = <i class="fm-in-times-italic">d</i>. Such a system of three linear equations would have the form:</p>
+
+  <p class="fm-equation"><a id="pgfId-1142956"></a><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub><i class="fm-in-times-italic2">y</i> + <i class="fm-in-times-italic2">c</i><sub class="fm-subscript">1</sub><i class="fm-in-times-italic2">z</i> = <i class="fm-in-times-italic2">d</i><sub class="fm-subscript">1</sub></p>
+
+  <p class="fm-equation"><a id="pgfId-1143046"></a><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">y</i> + <i class="fm-in-times-italic2">c</i><sub class="fm-subscript">2</sub><i class="fm-in-times-italic2">z</i> = <i class="fm-in-times-italic2">d</i><sub class="fm-subscript">2</sub></p>
+
+  <p class="fm-equation"><a id="pgfId-1143076"></a><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub><i class="fm-in-times-italic2">y</i> + <i class="fm-in-times-italic2">c</i><sub class="fm-subscript">3</sub><i class="fm-in-times-italic2">z</i> = <i class="fm-in-times-italic2">d</i><sub class="fm-subscript">3</sub></p>
+
+  <p class="body"><a id="pgfId-1131952"></a>Each plane is determined by four numbers: <i class="fm-in-times-italic">a<sub class="fm-subscript1">i</sub></i>, <i class="fm-in-times-italic">b<sub class="fm-subscript1">i</sub></i>, <i class="fm-in-times-italic">c<sub class="fm-subscript1">i</sub></i>, and <i class="fm-in-times-italic">d<sub class="fm-subscript1">i</sub></i>, where <i class="fm-in-times-italic">i</i> = 1, 2, or 3 and is the index of the plane we’re looking at. Subscripts like this are useful for systems of linear equations where there can be a lot of variables that need to be named. These twelve numbers in total are enough to find the point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) where the planes intersect, if there is one. To solve the system, we can convert the system into a matrix equation:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F24_Orland_EQ30.png"/></p>
+
+  <p class="body"><a id="pgfId-1131957"></a>Let’s try an example. Say our three planes are given by the following equations:</p>
+
+  <p class="fm-equation"><a id="pgfId-1131958"></a><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">z</i> = −1</p>
+
+  <p class="fm-equation"><a id="pgfId-1131959"></a>2<i class="fm-in-times-italic2">y</i> − <i class="fm-in-times-italic2">z</i> = 3</p>
+
+  <p class="fm-equation"><a id="pgfId-1131960"></a><i class="fm-in-times-italic2">x</i> + <i class="fm-in-times-italic2">z</i> = 2</p>
+
+  <p class="body"><a id="pgfId-1131961"></a>You can see how to plot these planes in Matplotlib in the source code for this book. Figure 7.25 shows the result.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F25_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153133"></a>Figure 7.25 Three planes plotted in Matplotlib</p>
+
+  <p class="body"><a id="pgfId-1131967"></a>It’s not easy to see, but somewhere in there, the three planes intersect. To find that intersection point, we need the values of <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i> that simultaneously satisfy all three linear equations. Once again, we can convert the system to matrix form and use NumPy to solve it. The matrix equation equivalent to this linear system is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F25_Orland_EQ32.png"/></p>
+
+  <p class="body"><a id="pgfId-1131972"></a>Converting the matrix and vector to NumPy arrays in Python, we can quickly find the solution vector:</p>
+  <pre class="programlisting">&gt;&gt;&gt; matrix = np.array(((1,1,−1),(0,2,−1),(1,0,1)))
+&gt;&gt;&gt; vector = np.array((−1,3,2))
+&gt;&gt;&gt; np.linalg.solve(matrix,vector)
+array([−1., 3., 3.])</pre>
+
+  <p class="body"><a id="pgfId-1131974"></a>This tells us that (−1, 3, 3) is the (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) point where all three planes intersect and the point that simultaneously satisfies all three linear equations.</p>
+
+  <p class="body"><a id="pgfId-1131975"></a>While this result was easy to compute with NumPy, you can see it’s already a bit harder to visualize systems of linear equations in 3D. Beyond 3D, it’s difficult (if not impossible) to visualize linear systems, but solving them is mechanically the same. The analogy to a line or a plane in any number of dimensions is called a <i class="fm-italics">hyperplane</i>, and the problem boils down to finding the points where multiple hyperplanes intersect.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1131977"></a><a id="id_wnkbs46xf8jp"></a>7.3.3 Studying hyperplanes algebraically</h3>
+
+  <p class="body"><a id="pgfId-1131978"></a>To be precise, a hyperplane in <i class="fm-in-times-italic">n</i> dimensions is a solution to a linear equation in <i class="fm-in-times-italic">n</i> unknown variables. A line is a 1D hyperplane living in 2D, and a plane is a 2D hyperplane living in 3D. As you might guess, a linear equation in standard form in 4D has the following form:</p>
+
+  <p class="fm-equation"><a id="pgfId-1131979"></a> <i class="fm-in-times-italic2">aw</i> + <i class="fm-in-times-italic2">bx</i> + <i class="fm-italics">cy</i> + <i class="fm-in-times-italic2">dz</i> = <i class="fm-in-times-italic2">e</i></p>
+
+  <p class="body"><a id="pgfId-1131980"></a>The set of solutions (<i class="fm-in-times-italic">w</i>, <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) form a region that is a 3D hyperplane living in 4D space. We need to be careful when we use the adjective 3D because it isn’t necessarily a 3D vector subspace of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">4</sup>. This is analogous to the 2D case: the lines passing through the origin in 2D are vector subspaces of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup>, but other lines are not. Vector space or not, the 3D hyperplane is 3D in the sense that there are three linearly independent directions you could travel in the solution set, like there are two linearly independent directions you can travel on any plane. I’ve included a mini-project at the end of this section to help you check your understanding of this.</p>
+
+  <p class="body"><a id="pgfId-1131981"></a>When we write linear equations in even higher numbers of dimensions, we’re in danger of running out of letters to represent coordinates and coefficients. To solve this, we’ll use letters with subscript indices. For instance, in 4D, we could write a linear equation in standard form as:</p>
+
+  <p class="fm-equation"><a id="pgfId-1131982"></a><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> x<sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> x<sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub> x<sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> = <i class="fm-in-times-italic2">b</i></p>
+
+  <p class="body"><a id="pgfId-1131983"></a>Here, the coefficients are <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">a</i><sub class="fm-subscript">3</sub>, and <i class="fm-in-times-italic">a</i><sub class="fm-subscript">4</sub>, and the 4D vector has the coordinates (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">4</sub>). We could just as easily write a linear equation in 10 dimensions:</p>
+
+  <p class="fm-equation"><a id="pgfId-1131984"></a><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">5</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">5</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">6</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">6</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">7</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">7</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">8</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">8</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">9</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">9</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">10</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">10</sub> = <i class="fm-in-times-italic2">b</i></p>
+
+  <p class="body"><a id="pgfId-1143291"></a>When the pattern of terms we’re summing is clear, we sometimes use an ellipsis (...) to save space. You may see equations like the previous one written <i class="fm-in-times-italic">a</i><sub class="fm-subscript">1</sub> <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic">a</i><sub class="fm-subscript">2</sub> <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> + ... + <i class="fm-in-times-italic">a</i><sub class="fm-subscript">10</sub> <i class="fm-in-times-italic">x</i><sub class="fm-subscript">10</sub> = <i class="fm-in-times-italic">b</i>. Another compact notation you’ll see involves<a id="marker-1143292"></a> the summation symbol Σ, which is the Greek letter sigma. If I want to write the sum of terms of the form <i class="fm-italics">aixi</i> with the index <i class="fm-in-times-italic">i</i> ranging from <i class="fm-in-times-italic">i</i> = 1 to <i class="fm-in-times-italic">i</i> = 10, and I want to state that the sum is equal to some other number <i class="fm-in-times-italic">b</i>, I can use the mathematical shorthand:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F25_Orland_EQ33.png"/></p>
+
+  <p class="body"><a id="pgfId-1131988"></a>This equation means the same thing as the earlier one; it is merely a more concise way of writing it. Whatever number of dimensions <i class="fm-in-times-italic">n</i> we’re working in, the standard form of a linear equation has the same shape:</p>
+
+  <p class="fm-equation"><a id="pgfId-1131989"></a> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + ... + <i class="fm-in-times-italic2">a<sub class="fm-subscript">n</sub>x<sub class="fm-subscript">n</sub></i> = <i class="fm-in-times-italic2">b</i></p>
+
+  <p class="body"><a id="pgfId-1131990"></a>To represent a system of <i class="fm-in-times-italic">m</i> linear equations in <i class="fm-in-times-italic">n</i> dimensions, we need even more indices. Our array of constants on the left-hand side of the equals sign can be denoted <i class="fm-italics">aij</i>, where the subscript <i class="fm-in-times-italic">i</i> indicates which equation we’re talking about and the subscript <i class="fm-in-times-italic">j</i> indicates which coordinate (<i class="fm-in-times-italic">x<sub class="fm-subscript1">j</sub></i>) the constant is multiplied by. For example,</p>
+
+  <p class="fm-equation"><a id="pgfId-1131991"></a> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">11</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">12</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + ... + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1n</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">n</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub></p>
+
+  <p class="fm-equation"><a id="pgfId-1131992"></a> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">21</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">22</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + ... + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2n</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">n</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub></p>
+
+  <p class="fm-equation"><a id="pgfId-1131993"></a>...</p>
+
+  <p class="fm-equation"><a id="pgfId-1131994"></a> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">m1</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">m2</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + ... + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">mn</sub> <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">n</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">m</sub></p>
+
+  <p class="body"><a id="pgfId-1131995"></a>You can see that I also used the ellipsis to skip equations three through <i class="fm-in-times-italic">m</i> −1 in the middle. There are <i class="fm-in-times-italic">m</i> equations and <i class="fm-in-times-italic">n</i> constants in each equation, so there are <i class="fm-italics">mn</i> constants of the form <i class="fm-italics">aij</i> in total. On the right-hand side, there are <i class="fm-in-times-italic">m</i> constants in total, one per equation: <i class="fm-in-times-italic">b</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">b</i><sub class="fm-subscript">2</sub>, ..., <i class="fm-italics">bm</i>.</p>
+
+  <p class="body"><a id="pgfId-1131996"></a>Regardless of the number of dimensions (the same as the number of unknown variables) and the number of equations, we can represent such a system as a linear equation. The previous system with <i class="fm-in-times-italic">n</i> unknowns and <i class="fm-in-times-italic">m</i> equations <a id="ucHlgwe53vFB2T2j4IZjFY8"></a>can be rewritten as shown in figure 7.26.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157709"></a>Figure 7.26 A system of m linear equations with n unknowns written in matrix form</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1132003"></a><a id="id_v7tij351xkp9"></a>7.3.4 Counting dimensions, equations, and solutions</h3>
+
+  <p class="body"><a id="pgfId-1132004"></a>We saw in both <a id="id-startrange-dimensions"></a>2D and 3D that it’s possible to write linear equations that don’t have a solution, or at least not a unique one. How will we know if a system of <i class="fm-in-times-italic">m</i> equations in <i class="fm-in-times-italic">n</i> unknowns is solvable? In other words, how will we know if <i class="fm-in-times-italic">m</i> hyperplanes in <i class="fm-in-times-italic">n</i> -dimensions have a unique intersection point? We’ll discuss this in detail in the last section of this chapter, but there’s one important conclusion we can draw now.</p>
+
+  <p class="body"><a id="pgfId-1132005"></a>In 2D, a pair of lines can intersect at a single point. They won’t always (for instance, if the lines are parallel), but they can. The algebraic equivalent to this statement is that a system of two linear equations in two variables can have a unique solution.</p>
+
+  <p class="body"><a id="pgfId-1132006"></a>In 3D, three planes can intersect at a single point. Likewise, this is not always the case, but three is the minimum number of planes (or linear equations) required to specify a point in 3D. With only two planes, you have at least a 1D space of possible solutions, which is the line of intersection. Algebraically, this means you need two linear equations to get a unique solution in 2D and three linear equations to get a unique solution in 3D. In general, you need <i class="fm-in-times-italic">n</i> linear equations to be able to get a unique solution in <i class="fm-in-times-italic">n</i> -dimensions.</p>
+
+  <p class="body"><a id="pgfId-1132007"></a>Here’s an example when working in 4D with the coordinates (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">4</sub>), which can seem overly simple but is useful because of how concrete it is. Let’s take our first linear equation to be <i class="fm-in-times-italic">x</i><sub class="fm-subscript">4</sub> = 0. The solutions to this linear equation form a 3D hyperplane, consisting of vectors of the form (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub>, 0). This is clearly a 3D space of solutions, and it turns out to be a vector subspace of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">4</sup> with basis (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0).</p>
+
+  <p class="body"><a id="pgfId-1132008"></a>A second linear equation could be <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> = 0. The solutions of this equation on its own are also a 3D hyperplane. The intersection of these two 3D hyperplanes is a 2D space, consisting of vectors of the form (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, 0, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub>, 0), which satisfy both equations. If we could picture such a thing, we would see this as a 2D plane living in 4D space. Specifically, it is the plane spanned by (1, 0, 0, 0) and (0, 0, 1, 0).</p>
+
+  <p class="body"><a id="pgfId-1132009"></a>Adding one more linear equation, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> = 0, which defines its own hyperplane, the solutions to all three equations are now a 1D space. The vectors in this 1D space lie on a line in 4D, and have the form (0, 0, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub>, 0). This line is exactly the x<sub class="fm-subscript">3</sub> -axis, which is a 1D subspace of <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">4</sup>.</p>
+
+  <p class="body"><a id="pgfId-1132010"></a>Finally, if we impose a fourth linear equation, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub> = 0, the only possible solution is (0, 0, 0, 0), a zero-dimensional vector space. The statements <i class="fm-in-times-italic">x</i><sub class="fm-subscript">4</sub> = 0, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> = 0, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> = 0, and <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub> = 0 are, in fact, linear equations, but these are so simple they describe the solution exactly: (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">3</sub>, <i class="fm-in-times-italic">x</i><sub class="fm-subscript">4</sub>) = (0, 0, 0, 0). Each time we add an equation, we reduced the dimension of the solution space by one, until we got a zero-dimensional space consisting of the single point (0, 0, 0, 0).</p>
+
+  <p class="body"><a id="pgfId-1132011"></a>Had we chosen different equations, each step would not have been as clear; we would have to test whether each successive hyperplane truly reduces the dimension of the solution space by one. For instance, if we started with</p>
+
+  <p class="fm-equation"><a id="pgfId-1132012"></a><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> = 0</p>
+
+  <p class="body"><a id="pgfId-1132013"></a>and</p>
+
+  <p class="fm-equation"><a id="pgfId-1132014"></a><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> = 0</p>
+
+  <p class="body"><a id="pgfId-1132015"></a>we would have reduced the solution set to a 2D space, but then adding another equation to the mix</p>
+
+  <p class="fm-equation"><a id="pgfId-1132016"></a><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> = 0</p>
+
+  <p class="body"><a id="pgfId-1132017"></a>there is no effect on the solution space. Because <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> are already constrained to be zero, the equation <i class="fm-in-times-italic">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic">x</i><sub class="fm-subscript">2</sub> = 0 is automatically satisfied. This third equation, therefore, adds no more specificity to the solution set.</p>
+
+  <p class="body"><a id="pgfId-1132018"></a>In the first case, four dimensions with three linear equations to satisfy left us with a 4 − 3 = 1 dimensional solution space. But in the second case, three equations described a less specific 2D solution space. If you have <i class="fm-in-times-italic">n</i> dimensions (<i class="fm-in-times-italic">n</i> unknown variables) and <i class="fm-in-times-italic">n</i> linear equations, it’s possible there’s a unique solution−a zero-dimensional solution space−but this is not always the case. More generally, if you’re working in <i class="fm-in-times-italic">n</i> dimensions, the lowest dimensional solution space you can get with <i class="fm-in-times-italic">m</i> linear equations is <i class="fm-in-times-italic">n</i> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic">m</i>. In that case, we call the system<a id="marker-1132019"></a> of linear equations <i class="fm-italics">independent</i>.</p>
+
+  <p class="body"><a id="pgfId-1132020"></a>Every basis vector in a space gives us a new independent direction we can move in the space. Independent directions in a space are sometimes<a id="marker-1132021"></a> called <i class="fm-italics">degrees of freedom</i> ; the <i class="fm-in-times-italic">z</i> direction, for instance, “freed” us from the plane into larger 3D space. By contrast, every independent linear equation we introduce is a constraint; it removes a degree of freedom and restricts the space of solutions to have a smaller number of dimensions. When the number of independent degrees of freedom (dimensions) equals the number of independent constraints (linear equations), there are no longer any degrees of freedom, and we are left with a unique point.</p>
+
+  <p class="body"><a id="pgfId-1143454"></a>This is a major philosophical point in linear algebra, and one you can explore more in some mini-projects that follow. In the final section of this chapter, we’ll connect the concepts of independent equations and (linearly) <a id="id-endrange-dimensions"></a>independent vectors.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1143456"></a><a id="id_7zi3nvje2i9k"></a>7.3.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1143472"></a><b class="fm-exercise-head">Exercise 7.16</b>: What’s the equation for a line that passes through (5, 4) and that is perpendicular to (−3, 3)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143476"></a><b class="fm-exercise-head">Solution</b>: Here’s the set up:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN03.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143477"></a>For every point (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) on the line, the vector (<i class="fm-in-times-italic1">x</i> − 5, <i class="fm-in-times-italic1">y</i> − 4) is parallel to the line and, therefore, perpendicular to (−3, 3). That means that the dot product (<i class="fm-in-times-italic1">x</i> − 5, <i class="fm-in-times-italic1">y</i> − 4) <span class="fm-in-cambria">·</span> (−3, 3) is zero for any (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) on the line. This equation expands to <span class="fm-in-cambria">−</span>3<i class="fm-in-times-italic1">x</i> + 15 + 3<i class="fm-in-times-italic1">y</i> − 12 = 0, which rearranges to give <span class="fm-in-cambria">−</span>3<i class="fm-in-times-italic1">x</i> + 3<i class="fm-in-times-italic1">y</i> = <span class="fm-in-cambria">−</span>3. We can divide both sides by <span class="fm-in-cambria">−</span>3 to get a simpler, equivalent equation: <i class="fm-in-times-italic1">x</i> − <i class="fm-in-times-italic1">y</i> = 1.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1143671"></a><b class="fm-exercise-head">Exercise 7.17-Mini Project</b>: Consider a system of two linear equations in 4D:</p>
+
+        <p class="fm-equation"><a id="pgfId-1143672"></a><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> = 0</p>
+
+        <p class="fm-equation"><a id="pgfId-1143673"></a> <i class="fm-italics">x</i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> = 0</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143674"></a>Explain algebraically (rather than geometrically) why the solutions form a vector subspace of 4D.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143675"></a><b class="fm-exercise-head">Solution</b>: We can show that if (<i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">3</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">4</sub>) and (<i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">3</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">4</sub>) are two solutions, then a linear combination of those is a solution as well. That would imply that the solution set contains all linear combinations of its vectors, making it a vector subspace.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143676"></a>Let’s start with the assumption that (<i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">3</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">4</sub>) and (<i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">3</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">4</sub>) are solutions to both linear equations, which explicitly means:</p>
+
+        <p class="fm-equation"><a id="pgfId-1143677"></a> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub> = 0</p>
+
+        <p class="fm-equation"><a id="pgfId-1143678"></a> <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">4</sub> = 0</p>
+
+        <p class="fm-equation"><a id="pgfId-1143679"></a> <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub> = 0</p>
+
+        <p class="fm-equation"><a id="pgfId-1143680"></a> <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">4</sub> = 0</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143681"></a>Picking scalars <i class="fm-in-times-italic1">c</i> and <i class="fm-in-times-italic1">d</i>, the linear combination <i class="fm-in-times-italic1">c</i>(<i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">3</sub>, <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">4</sub>) + <i class="fm-in-times-italic1">d</i>(<i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">3</sub>, <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">4</sub>) is equal to (<i class="fm-in-times-italic1">ca</i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1">db</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">ca</i><sub class="fm-subscript2">2</sub> + <i class="fm-in-times-italic1">db</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">ca</i><sub class="fm-subscript2">3</sub> + <i class="fm-in-times-italic1">db</i><sub class="fm-subscript2">3</sub>, <i class="fm-in-times-italic1">ca</i><sub class="fm-subscript2">4</sub> + <i class="fm-in-times-italic1">db</i><sub class="fm-subscript2">4</sub>). Is this a solution to the two equations? We can find out by plugging the four coordinates in for <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub>, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub>, and <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">4</sub>. In the first equation,</p>
+
+        <p class="fm-equation"><a id="pgfId-1143682"></a><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143683"></a>becomes</p>
+
+        <p class="fm-equation"><a id="pgfId-1143684"></a>(<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">1</sub>) + 2(<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">2</sub>) + 2(<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">3</sub>) + (<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">4</sub>)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143685"></a>That expands to give us</p>
+
+        <p class="fm-equation"><a id="pgfId-1143686"></a> <i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">db</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">3</sub> + 2<i class="fm-in-times-italic2">db</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">4</sub></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143687"></a>which rearranges to</p>
+
+        <p class="fm-equation"><a id="pgfId-1143688"></a><i class="fm-in-times-italic2">c</i>(<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> +2<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub>) + <i class="fm-in-times-italic2">d</i>(<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">4</sub>)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143689"></a>Because <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">1</sub> + 2<i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">2</sub> + 2<i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">3</sub> + <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">4</sub> and <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">1</sub> + 2<i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">2</sub> + 2<i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">3</sub> + <i class="fm-in-times-italic1">b</i><sub class="fm-subscript2">4</sub> are both zero, this expression is zero:</p>
+
+        <p class="fm-equation"><a id="pgfId-1143690"></a><i class="fm-in-times-italic2">c</i>(<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub>) + <i class="fm-in-times-italic2">d</i>(<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">4</sub>) = <i class="fm-in-times-italic2">c</i> <span class="fm-in-cambria">·</span> 0 + <i class="fm-in-times-italic2">d</i> <span class="fm-in-cambria">·</span> 0 = 0</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143694"></a>That means the linear combination is a solution to the first equation. Similarly, plugging the linear combination into the second equation, we see it’s a solution to that equation as well:</p>
+
+        <p class="fm-equation"><a id="pgfId-1143695"></a>(<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">1</sub>) − (<i class="fm-in-times-italic2">ca</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">db</i><sub class="fm-subscript">4</sub>) = <i class="fm-in-times-italic2">c</i>(<i class="fm-in-times-italic2">a</i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">4</sub>) + <i class="fm-in-times-italic2">d</i>(<i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">4</sub>) = <i class="fm-in-times-italic2">c</i> <span class="fm-in-cambria">·</span> 0 + <i class="fm-in-times-italic2">d</i> <span class="fm-in-cambria">·</span> 0 = 0</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143696"></a>Any linear combination of any two solutions is also a solution, so the solution set contains all of its linear combinations. That means the solution set is a vector subspace of 4D.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1143699"></a><b class="fm-exercise-head">Exercise 7.18</b>: What is the standard form equation for a plane that passes through the point (1, 1, 1) and is perpendicular to the vector (1, 1, 1)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143700"></a><b class="fm-exercise-head">Solution</b>: For any point (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, <i class="fm-in-times-italic1">z</i>) in the plane, the vector (<i class="fm-in-times-italic1">x</i> − 1, <i class="fm-in-times-italic1">y</i> − 1, <i class="fm-italics">z</i> − 1) is perpendicular to (1, 1, 1). That means that the dot product (<i class="fm-in-times-italic1">x</i> − 1, <i class="fm-in-times-italic1">y</i> − 1, <i class="fm-italics">z</i> − 1) <span class="fm-in-cambria">·</span> (1, 1, 1) is zero for any <i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, and <i class="fm-in-times-italic1">z</i> values giving a point in the plane. This expands to give us (<i class="fm-in-times-italic1">x</i> − 1) + (<i class="fm-in-times-italic1">y</i> − 1) + (<i class="fm-in-times-italic1">z</i> − 1) = 0 or <i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> + <i class="fm-in-times-italic1">z</i> = 3, the standard form equation for the plane.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1143721"></a><b class="fm-exercise-head">Exercise 7.19−Mini Project</b>: Write a Python function that takes three 3D points as inputs and returns the standard form equation of the plane that they lie in. For instance, if the standard form equation is <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> + <i class="fm-in-times-italic1">cz</i> = <i class="fm-in-times-italic1">d</i>, the function could return the tuple (<i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, <i class="fm-in-times-italic1">c</i>, <i class="fm-in-times-italic1">d</i>).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143722"></a><b class="fm-exercise-head">Hint</b>: Differences of any pairs of the three vectors are parallel to the plane, so cross products of the differences are perpendicular.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1143723"></a><b class="fm-exercise-head">Solution</b>: If the points given are <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">2</sub>, and <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">3</sub>, then the vector differences like <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">3</sub> − <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">1</sub> and <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">2</sub> − <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">1</sub> are parallel to the plane. The cross product (<i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">2</sub> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">1</sub>) <span class="fm-in-cambria">×</span> (<i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">3</sub> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">1</sub>) is then perpendicular to the plane. (All is well as long as the points <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">2</sub>, and <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">3</sub> form a triangle, so the differences are not parallel.) With a point in the plane (for instance, <i class="fm-in-times-italic1">p</i><sub class="fm-subscript2">1</sub>) and a perpendicular vector, we can repeat the process of finding the standard form of the solution as in the previous two exercises:</p>
+        <pre class="programlisting">from vectors import *
+
+def plane_equation(p1,p2,p3):
+    parallel1 = subtract(p2,p1)
+    parallel2 = subtract(p3,p1)
+    a,b,c = cross(parallel1, parallel2)
+    d = dot((a,b,c), p1)
+    return a,b,c,d</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1143958"></a>For example, these are three points from the plane <i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> + <i class="fm-in-times-italic1">z</i> = 3 from the preceding exercise:</p>
+        <pre class="programlisting">&gt;&gt;&gt; plane_equation((1,1,1), (3,0,0), (0,3,0))
+(3, 3, 3, 9)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1143960"></a>The result is (3, 3, 3, 9), meaning 3<i class="fm-in-times-italic1">x</i> + 3<i class="fm-in-times-italic1">y</i> + 3<i class="fm-in-times-italic1">z</i> = 9, which is equivalent to <i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> + <i class="fm-in-times-italic1">z</i> = 3. That means we got it right!</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144122"></a><b class="fm-exercise-head">Exercise 7.20</b>: How many total constants <i class="fm-italics">aij</i> are in the following matrix equation? How many equations are there? How many unknowns? Write the full matrix equation (no dots) and the full system of linear equations (no dots).</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN03_EQ34.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1153229"></a>An abbreviated system of linear equations in matrix form</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144131"></a><b class="fm-exercise-head">Solution</b>: To be clear, we can write out the full matrix equation first:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN03_EQ35.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1153264"></a>The unabbreviated version of the matrix equation</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144191"></a>In total, there are 5 <span class="fm-in-cambria">·</span> 7 = 35 entries in this matrix and 35 <i class="fm-italics">aij</i> constants on the left-hand side of the equations in the linear system. There are 7 unknown variables: <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub>, ..., <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">7</sub> and 5 equations (one per row of the matrix). You can get the full linear system by carrying out the matrix multiplication:</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">11</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">12</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">13</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">14</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">15</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">5</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">16</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">6</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">17</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">7</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">1</sub></p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">21</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">22</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">23</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">24</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">25</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">5</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">26</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">6</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">27</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">7</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">2</sub></p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">31</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">32</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">33</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">34</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">35</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">5</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">36</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">6</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">37</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">7</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">3</sub></p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">41</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">42</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">43</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">44</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">45</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">5</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">46</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">6</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">47</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">7</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">4</sub></p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">a</i><sub class="fm-subscript">5</sub>1<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">5</sub>2<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">5</sub>3<i class="fm-in-times-italic2">x</i><sub class="fm-subscript">3</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">54</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">4</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">55</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">5</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">56</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">6</sub> + <i class="fm-in-times-italic2">a</i><sub class="fm-subscript">57</sub><i class="fm-in-times-italic2">x</i><sub class="fm-subscript">7</sub> = <i class="fm-in-times-italic2">b</i><sub class="fm-subscript">5</sub></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-07-49.gif" ALT=""></P>-->
+
+        <p class="fm-figure-caption"><a id="pgfId-1153296"></a>The full system of linear equations represented by this matrix equation</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144197"></a>You can see why we avoid this tedious writing with abbreviations!</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144234"></a><b class="fm-exercise-head">Exercise 7.21</b>: Write the following linear equation without summation shorthand. Geometrically, what does the set of solutions look like?</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN03_EQ37.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144265"></a><b class="fm-exercise-head">Solution</b>: The left-hand side of this equation is a sum of terms of the form <i class="fm-in-times-italic1">x<sub class="fm-subscript">i</sub></i> for <i class="fm-in-times-italic1">i</i>, ranging from 1 to 3. That gives us <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub> + <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub> = 1. This is the standard form of a linear equation in three variables, so its solutions form a plane in 3D space.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144284"></a><b class="fm-exercise-head">Exercise 7.22</b>: Sketch three planes, none of which are parallel and do not have a single point of intersection. (Better yet, find their equations and graph them!)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144288"></a><b class="fm-exercise-head">Solution</b>: Here are three planes: <i class="fm-in-times-italic1">z</i> + <i class="fm-in-times-italic1">y</i> = 0, <i class="fm-in-times-italic1">z</i> − <i class="fm-in-times-italic1">y</i> = 0, and <i class="fm-in-times-italic1">z</i> = 3 and the graph:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN04.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1144289"></a>Three non-parallel planes that don’t share an intersection point</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144290"></a>I’ve drawn the intersections of the three pairs of planes, which are parallel lines. Because these lines never meet, there is no single point of intersection for all three planes. This is like the example you saw in chapter 6: three vectors can be linearly dependent even when no pair among them is parallel.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144320"></a><b class="fm-exercise-head">Exercise 7.23</b>: Suppose we have <i class="fm-in-times-italic1">m</i> linear equations and <i class="fm-in-times-italic1">n</i> unknown variables. What do the following values of <i class="fm-in-times-italic1">m</i> and <i class="fm-in-times-italic1">n</i> say about whether there is a unique solution?</p>
+
+        <ol class="calibre27">
+          <li class="fm-list-numbered1">
+            <p class="list"><a id="pgfId-1144321"></a> <i class="fm-in-times-italic">m</i> = 2, <i class="fm-in-times-italic">n</i> = 2</p>
+          </li>
+
+          <li class="fm-list-numbered1">
+            <p class="list"><a id="pgfId-1144322"></a> <i class="fm-in-times-italic">m</i> = 2, <i class="fm-in-times-italic">n</i> = 7</p>
+          </li>
+
+          <li class="fm-list-numbered1">
+            <p class="list"><a id="pgfId-1144323"></a> <i class="fm-in-times-italic">m</i> = 5, <i class="fm-in-times-italic">n</i> = 5</p>
+          </li>
+
+          <li class="fm-list-numbered1">
+            <p class="list"><a id="pgfId-1144324"></a> <i class="fm-in-times-italic">m</i> = 3, <i class="fm-in-times-italic">n</i> = 2</p>
+          </li>
+        </ol>
+
+        <p class="fm-sidebar"><a id="pgfId-1144645"></a><b class="fm-exercise-head">Solution</b>:</p>
+
+        <ol class="calibre27">
+          <li class="fm-list-numbered2">
+            <p class="list"><a id="pgfId-1144646"></a>With two linear equations and two unknowns, there <i class="fm-italics">can</i> be a unique solution. The two equations represent lines in the plane, and they will intersect at a unique point unless they are parallel.</p>
+          </li>
+
+          <li class="fm-list-numbered1">
+            <p class="list"><a id="pgfId-1144647"></a>With two linear equations and seven unknowns, there <i class="fm-italics">cannot</i> be a unique solution. Assuming the 6D hyperplanes defined by these equations are not parallel, there will be a 5D space of solutions.</p>
+          </li>
+
+          <li class="fm-list-numbered1">
+            <p class="list"><a id="pgfId-1144648"></a>With five linear equations and five unknowns, there <i class="fm-italics">can</i> be a unique solution, as long as the equations are independent.</p>
+          </li>
+
+          <li class="fm-list-numbered-last">
+            <p class="list"><a id="pgfId-1144649"></a>With three linear equations and two unknowns, there <i class="fm-italics">can</i> be a unique solution, but it requires some luck. This would mean that the third line happens to pass through the intersection point of the first two lines, which is unlikely but possible.</p>
+          </li>
+        </ol>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN05.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1153430"></a>Three lines in the plane that happen to intersect at a point</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144656"></a><b class="fm-exercise-head">Exercise 7.24</b>: Find 3 planes whose intersection is a single point, 3 planes whose intersection is a line, and 3 planes whose intersection is a plane.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144657"></a><b class="fm-exercise-head">Solution</b>: The planes <i class="fm-in-times-italic1">z</i> − <i class="fm-in-times-italic1">y</i> = 0, <i class="fm-in-times-italic1">z</i> + <i class="fm-in-times-italic1">y</i> = 0, and <i class="fm-in-times-italic1">z</i> + <i class="fm-in-times-italic1">x</i> = 0 intersect at the single point (0, 0, 0). Most randomly selected planes will intersect at a unique point like this.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN06.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1144661"></a>Three planes intersecting at a single point</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144665"></a>The planes <i class="fm-in-times-italic1">z</i> − <i class="fm-in-times-italic1">y</i> = 0, <i class="fm-in-times-italic1">z</i> + <i class="fm-in-times-italic1">y</i> = 0, and <i class="fm-in-times-italic1">z</i> = 0 intersect on a line, specifically the x-axis. If you play with these equations, you’ll find both <i class="fm-in-times-italic1">y</i> and <i class="fm-in-times-italic1">z</i> are constrained to be zero, but <i class="fm-in-times-italic1">x</i> doesn’t even appear, so it has no constraints. Any vector (<i class="fm-in-times-italic1">x</i>, 0, 0) on the x-axis is, therefore, a solution.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN07.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1144669"></a>Three planes whose intersection points form a line</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1149333"></a>Finally, if all three equations represent the same plane, then that whole plane is a set of solutions. For instance, <i class="fm-in-times-italic1">z</i> − <i class="fm-in-times-italic1">y</i> = 0, 2<i class="fm-in-times-italic1">z</i> − 2<i class="fm-in-times-italic1">y</i> = 0, and 3<i class="fm-in-times-italic1">z</i> − 3<i class="fm-in-times-italic1">y</i> = 0 all represent the same plane.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN08.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1144674"></a>Three identical planes overlaid; their set of solutions is the whole plane.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144691"></a><b class="fm-exercise-head">Exercise 7.25</b>: Without using Python, what is the solution of the system of linear equations in 5D? <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">5</sub> = 3, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub> = 1, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">4</sub> = −1, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub> = 0, and <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub> + <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub> = −2? Confirm the answer with NumPy.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144727"></a><b class="fm-exercise-head">Solution</b>: Because four of these linear equations specify the value of a coordinate, we know the solution has the form (0,1, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub>, −1,3). We need to do some algebra using the final equation to find out the value of <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub>. Because <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub> + <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub> = −2, we know 0 + 1 + <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub> = −2, and <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">3</sub> must be <span class="fm-in-cambria">−</span>3. The unique solution point is, therefore, (0, 1, <span class="fm-in-cambria">−</span>3, −1, 3). Converting this system to matrix form, we can solve it with NumPy to confirm we got it right:</p>
+        <pre class="programlisting">&gt;&gt;&gt; matrix = np.array(((0,0,0,0,1),(0,1,0,0,0),(0,0,0,1,0),(1,0,0,0,0),(1,1,1,0,0)))
+&gt;&gt;&gt; vector = np.array((3,1,−1,0,−2))
+&gt;&gt;&gt; np.linalg.solve(matrix,vector)
+array([ 0., 1., <span class="fm-in-cambria">−</span>3., −1., 3.])</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144772"></a><b class="fm-exercise-head">Exercise 7.26−Mini Project</b>: In any number of dimensions, there is an identity matrix that acts as the identity map. That is, when you multiply the <i class="fm-in-times-italic1">n</i> -dimensional identity matrix <i class="fm-italics">I</i> by any vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, you get the same vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> as a result; therefore, <i class="fm-italics">I</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> <i class="fm-italics">=</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> <i class="fm-italics">.</i></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144773"></a>This means that <i class="fm-italics">I</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> <i class="fm-italics">=</i> <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> is an easy system of linear equations to solve: one possible answer for <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i>. The idea of this mini-project is that you can start with a system of linear equations, <i class="fm-in-times-italic1">a</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i>, and multiply both sides by another matrix <i class="fm-italics">B</i> such that (<i class="fm-italics">BA</i>) = <i class="fm-italics">I</i>. If that is the case, then you have (<i class="fm-italics">BA</i>)<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-italics">B</i> <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> and <i class="fm-italics">I</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-italics">B</i> <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> or <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-italics">B</i> <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i>. In other words, if you have a system <i class="fm-in-times-italic1">a</i> <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i>, and a suitable matrix <i class="fm-italics">B</i>, then <i class="fm-italics">B</i> <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> is the solution to your system. This matrix <i class="fm-italics">B</i> is called the <i class="fm-italics">inverse</i> matrix of <i class="fm-in-times-italic1">a</i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144774"></a>Let’s look again at the system of equations we solved in section 7.3.2:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN08_EQ38.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144779"></a>Use the NumPy function <code class="fm-code-in-text1">numpy.linalg.inv(matrix)</code>, which returns the inverse of the matrix it is given to find the inverse of the matrix on the left-hand side of the equation. Then, multiply both sides by this matrix to find the solution to the linear system. Compare your results with the results we got from NumPy’s solver.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144808"></a><b class="fm-exercise-head">Hint</b>: You might also want to use NumPy’s built-in matrix multiplication routine, <code class="fm-code-in-text1">numpy.matmul</code>, to make computations simpler.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1144965"></a><b class="fm-exercise-head">Solution</b>: First, we can compute the inverse of the matrix using NumPy:</p>
+        <pre class="programlisting">&gt;&gt;&gt; matrix = np.array(((1,1,−1),(0,2,−1),(1,0,1)))
+&gt;&gt;&gt; vector = np.array((−1,3,2))
+&gt;&gt;&gt; inverse = np.linalg.inv(matrix)
+&gt;&gt;&gt; inverse
+array([[ 0.66666667, -0.33333333,  0.33333333],
+       [-0.33333333,  0.66666667,  0.33333333],
+       [-0.66666667,  0.33333333,  0.66666667]])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1144967"></a>The product of the inverse matrix with the original matrix gives us the identity matrix, having 1’s on the diagonal and 0’s elsewhere, albeit with some numerical error:</p>
+        <pre class="programlisting">&gt;&gt;&gt; np.matmul(inverse,matrix)
+array([[ 1.00000000e+00,  1.11022302e−16, −1.11022302e−16],
+       [ 0.00000000e+00,  1.00000000e+00,  0.00000000e+00],
+       [ 0.00000000e+00,  0.00000000e+00,  1.00000000e+00]])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1144969"></a>The trick is to multiply both sides of the matrix equation by this inverse matrix. Here I’ve rounded the values in the inverse matrix for the sake of readability. We already know that the first product on the left is a matrix and its inverse, so we can simplify accordingly:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F26_Orland_UN08_EQ39.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1144973"></a>Multiplying both sides of the system by the inverse matrix and simplifying</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1144974"></a>This gives us an explicit formula for the solution (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, <i class="fm-in-times-italic1">z</i>); all we need to do is to carry out the matrix multiplication. It turns out <code class="fm-code-in-text1">numpy.matmul</code> also works for matrix vector multiplication:</p>
+        <pre class="programlisting">&gt;&gt;&gt; np.matmul(inverse, vector)
+array([−1., 3., 3.])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1144976"></a>This is the same as the solution we got earlier from the solver.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_22"><a id="pgfId-1144982"></a><a id="id_8cbaasc4pnwg"></a>7.4 Changing basis by solving linear equations</h2>
+
+  <p class="body"><a id="pgfId-1134218"></a>The notion of linear independence of vectors is clearly related to the notion of independence of linear equations. The connection comes from the fact that solving a system of linear equations is the equivalent of rewriting vectors in a different basis. Let’s explore what this means in 2D. When we write coordinates for a vector like (4, 3), we are implicitly writing the vector as a linear combination of the standard basis vectors:</p>
+
+  <p class="fm-equation"><a id="pgfId-1134219"></a>(4, 3) = 4<i class="fm-in-times-italic2"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> + 3<i class="fm-in-times-italic2"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub></p>
+
+  <p class="body"><a id="pgfId-1134200"></a>In the last chapter, you learned that the standard basis consisting of <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0) and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1) is not the only basis available. For instance, a pair of vectors like <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> = (1, 1) and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub> = (−1, 1) form a basis for <span class="fm-in-cambria">ℝ</span><sup class="fm-superscript">2</sup>. As any 2D vector can be written as a linear combination of <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, so can any 2D vector be written as a linear combination of this <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub>. For some <i class="fm-in-times-italic">c</i> and <i class="fm-in-times-italic">d</i>, we can make the following equation true, but it’s not immediately obvious what the values of <i class="fm-in-times-italic">c</i> and <i class="fm-in-times-italic">d</i> are:</p>
+
+  <p class="fm-equation"><a id="pgfId-1132180"></a><i class="fm-in-times-italic2">c</i> <span class="fm-in-cambria">·</span> (1, 1) + <i class="fm-in-times-italic2">d</i> <span class="fm-in-cambria">·</span> (−1, 1) = (4, 2)</p>
+
+  <p class="body"><a id="pgfId-1132181"></a>Figure 7.27 shows a visual representation of this.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F27_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1153199"></a>Figure 7.27 Writing (4, 2) as a linear combination of u1 = (1, 1) and u2 = (−1, 1)</p>
+
+  <p class="body"><a id="pgfId-1132187"></a>As a linear combination, this equation is equivalent to a matrix equation, namely:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F27_Orland_EQ40.png"/></p>
+
+  <p class="body"><a id="pgfId-1132192"></a>This, too, is a system of linear equations! In this case, the unknown vector is written (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) rather than (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), and the linear equations hidden in the matrix equation are <i class="fm-in-times-italic">c</i> − <i class="fm-in-times-italic">d</i> = 4 and <i class="fm-in-times-italic">c</i> + <i class="fm-in-times-italic">d</i> = 2. There is a 2D space of vectors (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) that define different linear combinations of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub>, but only one simultaneously satisfies these two equations.</p>
+
+  <p class="body"><a id="pgfId-1132193"></a>Any choice of the pair (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) defines a different linear combination. As an example, let’s look at an arbitrary value of (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>), say (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) = (3, 1). The vector (3, 1) doesn’t live in the same vector space as <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub> ; it lives in a vector space of (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) pairs, each of which describe a different linear combination of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub>. The point (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) = (3, 1) describes a specific linear combination in our original 2D space: 3<i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> + 1<i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub> gets us to the point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = (2, 4) (figure 7.28).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F28_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1132198"></a>Figure 7.28 There is a 2D space of values (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>), where (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) = (3, 1) and yields the linear combination 3<i class="fm-in-times-italic">u</i><sub class="fm-subscript">1</sub> + 1<i class="fm-in-times-italic">u</i><sub class="fm-subscript">2</sub> = (2, 4).</p>
+
+  <p class="body"><a id="pgfId-1132199"></a>Recall that we’re trying to make (4, 2) as a linear combination of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub>, so this isn’t the linear combination we were looking for. For <i class="fm-in-times-italic">c</i> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic">d</i> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub> to equal (4, 2), we need to satisfy <i class="fm-in-times-italic">c</i> − <i class="fm-in-times-italic">d</i> = 4 and <i class="fm-in-times-italic">c</i> + <i class="fm-in-times-italic">d</i> = 2, as we saw previously.</p>
+
+  <p class="body"><a id="pgfId-1132200"></a>Let’s draw the system of linear equations in the <i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i> plane. Visually, we can tell that (3, −1) is a point that satisfies both <i class="fm-in-times-italic">c</i> + <i class="fm-in-times-italic">d</i> = 2 and <i class="fm-in-times-italic">c</i> − <i class="fm-in-times-italic">d</i> = 4. This gives us the pair of scalars to use in a linear combination to make (4, 2) out of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub> as shown in figure 7.29.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1132205"></a>Figure 7.29 The point (<i class="fm-in-times-italic">c</i>, <i class="fm-in-times-italic">d</i>) = (3, −1) satisfies both <i class="fm-in-times-italic">c</i> + <i class="fm-in-times-italic">d</i> = 2 and <i class="fm-in-times-italic">c</i> − <i class="fm-in-times-italic">d</i> = 4. Therefore, it describes the linear combination we were looking for.</p>
+
+  <p class="body"><a id="pgfId-1132206"></a>Now we can write (4, 2) as a linear combination of two different pairs of basis vectors: (4, 2) = 4<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> and (4, 2) = 3<i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> − 1<i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub>. Remember, the coordinates (4, 2) are exactly the scalars in the linear combination 4<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>. If we had drawn our axes differently, <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub> could just as well have been our standard basis; our vector would be 3<i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> − <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub> and we would say its coordinates were (3, 1). To emphasize that coordinates are determined by our choice of basis, we can say that the vector has coordinates (4, 2) with respect to the standard basis, but it has coordinates (3, −1) with respect to the basis consisting of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i><sub class="fm-subscript">2</sub>.</p>
+
+  <p class="body"><a id="pgfId-1132207"></a>Finding the coordinates of a vector with respect to a different basis is an example of a computational problem that is really a system of linear equations in disguise. It’s an important example because every system of linear equations can be thought of in this way. Let’s try another example, this time in 3D, to see what I mean.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1132209"></a><a id="id_147z5dbyqod3"></a>7.4.1 Solving a 3D example</h3>
+
+  <p class="body"><a id="pgfId-1132210"></a>Let’s start by writing an example of a system of linear equations in 3D and then we’ll work on interpreting it. Instead of a 2-by<span class="fm-in-cambria">−</span>2 matrix and a 2D vector, we can start with a 3-by<span class="fm-in-cambria">−</span>3 matrix and a 3D vector:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland_EQ41.png"/></p>
+
+  <p class="body"><a id="pgfId-1132215"></a>The unknown here is a 3D vector; we need to find three numbers to identify it. Doing the matrix multiplication, we can break this up into three equations:</p>
+
+  <p class="fm-equation">1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> <span class="fm-in-cambria">−</span> 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">y</i> + 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">z</i> = 1</p>
+
+  <p class="fm-equation">0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> <span class="fm-in-cambria">−</span> 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">y</i> <span class="fm-in-cambria">−</span> 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">z</i> = 3</p>
+
+  <p class="fm-equation"> </p>
+
+  <p class="fm-equation">1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">x</i> + 0 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">y</i> + 2 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">z</i> = <span class="fm-in-cambria">−</span>7</p><!--
+<P CLASS="FM-Figure"><IMG SRC="Ch-07-63.gif" ALT=""></P>
+<P CLASS="FM-Figure"><IMG SRC="Ch-07-64.gif" ALT=""></P>
+-->
+
+  <p class="body"><a id="pgfId-1132219"></a>This is a system of three linear equations with three unknowns, and <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> + <i class="fm-in-times-italic">cz</i> = <i class="fm-in-times-italic">d</i> is the standard form for a linear equation in 3D. In the next section, we look at the geometric interpretation for 3D linear equations. (It turns out they represent planes in 3D as opposed to lines in 2D.)</p>
+
+  <p class="body"><a id="pgfId-1132220"></a>For now, let’s look at this system as a linear combination with coefficients to be determined. The previous matrix equation is equivalent to the following:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland_EQ44.png"/></p>
+
+  <p class="body"><a id="pgfId-1132225"></a>Solving this equation is equivalent to asking the question: What linear combination of (1, 0, 1), (−1, −1, 0), and (0, −1, 2) yields the vector (1, 3, <span class="fm-in-cambria">−</span>7)? This is harder to picture than the 2D example, and it is harder to compute the answer by hand as well. Fortunately, we know NumPy can handle systems of linear equations in three unknowns, so we simply pass a 3-by<span class="fm-in-cambria">−</span>3 matrix and 3D vector as inputs to the solver like this:</p>
+  <pre class="programlisting">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; xw = np.array((1,3,<span class="fm-in-cambria">−</span>7))
+&gt;&gt;&gt; xa = np.array(((1,−1,0),(0,−1,−1),(1,0,2)))
+&gt;&gt;&gt; np.linalg.solve(a,w)
+array([ 3., 2., <span class="fm-in-cambria">−</span>5.])</pre>
+
+  <p class="body"><a id="pgfId-1132227"></a>The values that solve our linear system are, therefore, <i class="fm-in-times-italic">x</i> = 3, <i class="fm-in-times-italic">y</i> = 2, and <i class="fm-in-times-italic">z</i> = <span class="fm-in-cambria">−</span>5. In other words, these are the coefficients that build our desired linear combination. We can say that the vector (1, 3, <span class="fm-in-cambria">−</span>7) has coordinates (3, 2, <span class="fm-in-cambria">−</span>5) with respect to the basis (1, 0, 1), (−1, −1, 0), (0, −1, 2).</p>
+
+  <p class="body"><a id="pgfId-1132228"></a>The story is the same in higher dimensions; as long as it is possible to do so, we can write a vector as a linear combination of other vectors by solving a corresponding system of linear equations. But, it’s not always possible to write a linear combination, and not every system of linear equations has a unique solution or even a solution at all. The question of whether a collection of vectors forms a basis is computationally equivalent to the question of whether a system of linear equations has a unique solution.</p>
+
+  <p class="body"><a id="pgfId-1132229"></a>This profound connection is a good place to bookend part 1 with its focus on linear algebra. There will be plenty of more linear algebra nuggets throughout the book, but they are even more useful when we pair them with the core <a id="uwxLf8TtHZV9JMnFGtozeQ4"></a>topic of part 2: calculus.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1132231"></a><a id="id_iq8v42950nk8"></a>7.4.2 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1145638"></a><b class="fm-exercise-head">Exercise 7.27</b>: How can you write the vector (5, 5) as a linear combination of (10, 1) (3, 2)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1145639"></a><b class="fm-exercise-head">Solution</b>: This is equivalent to asking what numbers <i class="fm-in-times-italic1">a</i> and <i class="fm-in-times-italic1">b</i> satisfy the equation</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland_EQ44.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1145644"></a>or what vector (<i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>) satisfies the matrix equation:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland_EQ45.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1145649"></a>We can find a solution with NumPy:</p>
+        <pre class="programlisting">&gt;&gt;&gt; matrix = np.array(((10,3),(1,2)))
+&gt;&gt;&gt; vector = np.array((5,5))
+&gt;&gt;&gt; np.linalg.solve(matrix,vector)
+array([-0.29411765, 2.64705882])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1145651"></a>This means the linear combination (which you can check!) is as follows:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland_EQ46.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1145699"></a><b class="fm-exercise-head">Exercise 7.28</b>: Write the vector (3, 0, 6, 9) as a linear combination of the vectors (0, 0, 1, 1), (0, −2, −1, −1), (1, −2, 0, 2), and (0, 0, −2, 1).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1145743"></a><b class="fm-exercise-head">Solution</b>: The linear system to solve is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland_EQ47.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1145748"></a>where the columns of the 4-by<span class="fm-in-cambria">−</span>4 matrix are the vectors we want to build the linear combination from. NumPy gives us the solution to this system:</p>
+        <pre class="programlisting">&gt;&gt;&gt; matrix = np.array(((0, 0, 1, 0), (0, −2, −2, 0), (1, −1, 0, −2), (1, −1, 2, 1)))
+&gt;&gt;&gt; vector = np.array((3,0,6,9))
+&gt;&gt;&gt; np.linalg.solve(matrix,vector)
+array([ 1., <span class="fm-in-cambria">−</span>3., 3., −1.])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1145750"></a>This means that <a id="id-endrange-basis"></a>the linear <a id="uQsIygWeyGGAXLbO2fj8i94"></a>combination is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH07_F29_Orland_EQ48.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_25"><a id="pgfId-1132268"></a><a id="id_ozvxo1rxc6h7"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132269"></a>Model objects in a 2D video game can be done as polygonal shapes built out of line segments.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132270"></a>Given two vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, the points of the form <i class="fm-in-times-italic">u</i> + <i class="fm-italics">tv</i> for any real number <i class="fm-in-times-italic">t</i> lie on a straight line. In fact, any line can be described with this formula.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132271"></a>Given real numbers <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i>, where at least one of <i class="fm-in-times-italic">a</i> or <i class="fm-in-times-italic">b</i> is non-zero, the points (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) in the plane satisfying <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i> lie on a straight line. This is called the <i class="fm-italics">standard form</i> for the equation of a line, and any line can be written in this form for some choice of <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i>. Equations for lines are called <i class="fm-italics">linear equations</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132272"></a>Finding the point where two lines intersect in the plane is equivalent to finding the values (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) that simultaneously satisfy two linear equations. A collection of linear equations that we seek to solve simultaneously is called a <i class="fm-italics">system of linear equations</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132273"></a>Solving a system of two linear equations is equivalent to finding what vector can be multiplied by a known 2-by<span class="fm-in-cambria">−</span>2 matrix to yield a known vector.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132274"></a>NumPy has a built-in function, <code class="fm-code-in-text">numpy.linalg.solve</code>, that takes a matrix and a vector and solves the corresponding system of linear equations automatically, if possible.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132275"></a>Some systems of linear equations cannot be solved. For instance, if two lines are parallel, they can have either no intersection points or infinitely many (which would mean they are the same line). This means there is no (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) value that simultaneously satisfies both lines’ equations. A matrix representing such a system is called <i class="fm-italics">singular</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132276"></a>Planes in 3D are the analogs of lines in 2D. They are the sets of points (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) satisfying equations of the form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> + <i class="fm-in-times-italic">cz</i> = <i class="fm-in-times-italic">d</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132277"></a>Two non-parallel planes in 3D intersect at infinitely many points, and specifically, the set of points they share form a 1D line in 3D. Three planes can have a unique point of intersection that can be found by solving the system of three linear equations representing the planes.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132278"></a>Lines in 2D and planes in 3D are both cases of <i class="fm-italics">hyperplanes</i>, sets of points in <i class="fm-in-times-italic">n</i> -dimensions that are solutions to a single linear equation.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132279"></a>In <i class="fm-in-times-italic">n</i> -dimensions, you need a system of at least <i class="fm-in-times-italic">n</i> linear equations to find a unique solution. If you have exactly <i class="fm-in-times-italic">n</i> linear equations and they have a unique solution, those are called <i class="fm-italics">independent equations</i>.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1132280"></a>Figuring out how to write a vector as a linear combination of a given set of vectors is computationally equivalent to solving a system of linear equations. If the set of vectors is a basis for the space, this is always possible.</p>
+    </li>
+  </ul>
+</body>
+</html>

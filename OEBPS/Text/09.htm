@@ -1,0 +1,477 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>9</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1147826"></a><a id="marker-1155458"></a><a id="marker-1155463"></a><a id="pgfId-1147831"></a><a id="id_4cwx06g7tma4"></a>9 Simulating moving objects</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1147847"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1147848"></a>Implementing Newton’s laws of motion in code to simulate realistic motion</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1147849"></a>Calculating velocity and acceleration vectors</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1147850"></a>Using Euler’s method to approximate the position of a moving object</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1147851"></a>Finding the exact trajectory of a moving object with calculus</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1147837"></a>Our asteroid <a id="marker-1155763"></a>game from chapter 7 was functional but not that challenging. In order to make it more interesting, we need the asteroids to actually move! And, to give the player a chance to avoid the moving asteroids, we need to make it possible to move and steer the spaceship as well.</p>
+
+  <p class="body"><a id="pgfId-1147058"></a>To implement motion in the asteroid game, we’ll use many of the same calculus concepts from chapter 8. The numerical quantities we’ll consider are the <i class="fm-in-times-italic">x</i> and the <i class="fm-in-times-italic">y</i> positions of the asteroids and of the spaceship. If we want the asteroids to move, these values are different at different points in time, so we can consider them to be functions of time: <i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>). The derivative of a position function with respect to time is called <i class="fm-italics">velocity</i>, and the derivative of velocity with respect to time is called <i class="fm-italics">acceleration</i>. Because we have two position functions, we have two velocity functions and two acceleration functions. This allows us to think of velocities and accelerations as vectors, as well.</p>
+
+  <p class="body"><a id="pgfId-1147059"></a>Our first goal is to get the asteroids moving. For that, we’ll provide random, constant velocity functions for the asteroids. Then we’ll integrate these velocity functions in “real time” to get the position of each asteroid in each frame using an algorithm called <i class="fm-italics">Euler’s method</i>. Euler’s method is mathematically similar to the integration we did in chapter 8, but it has the advantage that we can carry it out as the game runs.</p>
+
+  <p class="body"><a id="pgfId-1147060"></a>After that, we can allow the user to control the spaceship. When the user presses the up arrow on their keyboard, the spaceship should accelerate in the direction it’s pointing. That means the derivative of the derivative of each of <i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>) becomes non-zero; the velocity begins to change, and the position starts to change as well. Again, we’ll use Euler’s method to integrate the acceleration function and the velocity function in real time.</p>
+
+  <p class="body"><a id="pgfId-1147061"></a>Euler’s method is merely an approximation of the integral, and in this application, it’s analogous to the Riemann sums from chapter 8. It is possible to calculate the exact positions of the asteroids and of the spaceship over time, and I conclude the chapter with a brief comparison of the Euler’s method results and the exact solutions.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1147063"></a><a id="id_yf5l4v1dt041"></a>9.1 Simulating a constant velocity motion</h2>
+
+  <p class="body"><a id="pgfId-1147064"></a>In <a id="marker-1155468"></a>everyday <a id="marker-1155473"></a>usage, the word <i class="fm-italics">velocity</i> is a synonym for the word <i class="fm-italics">speed</i>. In math and physics, velocity has a special meaning; it includes the concepts of both speed and direction of motion. Therefore, velocity will be the concept that we focus on, and we’ll think of it as a vector.</p>
+
+  <p class="body"><a id="pgfId-1155331"></a>What we want to do is to give each of the asteroid objects a random velocity vector, meaning a pair of numbers (<i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i>, <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i>), and interpret these to be the constant values of the derivatives of position with respect to time. That is, we assume <i class="fm-in-times-italic">x</i>'(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> and <i class="fm-in-times-italic">y</i>'(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i>. With that information encoded, we can update the game engine so that the asteroids actually move with those velocities as the game progresses.</p>
+
+  <p class="body"><a id="pgfId-1153865"></a>Because our game is two-dimensional, we work with pairs of positions and pairs of velocities. I switch back and forth from talking about <i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>) as a pair of position functions and <i class="fm-in-times-italic">x</i>'(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">y</i>'(<i class="fm-in-times-italic">t</i>) as a pair of velocity functions, and writing them as <i class="fm-italics">vector-valued</i> functions: <i class="fm-in-times-italic">s</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>)) and <i class="fm-in-times-italic">v</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">x</i>'(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">y</i>'(<i class="fm-in-times-italic">t</i>)). This notation just means that <i class="fm-in-times-italic">s</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">v</i>(<i class="fm-in-times-italic">t</i>) are both functions that take a time value and return a vector, representing position and velocity, respectively, at that time.</p>
+
+  <p class="body"><a id="pgfId-1147067"></a>The asteroids already have position vectors, indicated by their <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> properties, but we need to give them velocity vectors as well, indicating how fast they are moving in the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> directions. That’s our first step to get them moving frame-by-frame.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1147069"></a>9.1.1 <a id="id_rjc0f1j8xark"></a>Adding velocities to the asteroids</h3>
+
+  <p class="body"><a id="pgfId-1147070"></a>To <a id="marker-1155478"></a>give <a id="marker-1155483"></a>each <a id="marker-1155488"></a>asteroid a velocity vector, we can add the two components of the vectors <code class="fm-code-in-text">v x</code> and <code class="fm-code-in-text">v y</code> as properties on the <code class="fm-code-in-text">PolygonModel</code> object (in the chapter 9 version of <code class="fm-code-in-text">asteroids.py</code> in the source code):</p>
+  <pre class="programlisting">class PolygonModel():
+    def __init__(self,points):
+        self.points = points     <span class="fm-combinumeral">❶</span>
+        self.angle = 0
+        self.x = 0
+        self.y = 0
+        self.vx = 0              <span class="fm-combinumeral">❷</span>
+        self.vy = 0</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1147074"></a><span class="fm-combinumeral">❶</span> The first four properties are kept from the original implementation of this class in chapter 7.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1155905"></a><span class="fm-combinumeral">❷</span> These vx and vy properties store the current values of <i class="fm-in-times-italic1">v<sub class="fm-subscript">x</sub></i> = <i class="fm-in-times-italic1">x</i>'(<i class="fm-in-times-italic1">t</i>) and <i class="fm-in-times-italic1">v<sub class="fm-subscript">y</sub></i> = <i class="fm-in-times-italic1">y</i>'(<i class="fm-in-times-italic1">t</i>). By default, they are set to 0, meaning the object is not moving.</p>
+
+  <p class="body"><a id="pgfId-1148717"></a>Next, to make our asteroids move erratically, we can give them random values for the two components of their velocities. This means adding two lines at the bottom of the <code class="fm-code-in-text">Asteroid</code> constructor:</p>
+  <pre class="programlisting">class Asteroid(PolygonModel):
+    def __init__(self):
+        sides = randint(5,9)
+        vs = [vectors.to_cartesian((uniform(0.5,1.0), 2 * pi * i / sides))
+                for i in range(0,sides)]
+        super().__init__(vs)              <span class="fm-combinumeral">❶</span>
+        self.vx = uniform(−1,1)           <span class="fm-combinumeral">❷</span>
+        self.vy = uniform(−1,1)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1147078"></a><span class="fm-combinumeral">❶</span> Up to this line, the code is unchanged from chapter 7; it initializes the asteroid’s shape as a polygon with randomly positioned vertices.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1155943"></a><span class="fm-combinumeral">❷</span> In the last two lines, the <i class="fm-in-times-italic1">x</i> and y velocities are set to random values between −1 and 1.</p>
+
+  <p class="body"><a id="pgfId-1148784"></a>Remember, a negative derivative means that a function is decreasing, while a positive value means that a function is increasing. The fact that the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> velocities could be positive or negative means that the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> positions could each either be increasing or decreasing. That means <a id="marker-1155493"></a>our <a id="marker-1155498"></a>asteroids <a id="marker-1155503"></a>could be moving to the right or left and upward or downward.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1147080"></a><a id="id_o5wcq4md8v00"></a>9.1.2 Updating the game engine to move the asteroids<a id="marker-1155870"></a></h3>
+
+  <p class="body"><a id="pgfId-1147081"></a>The<a id="marker-1155508"></a> next<a id="marker-1155513"></a> thing <a id="marker-1155518"></a>we need to do is use the velocity to update the position. Regardless of whether we’re talking about the spaceship, the asteroids, or some other <code class="fm-code-in-text">PolygonModel</code> objects, the velocity components <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> and <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i> tell us how to update the position components <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i>.</p>
+
+  <p class="body"><a id="pgfId-1147082"></a>If some time <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> elapses between frames, we update <i class="fm-in-times-italic">x</i> by <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> and <i class="fm-in-times-italic">y</i> by <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>. (The symbol <span class="fm-in-cambria">Δ</span> is the capital Greek letter delta, often used to indicate a change in a variable). This is the same approximation we use to find a small change in volume from a small change in flow rate in chapter 8. In this case, it is better than an approximation because the velocities are constant, the velocity times the elapsed time gives the change in position.</p>
+
+  <p class="body"><a id="pgfId-1147085"></a>We can<a id="marker-1147083"></a> add a <code class="fm-code-in-text">move</code> method to the <code class="fm-code-in-text">PolygonModel</code> class that updates<a id="marker-1147084"></a> an object’s position based on this formula. The only thing that the object won’t be intrinsically aware of is the elapsed time, so we pass that in (in milliseconds):</p>
+  <pre class="programlisting">class PolygonModel():
+    ...
+    def move(self, milliseconds):
+        dx, dy = (self.vx * milliseconds / 1000.0, 
+                  self.vy * milliseconds / 1000.0        <span class="fm-combinumeral">❶</span>
+        self.x, self.y = vectors.add((self.x,self.y), 
+                                     (dx,dy))            <span class="fm-combinumeral">❷</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1147091"></a><span class="fm-combinumeral">❶</span> The change in <i class="fm-in-times-italic1">x</i> position is called dx, and the change in y position is called dy. Both are calculated by multiplying the asteroid’s velocity by the elapsed time in seconds.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156169"></a><span class="fm-combinumeral">❷</span> Completes the movement for the frame, updating the positions by adding the respective changes dx and dy</p>
+
+  <p class="body"><a id="pgfId-1151051"></a>This is a first, simple application of the Euler’s method algorithm. The algorithm consists of keeping track of the value of one or more functions (in our case, the positions <i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>) as well as their derivatives <i class="fm-in-times-italic">x</i>'(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> and <i class="fm-in-times-italic">y</i>'(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i>) and updating the functions according to their derivatives in each step. This works perfectly if the derivatives are constant, but it is still a fairly good approximation if the derivatives are themselves changing. When we turn our attention to the spaceship, <a id="marker-1155523"></a>we’ll <a id="marker-1155528"></a>deal with changing <a id="marker-1155533"></a>velocity values and update our implementation of Euler’s method.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1147093"></a><a id="id_7apdsjjr0p2m"></a>9.1.3 Keeping the asteroids on the screen</h3>
+
+  <p class="body"><a id="pgfId-1147094"></a>We can <a id="marker-1155543"></a>add <a id="marker-1155548"></a>one more small feature to improve the gameplay experience. An asteroid with a random velocity is bound to drift off the screen at some point. To keep the asteroids within the screen area, we can add some logic to keep both coordinates between the minimum and maximum values of −10 and 10. When, for instance, the <i class="fm-in-times-italic">x</i> property increases from 10.0 to 10.1, we subtract 20 so it becomes an acceptable value of -9.9. This has the effect of “teleporting” the asteroid from the right side of the screen to the left. This game mechanic has nothing to do with physics, but makes the game more interesting by keeping the asteroids in play (figure 9.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157308"></a>Figure 9.1 Keeping all objects’ coordinates between −10 and 10 by “teleporting” the objects across the screen when they are about to leave it</p>
+
+  <p class="body"><a id="pgfId-1147100"></a>Here’s the teleportation code:</p>
+  <pre class="programlisting">class PolygonModel():
+    ...
+    def move(self, milliseconds):
+        dx, dy = (self.vx * milliseconds / 1000.0, 
+                  self.vy * milliseconds / 1000.0)
+        self.x, self.y = vectors.add((self.x,self.y), 
+                                     (dx,dy))
+        if self.x &lt; −10:
+            self.x += 20      <span class="fm-combinumeral">❶</span>
+        if self.y &lt; −10:      <span class="fm-combinumeral">❷</span>
+            self.y += 20
+        if self.x &gt; 10:
+            self.x -= 20
+        if self.y &gt; 10:
+            self.y -=20</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156274"></a><span class="fm-combinumeral">❶</span> If <i class="fm-in-times-italic1">x</i> &lt; −10, the asteroid drifts off the left side of the screen, so we add 20 units to the <i class="fm-in-times-italic1">x</i> position to teleport it to the right side of the screen.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156295"></a><span class="fm-combinumeral">❷</span> If y &lt; −10, the asteroid drifts off the bottom of the screen, so we add 20 units to the y position to teleport it to the top of the screen.</p>
+
+  <p class="body"><a id="pgfId-1147107"></a>Finally, we need to call the <code class="fm-code-in-text">move</code> method for every asteroid<a id="marker-1147106"></a> in play. To do that, we need the following lines within our game loop before the drawing begins:</p>
+  <pre class="programlisting">milliseconds = clock.get_time()   <span class="fm-combinumeral">❶</span>
+for ast in asteroids:
+    ast.move(milliseconds)        <span class="fm-combinumeral">❷</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1147111"></a><span class="fm-combinumeral">❶</span> Figures out how many milliseconds have elapsed since the last frame</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156326"></a><span class="fm-combinumeral">❷</span> Signals all of the asteroids to update their position based on their velocity</p>
+
+  <p class="body"><a id="pgfId-1151266"></a>It’s unremarkable when printed on this page, but when you run the code yourself, you’ll see the asteroids move randomly about the screen, each in a random direction. But if you focus on an asteroid, you’ll see that its motion isn’t random; it changes position by the same distance in the same direction in each passing second (figure 9.2).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157351"></a>Figure 9.2 With the preceding code included, each asteroid moves with a random, constant velocity.</p>
+
+  <p class="body"><a id="pgfId-1147117"></a>With asteroids that move, the ship is now in danger−it needs to move to avoid them. But even moving at a constant velocity won’t save the ship as it will likely run into an asteroid at some point. The player needs to change the velocity of the ship, meaning both its speed and its direction. Next, we look at<a id="marker-1155579"></a> how<a id="marker-1155772"></a> to simulate<a id="marker-1155580"></a> change in velocity, which is known as <i class="fm-italics">acceleration</i>.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1147120"></a><a id="id_ywdyldfn6rao"></a>9.1.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1151346"></a><b class="fm-exercise-head">Exercise 9.1</b>: An <a id="marker-1155588"></a>asteroid <a id="marker-1155593"></a>has the velocity vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic1">v<sub class="fm-subscript">x</sub></i>, <i class="fm-in-times-italic1">v<sub class="fm-subscript">y</sub></i>) = (−3, 1). Which direction is it moving on the screen?</p>
+
+        <ul class="calibre22">
+          <li class="fm-exercise-list-num"><a id="pgfId-1151347"></a>Up and to the right</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1151348"></a>Up and to the left</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1151349"></a>Down and to the left</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1151350"></a>Down and to the right</li>
+        </ul>
+
+        <p class="fm-sidebar"><a id="pgfId-1151351"></a><b class="fm-exercise-head">Solution</b>: Because <i class="fm-in-times-italic1">x</i>'(<i class="fm-in-times-italic1">t</i>) = <i class="fm-in-times-italic1">v<sub class="fm-subscript">x</sub></i> = <span class="fm-in-cambria">−</span>3 at this moment in time, the asteroid is moving in the negative <i class="fm-in-times-italic1">x</i> direction, or to the left. Because <i class="fm-in-times-italic1">y</i>'(<i class="fm-in-times-italic1">t</i>) = <i class="fm-in-times-italic1">v<sub class="fm-subscript">y</sub></i> = 1, the asteroid is moving in the positive <i class="fm-in-times-italic1">y</i> <a id="marker-1155598"></a>direction <a id="marker-1155603"></a>at this <a id="marker-1155608"></a>moment, <a id="marker-1155613"></a>which is upward. Therefore, answer <i class="fm-in-times-italic1">b</i> is correct.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_8"><a id="pgfId-1147130"></a><a id="id_kf1gsaupbwlx"></a>9.2 Simulating acceleration</h2>
+
+  <p class="body"><a id="pgfId-1147131"></a>Let’s <a id="marker-1155618"></a>imagine<a id="marker-1155623"></a> our spaceship is equipped with a thruster that burns rocket fuel, and the expanding gasses push the spaceship in the direction it’s pointed (figure 9.3).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157404"></a>Figure 9.3 Schematic of how a rocket propels itself</p>
+
+  <p class="body"><a id="pgfId-1155202"></a> We’ll assume that when the rocket is firing its thruster, it accelerates at a constant rate in the direction it’s pointed. Because acceleration is defined as the derivative of velocity, constant acceleration values mean that the velocities change at a constant rate in both directions with respect to time. When acceleration is nonzero, the velocities <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> and <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i> are not constant; they are the functions <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i>(<i class="fm-in-times-italic">t</i>) that change over time. Our assumption that acceleration is constant means that there are two numbers, <i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i> and <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i>, so that <i class="fm-in-times-italic">v'<sub class="fm-subscript1">x</sub></i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i> and <i class="fm-in-times-italic">v'<sub class="fm-subscript1">y</sub></i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i>. As a vector, we denote acceleration by <i class="fm-in-times-italic">a</i> = (<i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i>, <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i>).</p>
+
+  <p class="body"><a id="pgfId-1155241"></a>Our goal is to give the Python spaceship a pair of properties representing (<i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i> and <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i>) and to have it accelerate and move across the screen according to those values. When the user is not pressing any buttons, the spaceship should have zero acceleration in both directions, and when the user presses the up arrow key, the acceleration values should instantly be updated so that (<i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i>, <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i>) is a non-zero vector pointing in the direction the spaceship is headed. While the user holds down the up arrow key, the spaceship’s velocity and position should both change realistically, causing it to move frame-by-frame.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1147140"></a><a id="id_83soqqr2loui"></a>9.2.1 Accelerating the spaceship</h3>
+
+  <p class="body"><a id="pgfId-1147141"></a>Regardless <a id="marker-1155628"></a>of the direction the spaceship is pointing, we want it to appear to accelerate at the same rate. That means that while the thruster is firing, the magnitude of the vector (<i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i>, <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i>) should have a fixed value. By trial and error, I discovered that an acceleration magnitude of 3 makes the ship sufficiently maneuverable. Let’s include this constant in our game code:</p>
+  <pre class="programlisting">acceleration = 3</pre>
+
+  <p class="body"><a id="pgfId-1147143"></a>Thinking of the distance units in our game as meters, this represents a value of 3 meters per second per second (m/s/s). If the spaceship starts<a id="marker-1147144"></a><a id="marker-1147145"></a> at a standstill and the player holds down the up arrow key, the spaceship increases its speed by 3 m/s every second in the direction it’s pointing. PyGame works in milliseconds, so the relevant speed change will be 0.003 m/s every millisecond, or 0.003 meters per second per millisecond.</p>
+
+  <p class="body"><a id="pgfId-1154467"></a>Let’s figure out how to calculate the acceleration vector <i class="fm-in-times-italic">a</i> = (<i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i>, <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i>) while the up arrow key is pressed. If the ship is pointing at a rotation angle <span class="fm-in-cambria">θ</span>, then we need to use trigonometry to find the vertical and horizontal components of the acceleration from the magnitude |<i class="fm-in-times-italic">a</i>| = 3. By the definition of sine and cosine, the horizontal and vertical components are |<i class="fm-in-times-italic">a</i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>) and |<i class="fm-in-times-italic">a</i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>), respectively (figure 9.4). In other words, the acceleration vector is the pair of components ( |<i class="fm-in-times-italic">a</i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>), |<i class="fm-in-times-italic">a</i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>)). Incidentally, you could also use the <code class="fm-code-in-text">from_polar</code> function we wrote in chapter 2 to get these components from the magnitude and direction of acceleration.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157453"></a>Figure 9.4 Using trigonometry to find the components of acceleration from its magnitude and direction</p>
+
+  <p class="body"><a id="pgfId-1147152"></a>During each iteration of the game loop, we can update the velocity of the ship before it moves. Over an elapsed time <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>, the update to <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> will be <i class="fm-in-times-italic">a<sub class="fm-subscript1">x</sub></i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> and the update to <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i> will be <i class="fm-in-times-italic">a<sub class="fm-subscript1">y</sub></i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>. In code, we need to add the appropriate changes in velocity to the ship’s <code class="fm-code-in-text">vx</code> and <code class="fm-code-in-text">vy</code> properties:</p>
+  <pre class="programlisting">while not done:
+    ...
+        if keys[pygame.K_UP]:                               <span class="fm-combinumeral">❶</span>
+            ax = acceleration * <span class="fm-in-times1">cos</span>(ship.rotation_angle)    <span class="fm-combinumeral">❷</span>
+            ay = acceleration * <span class="fm-in-times1">sin</span>(ship.rotation_angle)
+            ship.vx += ax * milliseconds/1000               <span class="fm-combinumeral">❸</span>
+            ship.vy += ay * milliseconds/1000
+
+        ship.move(milliseconds)                             <span class="fm-combinumeral">❹</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1147158"></a><span class="fm-combinumeral">❶</span> Detects whether the up arrow key is pressed</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156557"></a><span class="fm-combinumeral">❷</span> Calculates the values of <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">x</sub> and <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">y</sub> based on the fixed magnitude of acceleration and the angle the ship is pointing</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156574"></a><span class="fm-combinumeral">❸</span> Updates the <i class="fm-in-times-italic1">x</i> and y velocities by <i class="fm-in-times-italic1">a</i><sub class="fm-subscript2">x</sub> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic1">t</i> and ay <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic1">t</i>, respectively</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156591"></a><span class="fm-combinumeral">❹</span> Moves the spaceship, using the updated velocities to update positions</p>
+
+  <p class="body"><a id="pgfId-1151678"></a>That’s it! With this added code, the spaceship should accelerate when you press the up arrow. The code to rotate the spaceship with the left and right arrow keys is similar and included in the source code, but I won’t go into it here. With the left, right, and up arrow functionality implemented, you can point the ship in whatever direction to accelerate when you want to avoid asteroids.</p>
+
+  <p class="body"><a id="pgfId-1149605"></a>This is a slightly more advanced<a id="marker-1149604"></a> application of Euler’s method where we have <i class="fm-italics">second</i> <i class="fm-italics">derivatives</i> : <i class="fm-in-times-italic">x</i>''(<i class="fm-italics">t) = v</i> '<i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">ax</i> and <i class="fm-in-times-italic">y</i>''(<i class="fm-in-times-italic">t</i> <i class="fm-italics">) = v</i> '<i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-italics">ay</i>. At each step, we first update the velocities, then we use the updated velocities in the <code class="fm-code-in-text">move</code> method to determine<a id="marker-1149606"></a> the updated positions. We’re done with our game programming for this chapter, but in the next sections, we take a <a id="marker-1155633"></a>closer look <a id="marker-1155638"></a>at Euler’s <a id="marker-1155643"></a>method and evaluate how well it approximates motion.</p>
+
+  <h2 class="fm-head" id="heading_id_10"><a id="pgfId-1147163"></a><a id="id_f2134qlwl4ij"></a>9.3 Digging deeper into Euler’s method</h2>
+
+  <p class="body"><a id="pgfId-1147164"></a>The core <a id="marker-1155648"></a>idea <a id="marker-1155653"></a>of Euler’s method is to start with an initial value of a quantity (like position) and an equation describing its derivatives (like velocity and acceleration). The derivatives then tell us how to update the quantity. Let’s review how we did this by walking through an example, one step at a time.</p>
+
+  <p class="body"><a id="pgfId-1147165"></a>Say an object starts at time <i class="fm-in-times-italic">t</i> = 0 at position (0, 0) with an initial velocity (1, 0) and a constant acceleration (0, 0.2). (For notational clarity, I’ll leave out units in this section, but you can continue to think in seconds, meters, meters per second, and so on.) This initial velocity points in the positive <i class="fm-in-times-italic">x</i> direction, and the acceleration points in the positive <i class="fm-in-times-italic">y</i> direction. This means if we look at the plane, the object starts by moving directly to the right, but it veers upward over time.</p>
+
+  <p class="body"><a id="pgfId-1147166"></a>Our task is to find the values of the position vector every two seconds from <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 10 using Euler’s method. First, we’ll do it by hand and then we’ll do the identical computation in Python. Equipped with the resulting positions, we’ll draw them in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane to show the path the spaceship follows.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1147168"></a><a id="id_hpq2bbs7xwc"></a>9.3.1 Carrying out Euler’s method by hand</h3>
+
+  <p class="body"><a id="pgfId-1153801"></a>We <a id="marker-1155658"></a>will<a id="marker-1155663"></a> continue to think of position, velocity, and acceleration as functions of time: at any given time, the object will have some vector value for each of these quantities. I’ll call these vector-valued functions: <i class="fm-in-times-italic">s</i>(<i class="fm-in-times-italic">t</i>) <i class="fm-italics">, v</i> (<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic">t</i>) where <i class="fm-in-times-italic">s</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>)), <i class="fm-in-times-italic">v</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">x</i>'(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">y</i>'(<i class="fm-in-times-italic">t</i>)), and <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">x</i>''(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">y</i>''(<i class="fm-in-times-italic">t</i>)). Here are the initial values given in a table at time <i class="fm-in-times-italic">t</i> = 0:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland_EQ01.png"/></p>
+
+  <p class="body"><a id="pgfId-1147175"></a>In our asteroid game, PyGame dictated how many milliseconds elapsed between each calculation of position. In this example, to make it quick, let’s reconstruct the position from time <i class="fm-in-times-italic">t</i> = 0 to <i class="fm-in-times-italic">t</i> = 10 in 2-second increments. The table we need to complete is as follows:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland_EQ02.png"/></p>
+
+  <p class="body"><a id="pgfId-1147180"></a>I already filled out the acceleration column for us because we’ve stipulated that the acceleration is constant. What happens in the 2-second period between <i class="fm-in-times-italic">t</i> = 0 and <i class="fm-in-times-italic">t</i> = 2? The velocities change according to the acceleration as calculated in the following pair of equations. In these equations, we again use the Greek letter <span class="fm-in-cambria">Δ</span> (delta) to mean the change in a variable on the interval we’re considering. For instance, <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> is the change in time, so <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> = 2 seconds for each of the 5 intervals. The velocity components at time 2 are therefore:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland_EQ03.png"/></p>
+
+  <p class="body"><a id="pgfId-1147191"></a>The new vector value of the velocity at time <i class="fm-in-times-italic">t</i> = 2 is <i class="fm-in-times-italic">v</i>(2) = (<i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> (2), <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i> (2)) = (1, 0.4). The position changes as well, according to the velocity <i class="fm-in-times-italic">v</i>(0):</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland_EQ04.png"/></p>
+
+  <p class="body"><a id="pgfId-1147202"></a>Its updated value is <i class="fm-in-times-italic">s</i> = (<i class="fm-in-times-italic">x, y</i>) = (2, 0). That gives us the second row of the table:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland_EQ05.png"/></p>
+
+  <p class="body"><a id="pgfId-1147208"></a>Between <i class="fm-in-times-italic">t</i> = 2 and <i class="fm-in-times-italic">t</i> = 4, the acceleration stays the same so the velocity increases by the same amount, <i class="fm-in-times-italic">a</i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> = (0, 0.2) <span class="fm-in-cambria">·</span> 2 = (0, 0.4), to a new value, <i class="fm-in-times-italic">v</i>(4) = (1, 0.8). The position increases according to the velocity <i class="fm-in-times-italic">v</i>(2):</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland_EQ06.png"/></p>
+
+  <p class="body"><a id="pgfId-1147214"></a>This increases the position to <i class="fm-in-times-italic">s</i>(4) = (4, 0.8). We now have three rows of the table completed, and we’ve calculated two of the five positions we wanted:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F04_Orland_EQ07.png"/></p>
+
+  <p class="body"><a id="pgfId-1147220"></a>We could keep going like this, but it will be more pleasant if we let Python do the work for us−that’s our next step. But first, let’s pause for a moment. I’ve taken us through quite a bit of arithmetic in the past few paragraphs. Did any of my assumptions seem suspect to you? I’ll give you a hint: it’s not quite legal to use the equation <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">s</i> = <i class="fm-in-times-italic">v</i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> as I did here, so the positions in the table are only approximately correct. If you don’t see where I snuck in approximations yet, don’t worry. It <a id="marker-1155668"></a>will be <a id="marker-1155673"></a>clear soon, once we’ve plotted the position vectors on a graph.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1147222"></a><a id="id_9iam2qs5pjof"></a>9.3.2 Implementing the algorithm in Python</h3>
+
+  <p class="body"><a id="pgfId-1147223"></a>Describing this <a id="marker-1155683"></a>procedure<a id="marker-1155688"></a> in Python isn’t too much work. We first need to set the initial values of time, position, velocity, and acceleration:</p>
+  <pre class="programlisting">t = 0
+s = (0,0)
+v = (1,0)
+a = (0,0.2)</pre>
+
+  <p class="body"><a id="pgfId-1147225"></a>The other values we need to specify are the moments in time we’re interested in: 0, 2, 4, 6, 8, and 10 seconds. Rather than list all of these, we can use the fact that <i class="fm-in-times-italic">t</i> = 0 to begin with and specify a constant <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> = 2 for each time step with 5 time steps in total:</p>
+  <pre class="programlisting">dt = 2
+steps = 5</pre>
+
+  <p class="body"><a id="pgfId-1147227"></a>Finally, we need to update time, position, and velocity once for every time step. As we go, we can store the positions in an array for later use:</p>
+  <pre class="programlisting">from vectors import add, scale
+positions = [s]
+for _ in range(0,5):
+    t += 2
+    s = add(s, scale(dt,v))    <span class="fm-combinumeral">❶</span>
+
+    v  = add(v, scale(dt,a))   <span class="fm-combinumeral">❷</span>
+    positions.append(s)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156819"></a><span class="fm-combinumeral">❶</span> Updates the position by adding the change in position <span class="fm-in-cambria">Δ</span>s = v<span class="fm-in-cambria">·</span>Δt to the current position <i class="fm-in-times-italic1">s</i>. (I used the scale and add functions from chapter 2.)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1156836"></a><span class="fm-combinumeral">❷</span> Updates the velocity by adding the change in velocity <span class="fm-in-cambria">Δ</span>v = a<span class="fm-in-cambria">·</span>Δt to the current velocity v</p>
+
+  <p class="body"><a id="pgfId-1147232"></a>If we run this code, the positions list is populated with six values of the vector <i class="fm-in-times-italic">s</i>, corresponding to the times <i class="fm-in-times-italic">t</i> = 0, 2, 4, 6, 8, 10. Now that we have the values in code, we can plot them and picture the object’s motion. If we plot them in 2D using the drawing module from chapters 2 and 3, we can see the object initially moving to the right and then veering upward as expected (figure 9.5). Here’s the Python code, and the plot it generates:</p>
+  <pre class="programlisting">from draw2d import *
+draw2d(Points2D(*positions))</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157514"></a>Figure 9.5 Points on the object’s trajectory according to our calculation with Euler’s method</p>
+
+  <p class="body"><a id="pgfId-1147239"></a>In our approximation, it’s as if the object moved in five straight lines at a different velocity on each of the five time intervals (figure 9.6).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157557"></a>Figure 9.6 The five displacement vectors connecting the points on the trajectory by straight lines.</p>
+
+  <p class="body"><a id="pgfId-1147245"></a>The object is supposed to be accelerating the whole time, so you might expect it to move in a smooth curve instead of in straight lines. Now that we have Euler’s method implemented in Python, we can quickly rerun it <a id="marker-1155698"></a>with different parameters<a id="marker-1155703"></a> to assess the quality of the approximation.</p>
+
+  <h2 class="fm-head" id="heading_id_13"><a id="pgfId-1147247"></a><a id="id_clirheir2ecf"></a>9.4 Running Euler’s method with smaller time steps</h2>
+
+  <p class="body"><a id="pgfId-1147248"></a>We <a id="marker-1155708"></a>can <a id="marker-1155713"></a>rerun the calculation again using twice as many time steps by setting <code class="fm-code-in-text">dt = 1</code> and <code class="fm-code-in-text">steps = 10</code>. This still simulates 10 seconds of motion, but instead, models it with 10 straight line paths (figure 9.7).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157611"></a>Figure 9.7 Euler’s method produces different results with the same initial values and different numbers of steps.</p>
+
+  <p class="body"><a id="pgfId-1152683"></a>Trying again with 100 steps and <code class="fm-code-in-text">dt</code> <code class="fm-code-in-text">=</code> <code class="fm-code-in-text">0.1</code>, we see yet another trajectory in the same 10 seconds (figure 9.8).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1152726"></a>Figure 9.8 With 100 steps instead of 5 or 10, we get yet another trajectory. Dots are omitted for this trajectory because there are so many of them.</p>
+
+  <p class="body"><a id="pgfId-1152685"></a>Why do we get different results even though the same equations went into all three calculations? It seems like the more time steps we use, the bigger the <i class="fm-in-times-italic">y</i>-coordinates get. We can see the problem if we look closely at the first two seconds.</p>
+
+  <p class="body"><a id="pgfId-1147261"></a>In the 5-step approximation, there’s no acceleration; the object is still traveling along the x-axis. In the 10-step approximation, the object has had one chance to update its velocity, so it has risen above the x-axis. Finally, the 100-step approximation has 19 velocity updates between <i class="fm-in-times-italic">t</i> = 0 and <i class="fm-in-times-italic">t</i> = 1, so its velocity increase is the largest (figure 9.9).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157681"></a>Figure 9.9 Looking closely at the first two segments, the 100-step approximation is the largest because its velocity updates most frequently.</p>
+
+  <p class="body"><a id="pgfId-1147267"></a>This is what I swept under the rug earlier. The equation <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">s</i> = <i class="fm-in-times-italic">v</i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> is only correct when velocity is constant. Euler’s method is a good approximation when you use a lot of time steps because on smaller time intervals, velocity doesn’t change that much. To confirm this, you can try some large time steps with small<a id="marker-1147268"></a> values for <i class="fm-italics">dt</i>. For example, with 100 steps of 0.1 seconds each, the final position is</p>
+  <pre class="programlisting">(9.99999999999998, 9.900000000000006)</pre>
+
+  <p class="body"><a id="pgfId-1147270"></a>and with 100,000 steps of 0.0001 seconds each, the final position is</p>
+  <pre class="programlisting">(9.999999999990033, 9.999899999993497)</pre>
+
+  <p class="body"><a id="pgfId-1147272"></a>The exact value of the final position is (10.0, 10.0), and as we add more and more steps to our approximation with Euler’s method, our results appear to <i class="fm-italics">converge</i> to this value. You’ll have to trust me for now that (10.0, 10.0) is the exact value. We’ll cover how to do exact integrals in the next chapter to prove it. Stay tuned!</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1147274"></a><a id="id_hlbfrycf4et0"></a>Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1152796"></a><b class="fm-exercise-head">Exercise 9.2-Mini Project</b>: <a id="marker-1155718"></a>Create a <a id="marker-1155723"></a>function that carries out Euler’s method automatically for a constantly accelerating object. You need to provide the function with an acceleration vector, initial velocity vector, initial position vector, and perhaps other parameters.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1152797"></a><b class="fm-exercise-head">Solution</b>: I also included the total time and number of steps as parameters to make it easy to test various answers in the solution.</p>
+        <pre class="programlisting">def eulers_method(s0,v0,a,total_time,step_count):
+    trajectory = [s0]
+    s = s0
+    v  = v0
+    dt = total_time/step_count     <span class="fm-combinumeral">❶</span>
+    for _ in range(0,step_count):
+        s = add(s,scale(dt,v))     <span class="fm-combinumeral">❷</span>
+        v  = add(v,scale(dt,a))
+        trajectory.append(s)
+    return trajectory</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1157166"></a><span class="fm-combinumeral">❶</span> The duration of each time step dt is the total time elapsed divided by the number of time steps.</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1157227"></a><span class="fm-combinumeral">❷</span> For each step, updates the position and velocity and adds the latest position as the next position in the trajectory (list of positions)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1152924"></a><b class="fm-exercise-head">Exercise 9.3-Mini Project</b>: In the calculation of section 9.4, we under approximated the <i class="fm-in-times-italic1">y</i>-coordinate of position because we updated the <i class="fm-in-times-italic1">y</i> component of the velocity at the end of each time interval. Update the velocity at the beginning of each time interval and show that you over approximate the <i class="fm-in-times-italic1">y</i> position over time.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1152925"></a><b class="fm-exercise-head">Solution</b>: We can tweak our implementation of the <code class="fm-code-in-text1">eulers_method</code> function from mini-project 9.2 with the only modification being switching the update order of <code class="fm-code-in-text1">s</code> and <code class="fm-code-in-text1">v</code> :</p>
+        <pre class="programlisting">def eulers_method_overapprox(s0,v0,a,total_time,step_count):
+    trajectory = [s0]
+    s = s0
+    v  = v0
+    dt = total_time/step_count
+    for _ in range(0,step_count):
+        v  = add(v,scale(dt,a))
+        s = add(s,scale(dt,v))
+        trajectory.append(s)
+    return trajectory</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1152927"></a>With the same inputs, this indeed gives a higher approximation of the <i class="fm-in-times-italic1">y</i>-coordinate than the original implementation. If you look closely at the trajectory in the following figure, you can see it is already moving in the <i class="fm-in-times-italic1">y</i> direction in the first time step.</p>
+        <pre class="programlisting">eulers_method_overapprox((0,0),(1,0),(0,0.2),10,10)
+ </pre>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_UN01_Orland.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1157734"></a>The original Euler’s method trajectory and the new one. The exact trajectory is shown in black for comparison.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1153043"></a><b class="fm-exercise-head">Exercise 9.4−Mini Project</b>: Any projectile like a thrown baseball, a bullet, or an airborne snowboarder experiences the same acceleration vector: 9.81 m/s/s toward the earth. If we think of the x-axis of the plane as flat ground with the positive y-axis pointing upward, that amounts to an acceleration vector of (0, 9.81). If a baseball is thrown from shoulder height at <i class="fm-in-times-italic1">x</i> = 0, we could say its initial position is (0, 1.5). Assume it’s thrown at an initial speed of 30 m/s at an angle of 20° up from the positive <i class="fm-in-times-italic1">x</i> direction and simulate its trajectory with Euler’s method. Approximately how far does the baseball go in the <i class="fm-in-times-italic1">x</i> direction before hitting the ground?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1153044"></a><b class="fm-exercise-head">Solution</b>: The initial velocity is (30 <span class="fm-in-cambria">·</span> <span class="fm-in-times1">cos</span>(20°), 30 <span class="fm-in-cambria">·</span> <span class="fm-in-times1">sin</span>(20°)). We can use the <code class="fm-code-in-text1">eulers_method</code> function from mini-project 9.2 to simulate the baseball’s motion over a few seconds:</p>
+        <pre class="programlisting">from math import pi,sin,cos
+angle = 20 * pi/180
+s0 = (0,1.5)
+v0 = (30*<span class="fm-in-times1">cos</span>(angle),30*<span class="fm-in-times1">sin</span>(angle))
+a = (0,−9.81)
+
+result = eulers_method(s0,v0,a,3,100)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1153046"></a>Plotting the resulting trajectory, this figure shows that the baseball makes an arc in the air before returning to the earth at about the 67-meter mark on the x-axis. The trajectory continues underground because we didn’t tell it to stop.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_UN02_Orland.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1153075"></a><b class="fm-exercise-head">Exercise 9.5−Mini Project</b>: Rerun the Euler’s method simulation from the previous mini-project with the same initial speed of 30 but using an initial position of (0, 0) and trying various angles for the initial velocity. What angle makes the baseball go the farthest before hitting the ground?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1153120"></a><b class="fm-exercise-head">Solution</b>: To simulate different angles, you can package this code as a function. Using a new starting position of (0, 0), you can see various trajectories in the following figure. It turns out that the baseball makes it the farthest at an angle of <span class="fm-in-cambria">45°</span>. (Notice that I’ve filtered out the points on the trajectory with negative <i class="fm-in-times-italic1">y</i> components to consider only the motion before the baseball hits the ground.)</p>
+        <pre class="programlisting">def baseball_trajectory(degrees):
+    radians = degrees * pi/180
+    s0 = (0,0)
+    v0 = (30*<span class="fm-in-times1">cos</span>(radians),30*<span class="fm-in-times1">sin</span>(radians))
+    <i class="fm-in-times-italic1">a</i> = (0,−9.81)
+    return [(x,y) for (x,y) in eulers_method(s0,v0,a,10,1000) if y&gt;=0]</pre>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_UN03_Orland.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1153125"></a>Throwing a baseball at 30 m/s at various angles</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1153163"></a><b class="fm-exercise-head">Exercise 9.6−Mini Project</b>: An object moving in 3D space has an initial velocity of (1, 2, 0) and has a constant acceleration vector of (0, −1, 1). If it starts at the origin, where is it after 10 seconds? Plot its trajectory in 3D using the drawing functions from chapter 3.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1153185"></a><b class="fm-exercise-head">Solution</b>: It turns out our <code class="fm-code-in-text1">eulers_method</code> implementation can already handle 3D vectors! The figure following the code snippet shows the trajectory in 3D.</p>
+        <pre class="programlisting">from draw3d import *
+traj3d = eulers_method((0,0,0), (1,2,0), (0,−1,1), 10, 10)
+draw3d(
+    Points3D(*traj3d)
+)</pre>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH09_UN04_Orland.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1153256"></a>Running with 1,000 steps for improved accuracy, we can find the last position:</p>
+        <pre class="programlisting">&gt;&gt;&gt; eulers_method((0,0,0), (1,2,0), (0,−1,1), 10, 1000)[−1]
+(9.999999999999831, −29.949999999999644, 49.94999999999933)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1153258"></a>It’s<a id="marker-1155728"></a> close <a id="marker-1155733"></a>to (10, <span class="fm-in-cambria">−</span>30, 50), which <a id="marker-1155738"></a>turns <a id="marker-1155743"></a>out to<a id="marker-1155748"></a> be the <a id="marker-1155753"></a>exact position.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_15"><a id="pgfId-1147327"></a><a id="id_yi8nk8oidzgt"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1147328"></a>Velocity is the derivative of position with respect to time. It is a vector consisting of the derivatives of each of the position functions. In 2D, with position functions <i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>), we can write the position <i class="fm-italics">vector</i> as a function <i class="fm-in-times-italic">s</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>)) and the velocity vector as a function <i class="fm-in-times-italic">v</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">x</i>'(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">y</i>'(<i class="fm-in-times-italic">t</i>)).</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1147329"></a>In a video game, you can animate an object moving at a constant velocity by updating its position in each frame. Measuring the time between frames and multiplying it by the object’s velocity gives you the change in position for the frame.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1147330"></a>Acceleration is the derivative of velocity with respect to time. It is a vector whose components are the derivatives of the components of velocity, for instance, <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic">t</i>) = (<i class="fm-in-times-italic">v</i>'<i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>), <i class="fm-in-times-italic">v</i>'<i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>)).</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1147331"></a>To simulate an accelerating object in a video game, you need to not only update the position with each frame but also update the velocity.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1147332"></a>If you know the rate at which a quantity changes with respect to time, you can compute the value of a quantity itself over time by calculating the quantity’s change over many small time intervals. This is <a id="marker-1155758"></a>called <i class="fm-italics">Euler’s method</i>.</p>
+    </li>
+  </ul>
+</body>
+</html>

@@ -1,0 +1,1017 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>15</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1132322"></a><a id="pgfId-1175013"></a>15 Classifying data with logistic regression</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1175907"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1175908"></a>Understanding classification problems and measuring classifiers</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1175909"></a>Finding decision boundaries to classify two kinds of data</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1175910"></a>Approximating classified data sets with logistic functions</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1175911"></a>Writing a cost function for logistic regression</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1175912"></a>Carrying out gradient descent to find a logistic function of best fit</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1175020"></a>One of the most<a id="marker-1184365"></a> important <a id="marker-1184370"></a>classes of problems in machine learning is <i class="fm-italics">classification</i>, which we’ll focus on in the last two chapters of this book. A classification problem is one where we’ve got one or more pieces of raw data, and we want to say what <i class="fm-italics">kind</i> of object each one represents. For instance, we might want an algorithm to look at the data of all email messages entering our inbox and classify each one as an interesting message or as unwanted spam. As an even more impactful example, we could write a classification algorithm to analyze a data set of medical scans and decide whether they contain benign or malevolent tumors.</p>
+
+  <p class="body"><a id="pgfId-1175021"></a>We can build machine learning algorithms for classification where the more real data our algorithm sees, the more it learns, and the better it performs at the classification task. For instance, every time an email user flags an email as spam or a radiologist identifies a malignant tumor, this data can be passed back to the algorithm to improve its calibration.</p>
+
+  <p class="body"><a id="pgfId-1175023"></a>In this chapter, we look at the same simple data set as in the last chapter: mileages and prices of used cars. Instead of using data for a single model of car like in the last chapter, we’ll look at two car models: Toyota Priuses and BMW 5 series sedans. Based only on the numeric data of the car’s mileage and price, and a reference data set of known examples, we want our algorithm to give us a yes or no answer as to whether the car is a BMW. As opposed to a regression model that takes in a number and produces another number, the classification model will take in a vector and produce a number between zero and one, representing the confidence that the vector represents a BMW instead of a Prius (figure 15.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186204"></a>Figure 15.1 Our classifier takes a vector of two numbers, the mileage and price of a used car, and returns a number representing its confidence that the car is a BMW.</p>
+
+  <p class="body"><a id="pgfId-1175029"></a>Even though classification has different inputs and outputs than regression, it turns out we can build our classifier using a type of regression. The algorithm we’ll implement in this chapter is called logistic regression. To train this algorithm, we start with a known data set of used car mileages and prices, labeled with a 1 if they are BMWs and a 0 if they are Priuses. Table 15.1 shows sample points in this data set that we use to train our algorithm.</p>
+
+  <p class="fm-table-caption"><a id="pgfId-1177508"></a>Table 15.1 Sample data points used to train the algorithm</p>
+
+  <table border="1" class="contenttable" width="50%">
+    <colgroup class="calibre3">
+      <col class="calibre4" span="1" width="33.33%"/>
+      <col class="calibre4" span="1" width="33.33%"/>
+      <col class="calibre4" span="1" width="33.33%"/>
+    </colgroup>
+
+    <tr class="calibre5">
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1177456"></a>Mileage (mi)</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1177490"></a>Price ($)</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1177458"></a>Is BMW?</p>
+      </th>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177460"></a>110,890.0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177492"></a>13,995.00</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177462"></a>1</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177464"></a>94,133.0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177494"></a>13,982.00</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177466"></a>1</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177468"></a>70,000.0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177496"></a>9,900.00</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177470"></a>0</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177472"></a>46,778.0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177498"></a>14,599.00</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177474"></a>1</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177484"></a>84,507.0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177500"></a>14,998.00</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177486"></a>0</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177476"></a>. . .</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177502"></a>. . .</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1177478"></a>. . .</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1175075"></a>We want a function that takes the values in the first two columns and produces a result that is between zero and one, and hopefully, close to the correct choice of car. I’ll introduce you to a special kind of function called a <i class="fm-italics">logistic function</i>, which takes<a id="marker-1175076"></a> a pair of input numbers and produces a single output number that is always between zero and one. Our classification function is the logistic function that “best fits” the sample data we provide.</p>
+
+  <p class="body"><a id="pgfId-1175077"></a>Our classification function won’t always get the answer right, but then again neither would a human. BMW 5 series sedans are luxury cars, so we would expect to get a lower price for a Prius than a BMW with the same mileage. Defying our expectations, the last two rows of the data in table 5.1 show a Prius and BMW at roughly the same price, where the Prius has nearly twice the mileage of the BMW. Due to fluke examples like this, we won’t expect the logistic function to produce exactly one or zero for each BMW or Prius it sees. Rather it can return 0.51, which is the function’s way of telling us it’s not sure, but the data is slightly more likely to represent a BMW.</p>
+
+  <p class="body"><a id="pgfId-1175078"></a>In the last chapter, we saw that the linear function we chose was determined by the two parameters <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> in the formula <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>. The logistic functions we’ll use in this chapter are parametrized by three parameters, so the task of logistic regression boils down to finding three numbers that get the logistic function as close as possible to the sample data provided. We’ll create a special cost function for the logistic function and find the three parameters that minimize the cost function using gradient descent. There’s a lot of steps here, but fortunately, they all parallel what we did in the last chapter, so it will be a useful review if you’re learning about regression for the first time.</p>
+
+  <p class="body"><a id="pgfId-1175079"></a>Coding the logistic regression algorithm to classify the cars is the meat of the chapter, but before doing that, we spend a bit more time getting you familiar with the process of classification. And before we train a computer to do the classification, let’s measure how well we can do the task. Then, once we build our logistic regression model, we can evaluate how well it does by comparison.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1175081"></a><a id="id_ryp5iicyy3v6"></a>15.1 Testing a classification function on real data</h2>
+
+  <p class="body"><a id="pgfId-1175082"></a>Let’s see<a id="marker-1184375"></a> how <a id="marker-1184380"></a>well we can identify BMWs in our data set using a simple criterion. Namely, if a used car has a price above $25,000, it’s probably too expensive to be a Prius (after all, you can get a brand new Prius for near that amount). If the price is above $25,000, we’ll say that it is a BMW; otherwise, we’ll say that it’s a Prius. This classification is easy to build as a Python function:</p>
+  <pre class="programlisting">def bmw_finder(mileage,price):
+    if price &gt; 25000:
+        return 1
+    else:
+        return 0</pre>
+
+  <p class="body"><a id="pgfId-1175084"></a>The performance of this classifier might not be that great because it’s conceivable that BMWs with a lot of miles might sell for less than $25,000. But we don’t have to speculate: we can measure how well this classifier does on actual data.</p>
+
+  <p class="body"><a id="pgfId-1175085"></a>In this section, we measure the performance of our algorithm by writing a function called <code class="fm-code-in-text">test_classifier</code>, which takes a classification function like <code class="fm-code-in-text">bmw_finder</code> as well as the data set to test. The data set is an array of tuples of mileages, prices, and a <code class="fm-code-in-text">1</code> or <code class="fm-code-in-text">0</code>, indicating whether the car is a BMW or a Prius. Once we run the <code class="fm-code-in-text">test _classifier</code> function with real data, it returns a percent value, telling us how many of the cars it identifies correctly. At the end of the chapter when we’ve implemented logistic regression, we can instead pass in our logistic classification function to <code class="fm-code-in-text">test_classifier</code> and see its relative performance.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1175087"></a>15.1.1 <a id="id_5lr26gnx5gwz"></a>Loading the car data</h3>
+
+  <p class="body"><a id="pgfId-1175088"></a>It is <a id="marker-1184385"></a>easier to write the <code class="fm-code-in-text">test_classifier</code> function if we first load the car data. Rather than fuss with loading the data from CarGraph.com or from a flat file, I’ve made it easy for you by providing a Python file called cardata.py in the source code for the book. It contains two arrays of data: one for Priuses and one for BMWs. You can import the two arrays as follows:</p>
+  <pre class="programlisting">from car_data import bmws, priuses</pre>
+
+  <p class="body"><a id="pgfId-1175090"></a>If you inspect either the BMW or Prius raw data in the car_data.py file, you’ll see that this file contains more data than we need. For now, we’re focusing on the mileage and price of each car, and we know what car it is, based on the list it belongs to. For instance, the BMW list begins like this:</p>
+  <pre class="programlisting">[('bmw', '5', 2013.0, 93404.0, 13999.0, 22.09145859494213),
+ ('bmw', '5', 2013.0, 110890.0, 13995.0, 22.216458611342592),
+ ('bmw', '5', 2013.0, 94133.0, 13982.0, 22.09145862741898),
+ ...</pre>
+
+  <p class="body"><a id="pgfId-1175092"></a>Each tuple represents one car for sale, and the mileage and price are given by the fourth and fifth entries of the tuple, respectively. Within car_data.py, these are converted to <code class="fm-code-in-text">Car</code> objects, so we can write <code class="fm-code-in-text">car.price</code> instead of <code class="fm-code-in-text">car[4]</code>, for example. We can make a list, called <code class="fm-code-in-text">all_car_data</code>, of the shape we want by pulling the desired entries from the BMW tuples and Prius tuples:</p>
+  <pre class="programlisting">all_car_data = []
+for bmw in bmws:
+    all_car_data.append((bmw.mileage,bmw.price,1))
+for prius in priuses:
+    all_car_data.append((prius.mileage,prius.price,0))</pre>
+
+  <p class="body"><a id="pgfId-1175094"></a>Once this is run, <code class="fm-code-in-text">all_car_data</code> is a Python list starting with the BMWs and ending with the Priuses, labeled with 1’s and 0’s, <a id="marker-1184390"></a>respectively:</p>
+  <pre class="programlisting">&gt;&gt;&gt; all_car_data
+[(93404.0, 13999.0, 1),
+ (110890.0, 13995.0, 1),
+ (94133.0, 13982.0, 1),
+ (46778.0, 14599.0, 1),
+ ....
+(45000.0, 16900.0, 0),
+(38000.0, 13500.0, 0),
+(71000.0, 12500.0, 0)]</pre>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1175097"></a>15.1.2 <a id="id_7f5shihzi3sp"></a>Testing the classification function</h3>
+
+  <p class="body"><a id="pgfId-1175098"></a>With the <a id="marker-1184395"></a>data in a suitable format, we can now write the <code class="fm-code-in-text">test_classifier</code> function. The job of the <code class="fm-code-in-text">bmw_finder</code> is to look at the mileage and price of a car and tell us whether these represent a BMW. If the answer is yes, it returns a 1; otherwise, it returns a 0. It’s likely that <code class="fm-code-in-text">bmw_finder</code> will get some answers wrong. If it predicts that a car is a BMW (returning 1), but the car is actually a Prius, we’ll call<a id="marker-1175099"></a> that a <i class="fm-italics">false positive</i>. If it predicts the<a id="marker-1175100"></a> car is a Prius (returning 0), but the car is actually<a id="marker-1175101"></a> a BMW, we’ll call that a <i class="fm-italics">false negative</i>. If it correctly identifies a BMW or a Prius, we’ll call<a id="marker-1175102"></a> that a <i class="fm-italics">true positive</i> or <i class="fm-italics">true negative</i>, respectively.</p>
+
+  <p class="body"><a id="pgfId-1175103"></a>To test a classification function against the all_car_data data set, we need to run the classification function on each mileage and price in that list, and see whether the result of 1 or 0 matches the given value. Here’s what that looks like in code:</p>
+  <pre class="programlisting">def test_classifier(classifier, data):
+    trues = 0
+    falses = 0
+    for mileage, price, is_bmw in data:
+        if classifier(mileage, price) == is_bmw:  <span class="fm-combinumeral">❶</span>
+            trues += 1
+        else:
+            falses += 1                           <span class="fm-combinumeral">❷</span>
+    return trues / (trues + falses)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1184932"></a><span class="fm-combinumeral">❶</span> Adds 1 to the trues counter if the classification is correct</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1184956"></a><span class="fm-combinumeral">❷</span> Otherwise, adds 1 to the falses counter</p>
+
+  <p class="body"><a id="pgfId-1175107"></a>If we run this function with the <code class="fm-code-in-text">bmw_finder</code> classification function and the all_car_data data set, we see that it has 59% accuracy:</p>
+  <pre class="programlisting">&gt;&gt;&gt; test_classifier(bmw_finder, all_car_data)
+0.59</pre>
+
+  <p class="body"><a id="pgfId-1175109"></a>That’s not too bad; we got most of the answers right. But we’ll see we can do much better than this! In the next section, we plot the data set to understand what’s qualitatively wrong with the <code class="fm-code-in-text">bmw_finder</code> function. This helps us to see how we can improve the classification with our logistic classification <a id="marker-1184400"></a>function.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1175111"></a><a id="id_sxhekkx0s8kj"></a>15.1.3 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1183529"></a><b class="fm-exercise-head">Exercise 15.1</b>: Update <a id="marker-1184405"></a>the <code class="fm-code-in-text1">test_classifier</code> function to print the number of true positives, true negatives, false positives, and false negatives. Printing these for the <code class="fm-code-in-text1">bmw_finder</code> classifier, what can you tell about the performance of the classifier?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1178134"></a><b class="fm-exercise-head">Solution</b>: Rather than just keeping track of correct and incorrect predictions, we can track true and false positives <a id="marker-1184420"></a>and <a id="marker-1184415"></a>negatives <a id="marker-1184410"></a>separately:</p>
+        <pre class="programlisting">def test_classifier(classifier, data, verbose=False):   <span class="fm-combinumeral">❶</span>
+    true_positives = 0                                  <span class="fm-combinumeral">❷</span>
+    true_negatives = 0
+    false_positives = 0
+    false_negatives = 0
+    for mileage, price, is_bmw in data:
+        predicted = classifier(mileage,price)
+        if predicted and is_bmw:                       <span class="fm-combinumeral">❸</span>
+            true_positives += 1
+        elif predicted:
+            false_positives += 1
+        elif is_bmw:
+            false_negatives += 1
+        else:
+            true_negatives += 1
+            
+    if verbose:        
+        print("true positives %f" % true_positives)    <span class="fm-combinumeral">❹</span>
+        print("true negatives %f" % true_negatives)
+        print("false positives %f" % false_positives)
+        print("false negatives %f" % false_negatives)
+    
+    total = true_positives + true_negatives
+            
+    return total / len(data)                           <span class="fm-combinumeral">❺</span></pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1185189"></a><span class="fm-combinumeral">❶</span> We now have 4 counters to keep track of.</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1185210"></a><span class="fm-combinumeral">❷</span> Specifies whether to print the data (we might not want to print it every time).</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1185227"></a><span class="fm-combinumeral">❸</span> Depending on whether the car is a Prius or BMW and whether it’s classified correctly, increments 1 of 4 counters</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1185244"></a><span class="fm-combinumeral">❹</span> Prints the results of each counter</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1185261"></a><span class="fm-combinumeral">❺</span> Returns the number of correct classifications (true positives or negatives) divided by the length of the data set</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1177921"></a>For the <code class="fm-code-in-text1">bmw_finder</code> function, this prints the following text:</p>
+        <pre class="programlisting">true positives 18.000000
+true negatives 100.000000
+false positives 0.000000
+false negatives 82.000000</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1177923"></a>Because the classifier returns no false positives, this tells us it always correctly identifies when the car is <i class="fm-italics">not</i> a BMW. But we can’t be too proud of our function yet, because it says most of the cars are not BMWs, including many that are! In the next exercise, you can relax the constraint to get a higher overall success rate.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1178194"></a><b class="fm-exercise-head">Exercise 15.2</b>: Find a way to update the <code class="fm-code-in-text1">bmw_finder</code> function to improve its performance and use the <code class="fm-code-in-text1">test_classifier</code> function to confirm that your improved function has better than 59% accuracy.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1178195"></a><b class="fm-exercise-head">Solution</b>: If you solved the last exercise, you saw that <code class="fm-code-in-text1">bmw_finder</code> was too aggressive in saying that cars were not BMWs. We can lower the price threshold to $20,000 and see if it makes a difference:</p>
+        <pre class="programlisting">def bmw_finder2(mileage,price):
+    if price &gt; 20000:
+        return 1
+    else:
+        return 0</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1185533"></a>Indeed, by lowering this threshold, <code class="fm-code-in-text1">bmw_finder</code> improved the success rate to 73.5%:</p>
+        <pre class="programlisting">&gt;&gt;&gt; test_classifier(bmw_finder2, all_car_data)
+0.735</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_7"><a id="pgfId-1175135"></a><a id="id_opf1t9ddvhoc"></a>15.2 Picturing a decision boundary</h2>
+
+  <p class="body"><a id="pgfId-1175136"></a>Before<a id="marker-1184425"></a> we <a id="marker-1184430"></a>implement <a id="marker-1184435"></a>the logistic regression function, let’s look at one more way to measure our success at classification. Because two numbers, mileage and price, define our used car data points, we can think of these as 2D vectors and plot them as points on a 2D plane. This plot gives us a better sense of where our classification function “draws the line” between BMWs and Priuses, and we can see how to improve it. It turns out that using our <code class="fm-code-in-text">bmw_finder</code> function is equivalent to drawing a literal line in the 2D plane, calling any point above the line a BMW and any point below it a Prius.</p>
+
+  <p class="body"><a id="pgfId-1175137"></a>In this section, we use Matplotlib to draw our plot and see where <code class="fm-code-in-text">bmw_finder</code> places the dividing line between BMWs and Priuses. This line is called the <i class="fm-italics">decision boundary</i>, because what side of the line a point lies on, helps us decide what class it belongs to. After looking at the car data on a plot, we can figure out where to draw a better dividing line. This lets us define an improved version of the <code class="fm-code-in-text">bmw_finder</code> function, and we can measure exactly how much better it performs.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1175139"></a><a id="id_yomyhx2xmnry"></a>15.2.1 Picturing the space of cars</h3>
+
+  <p class="body"><a id="pgfId-1175140"></a>All of the <a id="marker-1184440"></a>cars in our data set have mileage and price values, but some of them represent BMWs and some represent Priuses, depending on whether they are labeled with a 1 or with a 0. To make our plot readable, we want to make a BMW and a Prius visually distinct on the scatter plot.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186293"></a>Figure 15.2 A plot of price vs. mileage for all cars in the data set with each BMW represented by an X and each Prius represented with a circle</p>
+
+  <p class="body"><a id="pgfId-1175141"></a>The <code class="fm-code-in-text">plot_data</code> helper function in the source code takes the whole list of car data and automatically plots the BMWs with X’s and the Priuses with circles. Figure 15.2 shows the plot.</p>
+  <pre class="programlisting">&gt;&gt;&gt; plot_data(all_car_data)</pre>
+
+  <p class="body"><a id="pgfId-1175148"></a>In general, we can see that the BMWs are more expensive than the Priuses; most BMWs are higher on the price axis. This justifies our strategy of classifying the more expensive cars as BMWs. Specifically, we drew the line at a price of $25,000 (figure 15.3). On the plot, this line separates the top of the plot with more expensive cars from the bottom with less expensive cars.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186348"></a>Figure 15.3 Shows the decision line with car data plotted</p>
+
+  <p class="body"><a id="pgfId-1175154"></a>This is our decision boundary. Every X above the line was correctly identified as a BMW, while every circle below the line was correctly identified as a Prius. All other points were classified incorrectly. It’s clear that if we move this decision boundary, we can improve our accuracy. Let’s<a id="marker-1186325"></a> give it a try.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1175156"></a><a id="id_okyillvw5ztk"></a>15.2.2 Drawing a better decision boundary</h3>
+
+  <p class="body"><a id="pgfId-1175157"></a>Based <a id="marker-1184460"></a>on the <a id="marker-1184465"></a>plot in figure 15.3, we could lower the line and correctly identify a few more BMWs, while not incorrectly identifying any Priuses. Figure 15.4 shows what the decision boundary looks like if we lower the cut-off price to $21,000.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186411"></a>Figure 15.4 Lowering the decision boundary line appears to increase our accuracy.</p>
+
+  <p class="body"><a id="pgfId-1175163"></a>The $21,000 cut-off might be a good boundary for low-mileage cars, but the higher the mileage, the lower the threshold. For instance, it looks like most BMWs with 75,000 miles or more are below $21,000. To model this, we can make our cut-off price <i class="fm-italics">mileage dependent</i>. Geometrically that means drawing a line that slopes downward (figure 15.5).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186450"></a>Figure 15.5 Using a downward-sloping decision boundary</p>
+
+  <p class="body"><a id="pgfId-1175170"></a>This line is given by the function <i class="fm-in-times-italic">p</i>(<i class="fm-in-times-italic">x</i>) = 21,000 − 0.07 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i>, where <i class="fm-in-times-italic">p</i> is price and <i class="fm-in-times-italic">x</i> is mileage. There is nothing special about this equation; I just played around with the numbers until I plotted a line that looked reasonable. But it looks like it correctly identifies even more BMWs than before, with only a handful of false positives (Priuses incorrectly classified as BMWs). Rather than just eyeballing these decision boundaries, we can turn them into classifier functions and measure<a id="marker-1184470"></a> their performance.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1175172"></a><a id="id_aol08zl15l8k"></a>15.2.3 Implementing the classification function</h3>
+
+  <p class="body"><a id="pgfId-1175173"></a>To turn<a id="marker-1184480"></a> this <a id="marker-1184485"></a>decision boundary into a classification function, we need to write a Python function that takes a car mileage and price, and returns one or zero depending on whether the point falls above or below the line. That means taking the given mileage, plugging it into the decision boundary function, <i class="fm-in-times-italic">p</i>(<i class="fm-in-times-italic">x</i>), to see what the threshold price is and comparing the result to the given price. This is what it looks like:</p>
+  <pre class="programlisting">def decision_boundary_classify(mileage,price):
+    if price &gt; 21000 − 0.07 * mileage:
+        return 1
+    else:
+        return 0</pre>
+
+  <p class="body"><a id="pgfId-1175175"></a>Testing this out, we can see it is much better than our first classifier; 80.5% of the cars are correctly classified by this line. Not bad!</p>
+  <pre class="programlisting">&gt;&gt;&gt; test_classifier(decision_boundary_classify, all_car_data)
+0.805</pre>
+
+  <p class="body"><a id="pgfId-1175177"></a>You might ask why we can’t just do a gradient descent on the parameters defining the decision boundary line. If 20,000 and 0.07 don’t give the most accurate decision boundary, maybe some pair of numbers near them do. This isn’t a crazy idea. When we implement logistic regression, you’ll see that under the hood, it moves the decision boundary around using gradient descent until it finds the best one.</p>
+
+  <p class="body"><a id="pgfId-1175180"></a>There are two important reasons we’ll implement the more sophisticated logistic regression algorithm rather than doing a gradient descent on the parameters <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> of the decision boundary function, <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>. The first is that if the decision boundary is close to vertical at any step in the gradient descent, the numbers <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> could get very large and cause numerical issues. The other is that there isn’t an obvious cost function. In the next section, we see how logistic regression takes care of both of these issues so we can search for the best decision boundary using <a id="marker-1184746"></a>gradient<a id="marker-1184741"></a> descent.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1175182"></a><a id="id_a87hcmu5x2ag"></a>15.2.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1178457"></a><b class="fm-exercise-head">Exercise 15.3-Mini Project</b>: <a id="marker-1184490"></a>What <a id="marker-1184495"></a>is the decision boundary of the form <i class="fm-in-times-italic1">p</i> = <i class="fm-italics">constant</i> that gives the best classification accuracy on the test data set?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1178458"></a><b class="fm-exercise-head">Solution</b>: The following function builds a classifier function for any specified, constant cut-off price. In other words, the resulting classifier returns true if the test car has price above the cutoff and false otherwise:</p>
+        <pre class="programlisting">def constant_price_classifier(cutoff_price):
+    def c(x,p):
+        if p &gt; cutoff_price:
+            return 1
+        else:
+            return 0
+    return c</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1178460"></a>The accuracy of this function can be measured by passing the resulting classifier to the <code class="fm-code-in-text1">test_classify</code> function. Here’s a helper function to automate this check for any price we want to test as a cut-off value:</p>
+        <pre class="programlisting">def cutoff_accuracy(cutoff_price):
+    c = constant_price_classifier(cutoff_price)
+    return test_classifier(c,all_car_data)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1178462"></a>The best cut-off price is between two of the prices in our list. It’s sufficient to check each price and see if it is the best cut-off price. We can do that quickly in Python using the <code class="fm-code-in-text1">max</code> function. The keyword argument <code class="fm-code-in-text1">key</code> lets us choose what function we want to maximize by. In this case, we want to find the price in the list that is the best cut-off, so we can maximize by the <code class="fm-code-in-text1">cutoff_accuracy</code> function:</p>
+        <pre class="programlisting">&gt;&gt;&gt; max(all_prices,key=cutoff_accuracy)
+17998.0</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1178464"></a>This tells us that according to our data set, $17,998 is the best price to use as a cut-off when deciding whether a car is a BMW 5 series or a Prius. It turns out to be quite accurate for our <a id="marker-1184500"></a>data <a id="marker-1184505"></a>set, <a id="marker-1184510"></a>with <a id="marker-1184515"></a>79.5% <a id="marker-1184520"></a>accuracy:</p>
+        <pre class="programlisting">&gt;&gt;&gt; test_classifier(constant_price_classifier(17998.0), all_car_data)
+0.795</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_12"><a id="pgfId-1175195"></a><a id="id_ja30763519fe"></a>15.3 Framing classification as a regression problem</h2>
+
+  <p class="body"><a id="pgfId-1175196"></a>The <a id="marker-1184525"></a>way <a id="marker-1184530"></a>that we can reframe our classification task as a regression problem is to create a function that takes in the mileage and price of a car, and returns a number measuring how likely it is to be a BMW instead of a Prius. In this section, we implement a function called <code class="fm-code-in-text">logistic_classifier</code> that, from the outside, looks a lot like the classifiers we’ve built so far; it takes a mileage and a price, and outputs a number telling us whether the car is a BMW or a Prius. The only difference is that rather than outputting one or zero, it outputs a value between zero and one, telling us how likely it is that the car is a BMW.</p>
+
+  <p class="body"><a id="pgfId-1175197"></a>You can think of this number as the probability that the mileage and price describe a BMW, or more abstractly, you can think of it as giving the “BMWness” of the data point (figure 15.6). (Yes, that’s a made-up word, which I pronounce “bee-em-doubleyou-ness.” It means how much it looks like a BMW. Maybe we could call the antonym “Priusity.”)</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186513"></a>Figure 15.6 The concept of “BMWness” describes how much like a BMW a point in the plane is.</p>
+
+  <p class="body"><a id="pgfId-1175203"></a>To build the logistic classifier, we start with a guess of a good decision boundary line. Points above the line have high “BMWness,” meaning these are likely to be BMWs and the logistic function should return values close to one. Data points below the line have a low “BMWness,” meaning these are more likely to be Priuses and our function should return values close to zero. On the decision boundary, the “BMWness” value will be 0.5, meaning a data point there is equally as likely to be a BMW as it is to be a Prius.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1175205"></a>15.3.1 <a id="id_esa8qjit2e84"></a>Scaling the raw car data</h3>
+
+  <p class="body"><a id="pgfId-1175206"></a>There’s <a id="marker-1184535"></a><i class="fm-in-times-italic">a</i> chore we need to take care of at some point in the regression process, so we might as well take care of it now. As we discussed in the last chapter, the large values of mileage and price can cause numerical errors, so it’s better to rescale them to a small, consistent size. We should be safe if we scale all of the mileages and the prices linearly to values between zero and one.</p>
+
+  <p class="body"><a id="pgfId-1175207"></a>We need to be able to scale and unscale each of mileage and price, so we need four functions in total. To make this a little bit less painful, I’ve written a helper function that takes a list of numbers and returns functions to scale and unscale these linearly, between zero and one, using the maximum and minimum values in the list. Applying this helper function to the whole list of mileages and of prices gives us the four functions we need:</p>
+  <pre class="programlisting">def make_scale(data):
+    min_val = min(data)                           <span class="fm-combinumeral">❶</span>
+    max_val = max(data)
+    def scale(<i class="fm-in-times-italic1">x</i>):                                 <span class="fm-combinumeral">❷</span>
+        return (x-min_val) / (max_val − min_val)
+    def unscale(<i class="fm-in-times-italic1">y</i>):                               <span class="fm-combinumeral">❸</span>
+        return y * (max_val − min_val) + min_val
+    return scale, unscale                         <span class="fm-combinumeral">❹</span>
+
+price_scale, price_unscale =\ 
+    make_scale([x[1] for <i class="fm-in-times-italic1">x</i> in all_car_data])      <span class="fm-combinumeral">❺</span>
+mileage_scale, mileage_unscale =\
+    make_scale([x[0] for <i class="fm-in-times-italic1">x</i> in all_car_data])</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1185607"></a><span class="fm-combinumeral">❶</span> The maximum and minimum provide the current range of the data set.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1185624"></a><span class="fm-combinumeral">❷</span> Puts the data point at the same fraction of the way between 0 and 1 as it was from min_val to max_val</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1185641"></a><span class="fm-combinumeral">❸</span> Puts the scaled data point at the same fraction of the way from min_val to max_val as it was from 0 to 1</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1185658"></a><span class="fm-combinumeral">❹</span> Returns the scale and unscale functions (closures, if you’re familiar with that term) to use when we want to scale or unscale members of this data set.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1185675"></a><span class="fm-combinumeral">❺</span> Returns two sets of functions, one for price and one for mileage</p>
+
+  <p class="body"><a id="pgfId-1175216"></a>We can now apply these scaling functions to every car data point in our list to get a scaled version of the data set:</p>
+  <pre class="programlisting">scaled_car_data = [(mileage_scale(mileage), price_scale(price), is_bmw) 
+                    for mileage,price,is_bmw in all_car_data]</pre>
+
+  <p class="body"><a id="pgfId-1175218"></a>The good news is that the plot looks the same (figure 15.7), except that the values on the axes are different.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186564"></a>Figure 15.7 The mileage and price data scaled so that all values are between zero and one. The plot looks the same as before, but our risk of numerical error has decreased.</p>
+
+  <p class="body"><a id="pgfId-1175224"></a>Because the geometry of the scaled data set is the same, it should give us confidence that a good decision boundary for this scaled data set translates to a good decision boundary for the original <a id="marker-1184540"></a>data set.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1175226"></a><a id="id_8iafohd1l5vp"></a>15.3.2 Measuring the “BMWness” of a car</h3>
+
+  <p class="body"><a id="pgfId-1175227"></a>Let’s<a id="marker-1184545"></a> start with a decision boundary that looks similar to the one from the last section. The function <i class="fm-in-times-italic">p</i>(<i class="fm-in-times-italic">x</i>) = 0.56 − 0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> gives price at the decision boundary as a function of mileage. This is pretty close to the one I found by eyeballing in the last section, but it applies to the scaled data set instead (figure 15.8).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186615"></a>Figure 15.8 The decision boundary <i class="fm-in-times-italic">p</i>(<i class="fm-in-times-italic">x</i>) = 0.56 − 0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> on the scaled data set</p>
+
+  <p class="body"><a id="pgfId-1175233"></a>We can still test classifiers on the scaled data set with our <code class="fm-code-in-text">test_classifier</code> function; we just need to take care to pass in the scaled data instead of the original. It turns out this decision boundary gives us a 78.5% accurate classification of the data.</p>
+
+  <p class="body"><a id="pgfId-1175234"></a>It also turns out that this decision boundary function can be rearranged to give a measure of the “BMWness” of a data point. To make our algebra easier, let’s write the decision boundary as</p>
+
+  <p class="fm-equation"><a id="pgfId-1175235"></a> <i class="fm-in-times-italic2">p</i> = <i class="fm-in-times-italic2">ax</i> + <i class="fm-in-times-italic2">b</i></p>
+
+  <p class="body"><a id="pgfId-1175236"></a>where <i class="fm-in-times-italic">p</i> is price, <i class="fm-in-times-italic">x</i> is still mileage, and <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> are the slope and intercept of the line (in this case, <i class="fm-in-times-italic">a</i> = -0.35 and <i class="fm-in-times-italic">b</i> = 0.56), respectively. Instead of thinking of this as a function, we can think of it as an equation satisfied by points (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) on the decision boundary. If we subtract <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i> from both sides of the equation, we get another correct equation:</p>
+
+  <p class="fm-equation"><a id="pgfId-1175237"></a> <i class="fm-in-times-italic2">p</i> − <i class="fm-in-times-italic2">ax</i> − <i class="fm-in-times-italic2">b</i> = 0</p>
+
+  <p class="body"><a id="pgfId-1175238"></a>Every point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) on the decision boundary satisfies this equation as well. In other words, the quantity <i class="fm-in-times-italic">p</i> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic">ax</i> <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic">b</i> is zero for every point on the decision boundary.</p>
+
+  <p class="body"><a id="pgfId-1175239"></a>Here’s the point of this algebra: the quantity <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i> is a measure of the “BMWness” of the point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>). If (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) is above the decision boundary, it means <i class="fm-in-times-italic">p</i> is too big, relative to <i class="fm-in-times-italic">x</i>, so <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i> &gt; 0. If, instead, (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) is below the decision boundary, it means <i class="fm-in-times-italic">p</i> is too small relative to <i class="fm-in-times-italic">x</i>, then <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i> &lt; 0. Otherwise, the expression <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i> is exactly zero, and the point is right at the threshold of being interpreted as a Prius or a BMW. This might be a little bit abstract on the first read, so table 15.2 lists the three cases.</p>
+
+  <p class="fm-table-caption"><a id="pgfId-1178856"></a>Table 15.2 Summary of the possible cases</p>
+
+  <table border="1" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178799"></a>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">p</i>) above decision boundary</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178827"></a><i class="fm-in-times-italic1">p</i> − <i class="fm-in-times-italic1">ax</i> − <i class="fm-in-times-italic1">b</i> &gt; 0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178801"></a>Likely to be a BMW</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178803"></a>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">p</i>) on decision boundary</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178829"></a><i class="fm-in-times-italic1">p</i> − <i class="fm-in-times-italic1">ax</i> − <i class="fm-in-times-italic1">b</i> = 0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178805"></a>Could be either car model</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178807"></a>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">p</i>) below decision boundary</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178831"></a><i class="fm-in-times-italic1">p</i> − <i class="fm-in-times-italic1">ax</i> − <i class="fm-in-times-italic1">b</i> &lt; 0</p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1178809"></a>Likely to be a Prius</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1175261"></a>If you’re not convinced that <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i> is a measure of “BMWness” compatible with the decision boundary, an easier way to see this is to look at the heat map of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i>, together with the data (figure 15.9). When <i class="fm-in-times-italic">a</i> = -0.35 and <i class="fm-italics">b =</i> 0.56, the function is <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <i class="fm-in-times-italic">p</i> − 0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> − 0.56.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1175266"></a>Figure 15.9 A plot of the heatmap and decision boundary showing that the bright values (positive “BMWness”) are above the decision boundary and dark values (negative “BMWness”) occur below the decision boundary</p>
+
+  <p class="body"><a id="pgfId-1175267"></a>The function, <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), <i class="fm-italics">almost</i> meets our requirements. It takes a mileage and a price, and it outputs a number that is higher if the numbers are likely to represent a BMW, and lower if the values are likely to represent a Prius. The only thing missing is that the output numbers aren’t constrained to be between zero and one, and the cutoff is at a value of zero rather than at a value of 0.5 as desired. Fortunately, there’s a handy kind of mathematical helper function we can use to adjust the<a id="marker-1184550"></a> output.</p>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1175269"></a><a id="id_e89cud2rcnnc"></a>15.3.3 Introducing the sigmoid function</h3>
+
+  <p class="body"><a id="pgfId-1175270"></a>The<a id="marker-1184555"></a> function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i> is linear, <a id="marker-1184560"></a>but this is not a chapter on linear regression! The topic at hand is <i class="fm-italics">logistic regression</i>, and to do<a id="marker-1175271"></a> logistic regression, you need to use a logistic function. The most basic logistic function is the one that follows, which is often called a <i class="fm-italics">sigmoid</i> function:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F09_Orland_EQ01.png"/></p>
+
+  <p class="body"><a id="pgfId-1175276"></a>We can implement this function in Python with the <code class="fm-code-in-text">exp</code> function, which stands in for <i class="fm-italics">ex</i>, where <i class="fm-in-times-italic">e</i> = 2.71828... and is the constant we’ve used for exponential bases before:</p>
+  <pre class="programlisting">from math import exp
+def sigmoid(<i class="fm-in-times-italic1">x</i>):
+    return 1 / (1+exp(−x))</pre>
+
+  <p class="body"><a id="pgfId-1175278"></a>Figure 15.10 shows its graph.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186679"></a>Figure 15.10 The graph of the sigmoid function <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>)</p>
+
+  <p class="body"><a id="pgfId-1175285"></a>In the function, we use the Greek letter <span class="fm-in-cambria">σ</span> (sigma) because <a id="id_Hlk44081207"></a>σ is the Greek version of the letter <i class="fm-in-times-italic">S</i>, and the graph of <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>) looks a bit like the letter <i class="fm-in-times-italic">S</i>. Sometimes the<a id="marker-1175286"></a> words <i class="fm-italics">logistic function</i> and <i class="fm-italics">sigmoid function</i> are used interchangeably to mean a function like the one in figure 15.10, which smoothly ramps up from one value to another. In this chapter (and the next), when I refer to the sigmoid function, I’ll be talking about this specific function: <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>).</p>
+
+  <p class="body"><a id="pgfId-1175287"></a>You don’t need to worry too much about how this function is defined, but you do need to understand the shape of the graph and what it means. This function sends any input number to a value between zero and one, with big negative numbers yielding results closer to zero, and big positive numbers yielding results closer to one. The result of <span class="fm-in-cambria">σ</span>(0) is 0.5. We can think of <span class="fm-in-cambria">σ</span> as translating the range from -∞ to ∞ to the more manageable range from<a id="marker-1184565"></a> zero to one.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1175289"></a><a id="id_mncqwq4a39gc"></a>15.3.4 Composing the sigmoid function with other functions</h3>
+
+  <p class="body"><a id="pgfId-1175290"></a>Returning <a id="marker-1184576"></a>to our function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i>, we saw that it takes a mileage value and a price value and returns a number measuring how much the values look like a BMW rather than a Prius. This number could be large or positive or negative, and a value of zero indicates that it is on the boundary between being a BMW and being a Prius.</p>
+
+  <p class="body"><a id="pgfId-1175291"></a>What we want our function to return is a value between zero and one (with values close to zero and one), representing cars likely to be Priuses or BMWs, respectively, and a value of 0.5, representing a car that is equally likely to be either a Prius or a BMW. All we have to do to adjust the outputs of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) to be in the expected range is to pass through the sigmoid function <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>) as shown in figure 15.11. That is, the function we want is <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>)), where <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">p</i> are the mileage and price.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1175296"></a>Figure 15.11 Schematic diagram of composing the “BMWness” function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) with the sigmoid function <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i>)</p>
+
+  <p class="body"><a id="pgfId-1179727"></a>Let’s call the resulting function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), so in other words, <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>)). Implementing the function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) in Python and plotting its heatmap (figure 15.12), we can see that it increases in the same direction as <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), but its values are different.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186744"></a>Figure 15.12 The heatmaps look basically the same, but the values of the function are slightly different.</p>
+
+  <p class="body"><a id="pgfId-1179843"></a>Based on this picture, you might wonder why we went through the trouble of passing the “BMWness” function through the sigmoid. From this perspective, the functions look mostly the same. However, if we plot their graphs as 2D surfaces in 3D (figure 15.13), you can see that the curvy shape of the sigmoid has an effect.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186789"></a>Figure 15.13 While <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) slopes upward linearly, <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) curves up from a minimum value of 0 to a maximum value of 1.</p>
+
+  <p class="body"><a id="pgfId-1179850"></a>In fairness, I had to zoom out a bit in (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) space to make the curvature clear. The point is that if the type of car is indicated by a 0 or 1, the values of the function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) actually come close to these numbers, whereas the values of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) go off to positive and negative infinity!</p>
+
+  <p class="body"><a id="pgfId-1175310"></a>Figure 15.14 illustrates two exaggerated diagrams to show you what I mean. Remember that in our data set, scaled_car_data, we represented Priuses as triples of the form (mileage, price, 0) and BMWs as triples of the form (mileage, price, 1). We can interpret these as points in 3D where the BMWs live in the plane <i class="fm-in-times-italic">z</i> = 1 and Priuses live in the plane <i class="fm-in-times-italic">z</i> = 0. Plotting scaled_car_data as a 3D scatter plot, you can see that a linear function can’t come close to many of the data points in the same way as a logistic function.</p>
+
+  <p class="body"><a id="pgfId-1179876"></a>With functions shaped like <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), we can actually hope to <i class="fm-italics">fit</i> the data, and we’ll see how to do that in the<a id="marker-1184586"></a> next <a id="marker-1184581"></a>section.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1175315"></a> Figure 15.14 The graph of a linear function in 3D can’t come as close to the data points as the graph of a logistic function.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1175318"></a><a id="id_2zro5kb6x48x"></a>15.3.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1179911"></a><b class="fm-exercise-head">Exercise 15.4</b>: Find a<a id="marker-1184591"></a> function <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>) such that large positive values of <i class="fm-in-times-italic1">x</i> cause <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>) to be close to 0, large negative values of <i class="fm-in-times-italic1">x</i> cause <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>) to be close to 1, and <i class="fm-in-times-italic1">h</i>(3) = 0.5.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1179941"></a><b class="fm-exercise-head">Solution</b>: The function <i class="fm-in-times-italic1">y</i>(<i class="fm-in-times-italic1">x</i>) = 3 − <i class="fm-in-times-italic1">x</i> has <i class="fm-in-times-italic1">y</i>(3) = 0 and it goes off to positive infinity when <i class="fm-in-times-italic1">x</i> is large and negative and off to negative infinity when <i class="fm-in-times-italic1">x</i> is large and posi-</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1179989"></a>tive. That means passing the result of <i class="fm-in-times-italic1">y</i>(<i class="fm-in-times-italic1">x</i>) into our sigmoid function gives us a function with the desired properties. Specifically, <i class="fm-in-times-italic1">h</i>(<i class="fm-in-times-italic1">x</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">y</i>(<i class="fm-in-times-italic1">x</i>)) = <span class="fm-in-cambria">σ</span>(3 − <i class="fm-in-times-italic1">x</i>) works, and its graph is shown here to convince you:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F14_Orland_UN01.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1180020"></a><b class="fm-exercise-head">Exercise 15.5−Mini Project</b>: There is actually a lower bound on the result of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">p</i>) because <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">p</i> are not allowed to be negative (negative mileages and prices don’t make sense, after all). Can you figure out the lowest value of <i class="fm-in-times-italic1">f</i> that a car could produce?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180021"></a><b class="fm-exercise-head">Solution</b>: According to the heatmap, the function <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">p</i>) gets smaller as we go down and to the left. The equation confirms this as well; if we decrease <i class="fm-in-times-italic1">x</i> or <i class="fm-in-times-italic1">p</i>, the value of <i class="fm-in-times-italic1">f</i> = <i class="fm-in-times-italic1">p</i> − <i class="fm-in-times-italic1">ax</i> − <i class="fm-in-times-italic1">b</i> = <i class="fm-in-times-italic1">p</i> + 0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">x</i> − 0.56 gets smaller. Therefore,<a id="marker-1184596"></a> the <a id="marker-1184601"></a>minimum <a id="marker-1184606"></a>value of <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">p</i>) occurs at (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">p</i>) = (0, 0), and it’s <i class="fm-in-times-italic1">f</i>(0, 0) = -0.056.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_18"><a id="pgfId-1175332"></a><a id="id_yi59sa94zcw3"></a>15.4 Exploring possible logistic functions</h2>
+
+  <p class="body"><a id="pgfId-1175333"></a>Let’s <a id="marker-1184611"></a>quickly <a id="marker-1184616"></a>retrace our steps. Plotting the mileages and prices of our set of Priuses and BMWs on a scatter plot, we could try to draw a line between these values, called a decision boundary, that defines a rule by which to distinguish a Prius from a BMW. We wrote our decision boundary as a line in the form <i class="fm-in-times-italic">p</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>, and it looked like -0.35 and 0.56 were reasonable choices for <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i>, giving us a classification that was about 80% correct.</p>
+
+  <p class="body"><a id="pgfId-1175334"></a>Rearranging this function, we found that <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <i class="fm-in-times-italic">p</i> − <i class="fm-in-times-italic">ax</i> − <i class="fm-in-times-italic">b</i> was a function taking a mileage and price (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) and returning a number that was greater than zero on the BMW side of the decision boundary and smaller than zero on the Prius side. On the decision boundary, <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) returned zero, meaning a car would be equally likely to be a BMW or a Prius. Because we represent BMWs with a 1 and Priuses with a 0, we wanted a version of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) that returned values between zero and one, where 0.5 would represent a car equally likely to be a BMW or a Prius. Passing the result of <i class="fm-italics">f</i> into a sigmoid function <span class="fm-in-cambria">σ</span>, we got a new function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>)), satisfying that requirement.</p>
+
+  <p class="body"><a id="pgfId-1175335"></a>But we don’t want the <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) I made by eyeballing the best decision boundary−we want the <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) that <i class="fm-italics">best fits the data</i>. On our way to doing that, we’ll see that there are three parameters we can control to write a general logistic function that takes 2D vectors and returns numbers between zero and one, and also has a decision boundary <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = 0.5, which is a straight line. We’ll write a Python function, <code class="fm-code-in-text">make_logistic (a,b,c)</code>, that takes in three parameters <i class="fm-in-times-italic">a</i> <a href="https://www.codecogs.com/eqnedit.php?latex=%5Csigma(x)%20%3D%20%5Cfrac%7B1%7D%7B1%2Be%5E%7B-x%7D%7D%250">,</a> <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i>, and returns the logistic function they define. As we explored a 2D space of (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>) pairs to choose a linear function in chapter 14, we’ll explore a 3D space of values (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) to define our logistic function (figure 15.15).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186959"></a>Figure 15.15 Exploring a 3D space of parameter values (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) to define a function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>)</p>
+
+  <p class="body"><a id="pgfId-1175342"></a>Then we’ll create a cost function, much like the one we created for linear regression. The cost function, which we’ll call <code class="fm-code-in-text">logistic_cost(a,b,c)</code>, takes the parameters <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i>, which define a logistic function and produce one number, measuring how far the logistic function is from our car data set. The <code class="fm-code-in-text">logistic_cost</code> function needs to be implemented in such a way that the lower its value, the better the predictions from the associated logistic function.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1175344"></a><a id="id_6gtxpi7g2jkw"></a>15.4.1 Parameterizing logistic functions</h3>
+
+  <p class="body"><a id="pgfId-1175345"></a>The <a id="marker-1184621"></a>first task is to find the general form of a logistic function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), whose values range from zero to one and whose decision boundary <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = 0.5 is a straight line. We got close to this in the last section, starting with the decision boundary <i class="fm-in-times-italic">p</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i> and reverse engineering a logistic function from that. The only problem is that a linear function of the form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i> can’t represent any line in the plane. For instance, figure 15.16 shows a data set where a vertical decision boundary, <i class="fm-in-times-italic">x</i> = 0.6, makes sense. Such a line can’t be represented in the form <i class="fm-in-times-italic">p</i> = <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">b</i>, however.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1186903"></a>Figure 15.16 A vertical decision boundary might make sense, but it can’t be represented in the form p = ax + b.</p>
+
+  <p class="body"><a id="pgfId-1175351"></a>The general form of a line that does work is the one we met in chapter 7: <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>. Because we’re calling our variables <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">p</i>, we’ll write <i class="fm-in-times-italic">ax</i> + <i class="fm-italics">bp</i> = c. Given an equation like this, the function <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <i class="fm-in-times-italic">ax</i> + <i class="fm-italics">bp</i> − <i class="fm-in-times-italic">c</i> is zero on the line with positive values on one side and negative values on the other. For us, the side of the line where <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) is positive is the BMW side, and the side where <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) is negative is the Prius side.</p>
+
+  <p class="body"><a id="pgfId-1175352"></a>Passing <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) through the sigmoid function, we get a general logistic function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>)), where <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = 0.5 on the line where <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = 0. In other words, the function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">ax</i> + <i class="fm-italics">bp</i> − <i class="fm-in-times-italic">c</i>) is the general form we’re looking for. This is easy to translate to Python, giving us a function of <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i> that returns a corresponding logistic function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">ax</i> + <i class="fm-italics">bp</i> − <i class="fm-in-times-italic">c</i>):</p>
+  <pre class="programlisting">def make_logistic(a,b,c):
+    def l(x,p):
+        return sigmoid(a*x + b*p − c)
+    return l</pre>
+
+  <p class="body"><a id="pgfId-1175354"></a>The next step is to come up with a measure of how close this function comes to our <a id="marker-1184626"></a>scaled_car_data dataset.</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1175356"></a><a id="id_wmj2544jstxk"></a>15.4.2 Measuring the quality of fit for a logistic function</h3>
+
+  <p class="body"><a id="pgfId-1175357"></a>For <a id="marker-1184631"></a>any BMW, the <code class="fm-code-in-text">scaled_car_data</code> list contains an entry of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>, 1), and for every Prius, it contains an entry of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>, 0), where <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">p</i> denote (scaled) mileage and price values, respectively. If we apply a logistic function, <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), to the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">p</i> values, we’ll get a result between zero and one.</p>
+
+  <p class="body"><a id="pgfId-1175358"></a>A simple way to measure the error or cost of the function <i class="fm-in-times-italic">L</i> is to find how far off it is from the correct value, which is either zero or one. If you add up all of these errors, you’ll get a total value telling you how far the function <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) comes from the data set. Here’s what that looks like in Python:</p>
+  <pre class="programlisting">def simple_logistic_cost(a,b,c):
+    l = make_logistic(a,b,c)
+    errors = [abs(is_bmw-l(x,p)) 
+              for x,p,is_bmw in scaled_car_data]
+    return sum(errors)</pre>
+
+  <p class="body"><a id="pgfId-1175360"></a>This cost reports the error reasonably well, but it isn’t good enough to get our gradient descent to converge to a best value of <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i>. I won’t go into a full explanation of why this is, but I’ll try to quickly give you the general idea.</p>
+
+  <p class="body"><a id="pgfId-1175361"></a>Suppose we have two logistic functions, <i class="fm-in-times-italic">L</i><sub class="fm-subscript">1</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) and <i class="fm-in-times-italic">L</i><sub class="fm-subscript">2</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), and we want to compare the performance of both. Let’s say they both look at the same data point (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>, 0), meaning a data point representing a Prius. Then let’s say <i class="fm-in-times-italic">L</i><sub class="fm-subscript">1</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) returns 0.99, which is greater than 0.5, so it predicts incorrectly that the car is a BMW. The error for this point is |0-0.99| = 0.99. If another logistic function, <i class="fm-in-times-italic">L</i><sub class="fm-subscript">2</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), predicts a value of 0.999, the model predicts with more certainty that the car is a BMW, and is even more wrong. That said, the error would be only |0-0.999| = 0.999, which is not much different.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1187044"></a>Figure 15.17 The function -lo<i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>) returns big values for small inputs, and <span class="fm-in-cambria">−log</span>(1) = 0.</p>
+
+  <p class="body"><a id="pgfId-1175362"></a>It’s more appropriate to think of <i class="fm-in-times-italic">L</i><sub class="fm-subscript">1</sub> as reporting a 99% chance the data point represents a BMW and a 1% chance that it represents a Prius, with <i class="fm-in-times-italic">L</i><sub class="fm-subscript">2</sub> reporting a 99.9% chance it is a BMW and a 0.1% chance it is a Prius. Instead of thinking of this as a 0.09% worse Prius prediction, we should really think of it as being <i class="fm-italics">ten times</i> worse! We can, therefore, think of <i class="fm-in-times-italic">L</i><sub class="fm-subscript">2</sub> as being ten times more wrong than <i class="fm-in-times-italic">L</i><sub class="fm-subscript">1</sub>.</p>
+
+  <p class="body"><a id="pgfId-1175363"></a>We want a cost function such that if <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) is <i class="fm-italics">really sure</i> of the wrong answer, then the cost of <i class="fm-in-times-italic">L</i> is high. To get that, we can look at the difference between <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) and the wrong answer, and pass it through a function that makes tiny values big. For instance, <i class="fm-in-times-italic">L</i><sub class="fm-subscript">1</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) returned 0.99 for a Prius, meaning it was 0.01 units from the wrong answer, while <i class="fm-in-times-italic">L</i><sub class="fm-subscript">2</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) returned 0.999 for a Prius, meaning it was 0.001 units from the wrong answer. A good function to return big values from tiny ones is <span class="fm-in-cambria">−log</span>(<i class="fm-in-times-italic">x</i>), where log is the special natural logarithm function. It’s not critical that you know what the <span class="fm-in-cambria">−log</span> function does, only that it returns big numbers for small inputs. Figure 15.17 shows the plot of <span class="fm-in-cambria">−log</span>(<i class="fm-in-times-italic">x</i>).</p>
+
+  <p class="body"><a id="pgfId-1180299"></a>To familiarize yourself with <span class="fm-in-cambria">−log</span>(<i class="fm-in-times-italic">x</i>), you can test it with some small inputs. For <i class="fm-in-times-italic">L</i><sub class="fm-subscript">1</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), which was 0.01 units from the wrong answer, we get a smaller cost than <i class="fm-in-times-italic">L</i><sub class="fm-subscript">2</sub>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>), which was 0.001 units from the wrong answer:</p>
+  <pre class="programlisting">from math import log
+&gt;&gt;&gt; <span class="fm-in-cambria">−log</span>(0.01)
+4.605170185988091
+&gt;&gt;&gt; <span class="fm-in-cambria">−log</span>(0.001)
+6.907755278982137</pre>
+
+  <p class="body"><a id="pgfId-1175371"></a>By comparison, if <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) returns zero for a Prius, it would be giving the correct answer. That’s one unit away from the wrong answer, and <span class="fm-in-cambria">−log</span>(1) = 0, so there is zero cost for the right answer.</p>
+
+  <p class="body"><a id="pgfId-1175372"></a>Now we’re ready to implement the <code class="fm-code-in-text">logistic_cost</code> function that we set out to create. To find the cost for a given point, we calculate how close the given logistic function comes to the wrong answer and then take the negative logarithm of the result. The total cost is the sum of the cost at every data point in the <code class="fm-code-in-text">scaled_car_data</code> data set:</p>
+  <pre class="programlisting">def point_cost(l,x,p,is_bmw):                     <span class="fm-combinumeral">❶</span>
+    wrong = 1 − is_bmw
+    return <span class="fm-in-cambria">−log</span>(abs(wrong − l(x,p)))
+
+def logistic_cost(a,b,c):
+    l = make_logistic(a,b,c)
+    errors = [point_cost(l,x,p,is_bmw)            <span class="fm-combinumeral">❷</span>
+              for x,p,is_bmw in scaled_car_data]
+    return sum(errors)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1185991"></a><span class="fm-combinumeral">❶</span> Determines the cost of a single data point</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1186012"></a><span class="fm-combinumeral">❷</span> The overall cost of the logistic function is the same as before, except that we use the new point_cost function for each data point instead of just the absolute value of the error.</p>
+
+  <p class="body"><a id="pgfId-1175376"></a>It turns out, we get good results if we try to minimize the <code class="fm-code-in-text">logistic_cost</code> function using gradient descent. But before we do that, let’s do a sanity check and confirm that <code class="fm-code-in-text">logistic_cost</code> returns lower values for a logistic function with an (obviously) better <a id="marker-1184636"></a>decision boundary.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1175378"></a>15.4.3 <a id="id_dhgfaujpps6g"></a>Testing different logistic functions</h3>
+
+  <p class="body"><a id="pgfId-1175379"></a>Let’s try <a id="marker-1184641"></a>out two logistic functions with different decision boundaries, and confirm if one has an obviously better decision boundary than if it has a lower cost. As our two examples, let’s use <i class="fm-in-times-italic">p</i> = 0.56 − 0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i>, my best-guess decision boundary, which is the same as 0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + 1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">p</i> = 0.56, and also an arbitrarily selected one, say <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">p</i> = 1. Clearly, the former is a better dividing line between the Priuses and the BMWs.</p>
+
+  <p class="body"><a id="pgfId-1175380"></a>In the source code, you’ll find a <code class="fm-code-in-text">plot_line</code> function to draw a line based on the values <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i> in the equation <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>(and as an exercise at the end of the section, you can try implementing this function yourself). The respective values of (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) are (0.35, 1, 0.56) and (1, 1, 1). We can plot them alongside the scatter plot of car data (shown in figure 15.18) with these three lines:</p>
+  <pre class="programlisting">plot_data(scaled_car_data)
+plot_line(0.35,1,0.56)
+plot_line(1,1,1)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F18_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1187096"></a>Figure 15.18 The graphs of two decision boundary lines. One is clearly better than the other at separating Priuses from BMWs.</p>
+
+  <p class="body"><a id="pgfId-1175387"></a>The corresponding logistic functions are <span class="fm-in-cambria">σ</span>(0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">p</i> − 0.56) and <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">p</i> − 1), and we expect the first one has a lower cost with respect to the data. We can confirm this with the <code class="fm-code-in-text">logistic_cost</code> function:</p>
+  <pre class="programlisting">&gt;&gt;&gt; logistic_cost(0.35,1,0.56)
+130.92490748700456
+&gt;&gt;&gt; logistic_cost(1,1,1)
+135.56446830870456</pre>
+
+  <p class="body"><a id="pgfId-1180565"></a>As expected, the line <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">p</i> = 1 is a worse decision boundary, so the logistic function <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">p</i> − 1) has a higher cost. The first function <span class="fm-in-cambria">σ</span>(0.35 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">x</i> + <i class="fm-in-times-italic">p</i> − 0.56) has a lower cost and a better fit. But is it the best fit? When we run gradient descent on the <code class="fm-code-in-text">logistic_cost</code> function in the next section, we’ll find <a id="marker-1184646"></a>out.</p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1180583"></a><a id="id_73lq2ulk99bu"></a>15.4.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1180569"></a><b class="fm-exercise-head">Exercise 15.6</b>: Implement <a id="marker-1184651"></a>the function <code class="fm-code-in-text1">plot_line(a,b,c)</code> referenced in section 15.4.3 that plots the line <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> = <i class="fm-in-times-italic1">c</i>, where 0 <span class="fm-in-cambria">≤</span> <i class="fm-in-times-italic1">x</i> <span class="fm-in-cambria">≤</span> 1 and 0 <span class="fm-in-cambria">≤</span> <i class="fm-in-times-italic1">y</i> <span class="fm-in-cambria">≤</span> 1.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180570"></a><b class="fm-exercise-head">Solution</b>: Note that I used different names other than <i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, and <i class="fm-in-times-italic1">c</i> for the function arguments because <code class="fm-code-in-text1">c</code> is a keyword argument that sets the color of the plotted line for Matplotlib’s <code class="fm-code-in-text1">plot</code> function, which I commonly make use of:</p>
+        <pre class="programlisting">def plot_line(acoeff,bcoeff,ccoeff,**kwargs):
+    a,b,<i class="fm-in-times-italic1">c</i> = acoeff, bcoeff, ccoeff
+    if b == 0:
+        plt.plot([c/a,c/a],[0,1])
+    else:
+        def y(<i class="fm-in-times-italic1">x</i>):
+            return (c-a*x)/b
+        plt.plot([0,1],[y(0),y(1)],**kwargs)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1180600"></a><b class="fm-exercise-head">Exercise 15.7</b>: Use the formula for the sigmoid function <span class="fm-in-cambria">σ</span> to write an expanded formula for <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> − <i class="fm-in-times-italic1">c</i>).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180604"></a><b class="fm-exercise-head">Solution</b>: Given that</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F18_Orland_EQ02.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180608"></a>we can write</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F18_Orland_EQ03.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1180673"></a><b class="fm-exercise-head">Exercise 15.8−Mini Project</b>: What does the graph of <i class="fm-italics">k</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup> − 1) look like? What does the decision boundary look like, meaning the set of points where <i class="fm-italics">k</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = 0.5?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180665"></a><b class="fm-exercise-head">Solution</b>: We know that <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup> − 1) = 0.5, wherever <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup> − 1 = 0 or where <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup> = 1. You can recognize the solutions to this equation as the points of distance one from the origin or a circle of radius 1. Inside the circle, the distance from the origin is smaller, so <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup> &lt; 1 and <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup>) &lt; 0.5, while outside the circle <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup> &gt; 1, so <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> + y<sup class="fm-superscript1">2</sup> − 1) &gt; 0.5. The graph of this function approaches 1</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180688"></a>as we move further away from the origin in any direction, while it decreases inside the circle to a minimum value of about 0.27 at the origin. Here’s the graph:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F18_Orland_UN02.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1180737"></a>A graph of <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup> − 1). Its value is less than 0.5 inside the circle of a radius of 1, and it increases to a value of 1 in every direction outside that circle.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1180865"></a><b class="fm-exercise-head">Exercise 15.9−Mini Project</b>: Two equations, 2<i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> = 1 and 4<i class="fm-in-times-italic1">x</i> + 2<i class="fm-in-times-italic1">y</i> = 2, define the same line and, therefore, the same decision boundary. Are the logistic functions <span class="fm-in-cambria">σ</span>(2<i class="fm-in-times-italic1">x</i> + <i class="fm-in-times-italic1">y</i> − 1) and <span class="fm-in-cambria">σ</span>(4<i class="fm-in-times-italic1">x</i> + 2<i class="fm-in-times-italic1">y</i> − 2) the same?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180820"></a><b class="fm-exercise-head">Solution</b>: No, they aren’t the same function. The quantity 4<i class="fm-in-times-italic1">x</i> + 2<i class="fm-in-times-italic1">y</i> − 2 increases more rapidly with respect to increases in <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">y</i>, so the graph of the latter function is steeper:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F18_Orland_UN03.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1180824"></a>The graph of the second logistic function is steeper than the graph of the first.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1180959"></a><b class="fm-exercise-head">Exercise 15.10-Mini Project</b>: Given a line <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> = <i class="fm-in-times-italic1">c</i>, it’s not as easy to define what is above that line and what is below. Can you describe which side of the line the function <i class="fm-in-times-italic1">z</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> − <i class="fm-in-times-italic1">c</i> returns positive values?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1180919"></a><b class="fm-exercise-head">Solution</b>: The line <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> = <i class="fm-in-times-italic1">c</i> is the set of points where <i class="fm-in-times-italic1">z</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> − <i class="fm-in-times-italic1">c</i> = 0. As we saw for equations of this form in chapter 7, the graph of <i class="fm-in-times-italic1">z</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = <i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">by</i> − <i class="fm-in-times-italic1">c</i> is a plane, so it increases in one direction from the line and decreases in the other direction. The gradient of <i class="fm-in-times-italic1">z</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) is <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic1">z</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) = (<i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>), so <i class="fm-in-times-italic1">z</i>(<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) increases most rapidly in the direction of the vector (<i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>) and decreases most rapidly in the opposite direction (− <i class="fm-in-times-italic1">a</i>, <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic1">b</i>). Both of these directions are perpendicular to the direction of the<a id="marker-1184656"></a> line.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_23"><a id="pgfId-1175433"></a><a id="id_oclkm4wewuw2"></a>15.5 Finding the best logistic function</h2>
+
+  <p class="body"><a id="pgfId-1175434"></a>We now <a id="marker-1184661"></a>have a <a id="marker-1184666"></a>straightforward minimization problem to solve; we’d like to find the values <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i> that make the <code class="fm-code-in-text">logistic_cost</code> function as small as possible. Then the corresponding function, <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) = <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">ax</i> + <i class="fm-italics">bp</i> − <i class="fm-in-times-italic">c</i>) will be the best fit to the data. We can use that resulting function to build a classifier by plugging in the mileage <i class="fm-in-times-italic">x</i> and price <i class="fm-in-times-italic">p</i> for an unknown car and labeling it as a BMW if <i class="fm-in-times-italic">L</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">p</i>) &gt; 0.5 and as a Prius, otherwise. We’ll call this classifier <code class="fm-code-in-text">best_logistic_classifier(x,p)</code>, and we can pass it to <code class="fm-code-in-text">test_classifier</code> to see how well it does.</p>
+
+  <p class="body"><a id="pgfId-1175435"></a>The only major work we have to do here is upgrading our <code class="fm-code-in-text">gradient_descent</code> function. So far, we’ve only done gradient descent with functions that take 2D vectors and return numbers. The <code class="fm-code-in-text">logistic_cost</code> function takes a 3D vector (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) and outputs a number, so we need a new version of gradient descent. Fortunately, we covered 3D analogies for every 2D vector operation we’ve used, so it won’t be too hard.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1175437"></a><a id="id_p9xvbqkc37kj"></a>15.5.1 Gradient descent in three dimensions</h3>
+
+  <p class="body"><a id="pgfId-1175438"></a>Let’s<a id="marker-1184671"></a> look at our existing gradient calculation that we used to work with functions of two variables in chapters 12 and 14. The partial derivatives of a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at a point (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>) are the derivatives with respect to <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> individually, while assuming the other variable is a constant. For instance, plugging in <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub> into the second slot of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), we get <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>), which we can treat as a function of <i class="fm-in-times-italic">x</i> alone and take its ordinary derivative. Putting the two partial derivatives together as components of a 2D vector gives us the gradient:</p>
+  <pre class="programlisting">def approx_gradient(f,x0,y0,dx=1e-6):
+    partial_x = approx_derivative(lambda x:f(x,y0),x0,dx=dx)
+    partial_y = approx_derivative(lambda y:f(x0,y),y0,dx=dx)
+    return (partial_x,partial_y)</pre>
+
+  <p class="body"><a id="pgfId-1175440"></a>The difference for a function of three variables is that there’s one other partial derivative we can take. If we look at <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) at some point (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">0</sub>), we can look at <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">0</sub>), <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i><sub class="fm-subscript">0</sub>), and <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">z</i>) as functions of <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i>, respectively, and take their ordinary derivatives to get three partial derivatives. Putting these three partial derivatives together in a vector, we get the 3D version of the gradient:</p>
+  <pre class="programlisting">def approx_gradient3(f,x0,y0,z0,dx=1e-6):
+    partial_x = approx_derivative(lambda x:f(x,y0,z0),x0,dx=dx)
+    partial_y = approx_derivative(lambda y:f(x0,y,z0),y0,dx=dx)
+    partial_z = approx_derivative(lambda z:f(x0,y0,z),z0,dx=dx)
+    return (partial_x,partial_y,partial_z)</pre>
+
+  <p class="body"><a id="pgfId-1175442"></a>To do the gradient descent in 3D, the procedure is just as you’d expect; we start at some point in 3D, calculate the gradient, and step a small amount in that direction to arrive at a new point, where hopefully, the value of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, <i class="fm-in-times-italic">z</i>) is smaller. As one additional enhancement, I’ve added a <code class="fm-code-in-text">max_steps</code> parameter so we can set a maximum number of steps to take during the gradient descent. With that parameter set to a reasonable limit, we won’t have to worry about our program stalling even if the algorithm doesn’t converge to a point within the tolerance. Here’s what the result looks like in Python:</p>
+  <pre class="programlisting">def gradient_descent3(f,xstart,ystart,zstart,
+                      tolerance=1e-6,max_steps=1000):
+    x = xstart
+    y = ystart
+    z = zstart
+    grad = approx_gradient3(f,x,y,z)
+    steps = 0
+    while length(grad) &gt; tolerance and steps &lt; max_steps:
+        x -= 0.01 * grad[0]
+        y -= 0.01 * grad[1]
+        z -= 0.01 * grad[2]
+        grad = approx_gradient3(f,x,y,z)
+        steps += 1
+    return x,y,z</pre>
+
+  <p class="body"><a id="pgfId-1175445"></a>All that remains is to plug in the <code class="fm-code-in-text">logistic_cost</code> function, and the <code class="fm-code-in-text">gradient_descent3</code> function finds inputs that <a id="marker-1184676"></a>minimize it.</p>
+
+  <h3 class="fm-head1" id="heading_id_25"><a id="pgfId-1175447"></a><a id="id_8upw0d9ghhx"></a>15.5.2 Using gradient descent to find the best fit</h3>
+
+  <p class="body"><a id="pgfId-1175448"></a>To be <a id="marker-1184681"></a>cautious, we can start by using a small number of <code class="fm-code-in-text">max_steps</code>, like 100:</p>
+  <pre class="programlisting">&gt;&gt;&gt; gradient_descent3(logistic_cost,1,1,1,max_steps=100)
+(0.21114493546399946, 5.04543972557848, 2.1260122558655405)</pre>
+
+  <p class="body"><a id="pgfId-1175450"></a>If we allow it to take 200 steps instead of 100, we see that it has further to go after all:</p>
+  <pre class="programlisting">&gt;&gt;&gt; gradient_descent3(logistic_cost,1,1,1,max_steps=200)
+(0.884571531298388, 6.657543188981642, 2.955057286988365)</pre>
+
+  <p class="body"><a id="pgfId-1175452"></a>Remember, these results are the parameters required to define the logistic function, but they are also the parameters (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) defining the decision boundary in the form <i class="fm-in-times-italic">ax</i> + <i class="fm-italics">bp</i> = <i class="fm-in-times-italic">c</i>. If we run gradient descent for 100 steps, 200 steps, 300 steps, and so on, and plot the corresponding lines with <code class="fm-code-in-text">plot_line</code>, we can see the decision boundary converging as in figure 15.19.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F19_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1187175"></a>Figure 15.19 With more and more steps, the values of (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) returned by gradient descent seem to be settling on a clear decision boundary.</p>
+
+  <p class="body"><a id="pgfId-1175458"></a>Somewhere between 7,000 and 8,000 steps, the algorithm actually converges, meaning it finds a point where the length of the gradient is less than 10<sup class="fm-superscript"><span class="fm-in-cambria1">−</span>6</sup>. Approximately speaking, that’s the minimum point we’re looking for:</p>
+  <pre class="programlisting">&gt;&gt;&gt; gradient_descent3(logistic_cost,1,1,1,max_steps=8000)
+(3.7167003153580045, 11.422062409195114, 5.596878367305919)</pre>
+
+  <p class="body"><a id="pgfId-1175460"></a>We can see what this decision boundary looks like relative to the one we’ve been using (figure 15.20 shows the result):</p>
+  <pre class="programlisting">plot_data(scaled_car_data)
+plot_line(0.35,1,0.56)
+plot_line(3.7167003153580045, 11.422062409195114, 5.596878367305919)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F20_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1175466"></a>Figure 15.20 Comparing our previous best-guess decision boundary to the one implied by the result of gradient descent</p>
+
+  <p class="body"><a id="pgfId-1175467"></a>This decision boundary isn’t too far off from our guess. The result of the logistic regression appears to have moved the decision boundary slightly downward from our guess, trading off a few false positives (Priuses that are now incorrectly above the line in figure 15.20) for a few more true positives (BMWs that are now correctly above the<a id="marker-1184686"></a> line).</p>
+
+  <h3 class="fm-head1" id="heading_id_26"><a id="pgfId-1175469"></a>15.5.3 <a id="id_mx81yectei53"></a>Testing and understanding the best logistic classifier</h3>
+
+  <p class="body"><a id="pgfId-1175470"></a>We <a id="marker-1184691"></a>can easily plug these values for (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) into a logistic function and then use it to make a car classification function:</p>
+  <pre class="programlisting">def best_logistic_classifier(x,p):
+    l = make_logistic(3.7167003153580045, 11.422062409195114, 5.596878367305919)
+    if l(x,p) &gt; 0.5:
+        return 1
+    else:
+        return 0</pre>
+
+  <p class="body"><a id="pgfId-1175472"></a>Plugging this function into the <code class="fm-code-in-text">test_classifier</code> function, we can see its accuracy rate on the test data set is about what we got from our best attempts, 80% on the dot:</p>
+  <pre class="programlisting">&gt;&gt;&gt; test_classifier(best_logistic_classifier,scaled_car_data)
+0.8</pre>
+
+  <p class="body"><a id="pgfId-1175474"></a>The decision boundaries are fairly close, so it makes sense that the performance is not too far off of our guess from section 15.2. That said, if what we had previously was close, why did the decision boundary converge so decisively where it did?</p>
+
+  <p class="body"><a id="pgfId-1175475"></a>It turns out logistic regression does more than simply find the optimal decision boundary. In fact, we saw a decision boundary early in the section that outperformed this best fit logistic classifier by 0.5%, so the logistic classifier doesn’t even maximize accuracy on the test data set. Rather, logistic regression looks holistically at the data set and finds the model that is most likely to be accurate given all of the examples. Rather than moving the decision boundary slightly to grab one or two more percentage points of accuracy on the test set, the algorithm orients the decision boundary based on a holistic view of the data set. If our data set is representative, we can trust our logistic classifier to do well on data it hasn’t seen yet, not just the data in our training set.</p>
+
+  <p class="body"><a id="pgfId-1175476"></a>The other information that our logistic classifier has is an amount of certainty about every point it classifies. A classifier based only on a decision boundary is 100% certain that a point above that boundary is a BMW and that a point below that is a Prius. Our logistic classifier has a more nuanced view; we can interpret the values it returns between zero and one as a probability a car is a BMW rather than a Prius. For real-world applications, it can be valuable to know not only the best guess from your machine learning model, but also how trustworthy it considers itself to be. If we were classifying benign tumors from malignant ones based on medical scans, we might act much differently if the algorithm told us it was 99% sure, as opposed to 51% sure, if a tumor was malignant.</p>
+
+  <p class="body"><a id="pgfId-1175477"></a>The way certainty comes through in the shape of the classifier is the magnitude of the coefficients (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>). For instance, you can see that the ratio between (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) in our guess of (0.35, 1, 0.56) is similar to the ratio in the optimal values of (3.717, 11.42, 5.597). The optimal values are approximately ten times bigger than our best guess. The biggest difference that causes this change is the steepness of the logistic function. The optimal logistic function is much more certain of the decision boundary than the first. It tells us that as soon as you cross the decision boundary, certainty of the result increases significantly as figure 15.21 shows.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F21_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1187250"></a>Figure 15.21 The optimized logistic function is much steeper, meaning its certainty that a car is a BMW rather than a Prius increases rapidly as you cross the decision boundary.</p>
+
+  <p class="body"><a id="pgfId-1175483"></a>In the final chapter, we’ll continue to use sigmoid functions to produce certainties of results between zero and one as we implement classification using neural <a id="marker-1184696"></a>networks.</p>
+
+  <h3 class="fm-head1" id="heading_id_27"><a id="pgfId-1175485"></a><a id="id_6evx8u64ckd5"></a>15.5.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1181123"></a><b class="fm-exercise-head">Exercise 15.11</b>: Modify <a id="marker-1184701"></a>the <code class="fm-code-in-text1">gradient_descent3</code> function to print the total number of steps taken before it returns its result. How many steps does the gradient descent take to converge for <code class="fm-code-in-text1">logistic_cost</code> ?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1181124"></a><b class="fm-exercise-head">Solution</b>: All you need to do is add the line <code class="fm-code-in-text1">print(steps)</code> right before <code class="fm-code-in-text1">gradient_descent3</code> to return its result:</p>
+        <pre class="programlisting">def gradient_descent3(f,xstart,ystart,zstart,tolerance=1e<span class="fm-in-cambria">−</span>6,max_steps=1000):
+    ...
+    print(steps)
+    return x,y,z</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1181126"></a>Running the following gradient descent</p>
+        <pre class="programlisting">gradient_descent3(logistic_cost,1,1,1,max_steps=8000)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1181128"></a>the number printed is <code class="fm-code-in-text1">7244</code>, meaning the algorithm converges in 7,244 steps.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1181179"></a><b class="fm-exercise-head">Exercise 15.12-Mini Project</b>: Write an <code class="fm-code-in-text1">approx_gradient</code> function that calculates the gradient of a function in any number of dimensions. Then write a <code class="fm-code-in-text1">gradient_descent</code> function that works in any number of dimensions. To test your <code class="fm-code-in-text1">gradient_descent</code> on an <i class="fm-in-times-italic1">n</i> -dimensional function, you can try a function like <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub>, ... , <i class="fm-in-times-italic1">x<sup class="fm-superscript">n</sup></i> ) = (<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub> − 1)<sup class="fm-superscript1">2</sup> + (<i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub> − 1)<sup class="fm-superscript1">2</sup> + ... + (<i class="fm-in-times-italic1">x<sup class="fm-superscript">n</sup></i> − 1)<sup class="fm-superscript1">2</sup>, where <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">x</i><sub class="fm-subscript2">2</sub>, ... , <i class="fm-in-times-italic1">x<sup class="fm-superscript">n</sup></i> are the <i class="fm-in-times-italic1">n</i> input variables to the function <i class="fm-in-times-italic1">f</i> . The minimum of this function should be (1, 1, ..., 1), an <i class="fm-in-times-italic1">n</i> -dimensional vector with the number 1 in every entry.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1181180"></a><b class="fm-exercise-head">Solution</b>: Let’s model our vectors of arbitrary dimension as lists of numbers. To take partial derivatives in the <i class="fm-in-times-italic1">i</i><sup class="fm-superscript1">th</sup> coordinate at a vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic1">v</i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1">v</i><sub class="fm-subscript2">2</sub>, ... , <i class="fm-italics">v<sub class="fm-subscript2">n</sub></i>), we want to take the ordinary derivative of the <i class="fm-in-times-italic1">i</i><sup class="fm-superscript1">th</sup> coordinate <i class="fm-in-times-italic1">x<sub class="fm-subscript">i</sub></i>. That is, we want to look at the function:</p>
+
+        <p class="fm-equation"><a id="pgfId-1181181"></a><i class="fm-in-times-italic2">f</i>(<i class="fm-in-times-italic2">v</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">2</sub>, ..., <i class="fm-italics">v</i><sub class="fm-subscript"><i class="fm-in-times-italic2">i</i><span class="fm-in-cambria1">−</span>1</sub>, <i class="fm-in-times-italic2">x<sub class="fm-subscript">i</sub></i>, <i class="fm-italics">v</i><sub class="fm-subscript"><i class="fm-in-times-italic2">i</i>+1</sub>, ..., <i class="fm-italics">v<sub class="fm-subscript">n</sub></i>)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1181182"></a>that is, in other words, every coordinate of <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> plugged in to <i class="fm-in-times-italic1">f</i> , except the <i class="fm-in-times-italic1">i</i><sup class="fm-superscript1">th</sup> entry, which is left as a variable <i class="fm-in-times-italic1">x<sub class="fm-subscript">i</sub></i>. This gives us a function of a single variable <i class="fm-in-times-italic1">x<sub class="fm-subscript">i</sub></i>, and its ordinary derivative is the <i class="fm-in-times-italic1">i</i><sup class="fm-superscript1">th</sup> partial derivative. The code for partial derivatives looks like this:</p>
+        <pre class="programlisting">def partial_derivative(f,i,v,**kwargs):
+    def cross_section(<i class="fm-in-times-italic1">x</i>):
+        arg = [(vj if j != i else x) for j,vj in enumerate(<i class="fm-in-times-italic1">v</i>)]
+        return <i class="fm-in-times-italic1">f</i>(*arg)
+    return approx_derivative(cross_section, v[i], **kwargs)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1181184"></a>Note that our coordinates are zero-indexed, and the dimension of input to <i class="fm-in-times-italic1">f</i> is inferred from the length of <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1181185"></a>The rest of the work is easy by comparison. To build the gradient, we just take the <i class="fm-in-times-italic1">n</i> partial derivatives and put them in order in a list:</p>
+        <pre class="programlisting">def approx_gradient(f,v,dx=1e<span class="fm-in-cambria">−</span>6):
+    return [partial_derivative(f,i,v) for i in range(0,len(<i class="fm-in-times-italic1">v</i>))]</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1181187"></a>To do the gradient descent, we replace all of the manipulations of named coordinate variables, like <i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>, and <i class="fm-in-times-italic1">z</i>, with list operations on the list vector of coordinates called <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> <i class="fm-italics">:</i></p>
+        <pre class="programlisting">def gradient_descent(f,vstart,tolerance=1e<span class="fm-in-cambria">−</span>6,max_steps=1000):
+    v  = vstart
+    grad = approx_gradient(f,v)
+    steps = 0
+    while length(grad) &gt; tolerance and steps &lt; max_steps:
+        v  = [(vi − 0.01 * dvi) for vi,dvi in zip(v,grad)]
+        grad = approx_gradient(f,v)
+        steps += 1
+    return v</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1181220"></a>To implement the suggested test function, we can write a generalized version of it that takes any number of inputs and returns the sum of their squared difference from one:</p>
+        <pre class="programlisting">def sum_squares(*v):
+    return sum([(x−1)**2 for <i class="fm-in-times-italic1">x</i> in v])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1181222"></a>This function can’t be lower than zero because it’s a sum of squares, and a square cannot be less than zero. The value zero is obtained if every entry of the input vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is one, so that’s the minimum. Our gradient descent confirms this (with only a small numerical error), so everything looks good! Note that because the starting vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> is 5D, all vectors in the computation are automatically 5D.</p>
+        <pre class="programlisting">&gt;&gt;&gt; xv  = [2,2,2,2,2]
+&gt;&gt;&gt; gradient_descent(sum_squares,v)
+[1.0000002235452137,
+ 1.0000002235452137,
+ 1.0000002235452137,
+ 1.0000002235452137,
+ 1.0000002235452137]</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1181248"></a><b class="fm-exercise-head">Exercise 15.13-Mini Project</b>: Attempt to run the gradient descent with the <code class="fm-code-in-text1">simple_logistic_cost</code> cost function. What happens?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1181249"></a><b class="fm-exercise-head">Solution</b>: It does not appear to converge. The values of <i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, and <i class="fm-in-times-italic1">c</i> continue increasing without bound even though the decision boundary stabilizes. This means as the gradient descent explores more and more logistic functions, these are staying oriented in the same direction but becoming infinitely steep. It is incentivized to become closer and closer to most of the points, while neglecting the ones it has already mislabeled. As I mentioned, this can be solved by penalizing the incorrect classifications for which the logistic function is the most <a id="marker-1184721"></a>confident, <a id="marker-1184726"></a>and our <code class="fm-code-in-text1">logistic_cost</code> function <a id="marker-1184706"></a>does <a id="marker-1184711"></a>that <a id="marker-1184716"></a>well.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_28"><a id="pgfId-1175515"></a><a id="id_u85f5x6y1bxn"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1175516"></a>Classification is a type of machine learning task where an algorithm is asked to look at unlabeled data points and identify each one as a member of a class. In our examples for this chapter, we looked at mileage and price data for used cars and wrote an algorithm to classify them either as 5 series BMWs or Toyota Priuses.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1175517"></a>A simple way to classify vector data in 2D is to establish a decision boundary; that means drawing a literal boundary in the 2D space where your data lives, where points on one side of the boundary are classified in one class and points on the other side are classified in another. A simple decision boundary is a straight line.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1175518"></a>If our decision boundary line takes the form <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> = <i class="fm-in-times-italic">c</i>, then the quantity <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> − <i class="fm-in-times-italic">c</i> is positive on one side of the line and negative on the other. We can interpret this value as a measure of how much the data point looks like a BMW. A positive value means that the data point looks like a BMW, while a negative value means that it looks more like a Prius.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1175519"></a>The sigmoid function, defined as follows, takes numbers between -∞ and ∞ and crunches them into the finite interval from zero to one:</p>
+
+      <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH15_F21_Orland_EQ04.png"/></p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1175524"></a>Composing the sigmoid with the function <i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> − <i class="fm-in-times-italic">c</i>, we get a new function <span class="fm-in-cambria">σ</span>(<i class="fm-in-times-italic">ax</i> + <i class="fm-in-times-italic">by</i> − <i class="fm-in-times-italic">c</i>) that also measures how much the data point looks like a BMW, but it only returns values between zero and one. This type of function is a logistic function in 2D.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1175525"></a>The value between zero and one that a logistic classifier outputs can be interpreted as how confident it is that a data point belongs to one class versus another. For instance, return values of 0.51 or 0.99 would both indicate that the model thinks we’re looking at a BMW, but the latter would be a much more confident prediction.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1175526"></a>With an appropriate cost function that penalizes confident, incorrect classifications, we can use gradient descent to find the logistic function of best fit. This is the best logistic classifier according to<a id="marker-1184731"></a> the <a id="marker-1184736"></a>data set.</p>
+    </li>
+  </ul>
+</body>
+</html>

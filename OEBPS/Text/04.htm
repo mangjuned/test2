@@ -1,0 +1,952 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>4</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1108839"></a>4 <a id="id_30j0zll"></a>Transforming vectors and graphics</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1108855"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1108856"></a>Transforming and drawing 3D objects by applying mathematical functions</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1108857"></a>Creating computer animations using transformations to vector graphics</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1108858"></a>Identifying linear transformations, which preserve lines and polygons</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1108859"></a>Computing the effects of linear transformations on vectors and 3D models</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1107747"></a>With the <a id="marker-1122562"></a>techniques from the last two chapters and a little creativity, you can render any 2D or 3D figure you can think of. Whole objects, characters, and worlds can be built from line segments and polygons defined by vectors. But, there’s still one thing standing in between you and your first feature-length, computer-animated film or life-like action video game−you need to be able to draw objects that <i class="fm-italics">change</i> over time.</p>
+
+  <p class="body"><a id="pgfId-1107748"></a>Animation works the same way for computer graphics as it does for film: you render static images and then display dozens of them every second. When we see that many snapshots of a moving object, it looks like the image is continuously changing. In chapters 2 and 3, we looked at a few mathematical operations that take in existing vectors and transform them geometrically to output new ones. By chaining together sequences of small transformations, we can create the illusion of continuous motion.</p>
+
+  <p class="body"><a id="pgfId-1107749"></a>As a mental model for this, you can keep in mind our examples of rotating 2D vectors. You saw that you could write a Python function, <code class="fm-code-in-text">rotate</code>, that took in a 2D vector and rotated it by, say, <span class="fm-in-cambria">45°</span> in the counterclockwise direction. As figure 4.1 shows, you can think of the <code class="fm-code-in-text">rotate</code> function as a machine that takes in a vector and outputs an appropriately transformed vector.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F01_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1107754"></a>Figure 4.1 Picturing a vector function as a machine with an input slot and output slot</p>
+
+  <p class="body"><a id="pgfId-1107755"></a>If we apply a 3D analogy of this function to every vector of every polygon defining a 3D shape, we can see the whole shape rotate. This 3D shape could be the octahedron from the previous chapter or a more interesting one like a teapot. In figure 4.2, this rotation machine takes a teapot as input and returns a rotated copy as its output.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F02_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1107760"></a>Figure 4.2 A transformation can be applied to every vector making up a 3D model, thereby transforming the whole model in the same geometric way.</p>
+
+  <p class="body"><a id="pgfId-1107761"></a>If instead of rotating by <span class="fm-in-cambria">45°</span> once, we rotated by one degree 45 times, we could generate frames of a movie showing a rotating teapot (figure 4.3).</p>
+
+  <p class="body"><a id="pgfId-1107767"></a>Rotations turn out to be great examples to work with because when we rotate every point on a line segment by the same angle about the origin, we still have a line segment of the same length. As a result, when you rotate all the vectors outlining a 2D or 3D object, you can still recognize the object.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F03_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1109157"></a>Figure 4.3 Rotating the teapot by <span class="fm-in-cambria">1°</span> at a time, 45 times in a row, beginning with the upper left-hand corner</p>
+
+  <p class="body"><a id="pgfId-1107768"></a>I’ll introduce you to a broad class of vector transformations called <i class="fm-italics">linear transformations</i> that, like rotations, send vectors lying on a straight line to new vectors that also lie on a straight line. Linear transformations have numerous applications in math, physics, and data analysis. It’s helpful to know how to picture them geometrically when you meet them again in these contexts.</p>
+
+  <p class="body"><a id="pgfId-1107769"></a>To visualize rotations, linear transformations, and other vector transformations in this chapter, we’ll upgrade to more powerful drawing tools. We’ll swap out Matplotlib for OpenGL, which is an industry standard library for high-performance graphics. Most OpenGL programming is done in C or C++, but we’ll use a friendly Python wrapper called PyOpenGL. We’ll also use a video game development library in Python called PyGame. Specifically, we’ll use the features in PyGame that make it easy to render successive images into an animation. The set up for all of these new tools is covered in appendix C, so we can jump right in and focus on the math of transforming vectors. If you want to follow along with the code for this chapter (which I strongly recommend!), then you should skip to appendix C and return here once you get the code working.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1107771"></a><a id="id_msmbstdig1fi"></a>4.1 Transforming 3D objects</h2>
+
+  <p class="body"><a id="pgfId-1107772"></a>Our main <a id="marker-1122567"></a>goal in this chapter is <a id="marker-1122850"></a>taking a 3D object (like the teapot) and changing it to create a new 3D object that is visually different. In chapter 2, we already saw that we could translate or scale each vector in a 2D dinosaur and the whole dinosaur shape would move or change in size accordingly. We take the same approach here. Every transformation we look at takes a vector as input and returns a vector as output, something like this pseudocode:</p>
+  <pre class="programlisting">def transform(<i class="fm-in-times-italic1">v</i>):
+    old_x, old_y, old_z = v
+    # ... do some computation here ...
+    return (new_x, new_y, new_z)</pre>
+
+  <p class="body"><a id="pgfId-1107774"></a>Let’s start by adapting the familiar examples of translation and scaling from 2D to 3D.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1107776"></a><a id="id_sv4sf0nffmor"></a>4.1.1 Drawing a transformed object</h3>
+
+  <p class="body"><a id="pgfId-1107777"></a>If you’ve <a id="marker-1122582"></a>installed <a id="marker-1122587"></a>the dependencies described in appendix C, you should be able to run the file draw_teapot.py in the source code for chapter 4 (see appendix A for instructions to run a Python script from the command line). If it runs successfully, you should see a PyGame window that shows the image in figure 4.4.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F04_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1123973"></a> Figure 4.4 The result of running draw_teapot.py</p>
+
+  <p class="body"><a id="pgfId-1107783"></a>In the next few examples, we modify the vectors defining the teapot and then re-render it so that we can see the geometric effect. As a first example, we can scale all of the vectors by the same factor. The following function, <code class="fm-code-in-text">scale2</code>, multiplies an input vector by the scalar 2.0 and returns the result:</p>
+  <pre class="programlisting">from vectors import scale
+def scale2(<i class="fm-in-times-italic1">v</i>):
+    return scale(2.0, v)</pre>
+
+  <p class="body"><a id="pgfId-1107785"></a>This <code class="fm-code-in-text">scale2(<i class="fm-in-times-italic2">v</i>)</code> function has the same form as the <code class="fm-code-in-text">transform(<i class="fm-in-times-italic2">v</i>)</code> function given at the top of this section; when passed a 3D vector as input, <code class="fm-code-in-text">scale2</code> returns a new 3D vector as output. To execute this transformation on the teapot, we need to transform each of its vertices. We can do this triangle by triangle. For each triangle that we use to build the teapot, we create a new triangle with the result of applying <code class="fm-code-in-text">scale2</code> to the original vertices:</p>
+  <pre class="programlisting">original_triangles = load_triangles()        <span class="fm-combinumeral">❶</span>
+scaled_triangles = [
+    [scale2(vertex) for vertex in triangle]  <span class="fm-combinumeral">❷</span>
+    for triangle in original_triangles       <span class="fm-combinumeral">❸</span>
+]</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1123022"></a><span class="fm-combinumeral">❶</span> Loads the triangles using the code from appendix C</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1123060"></a><span class="fm-combinumeral">❷</span> Applies scale2 to each vertex in a given triangle to get new vertices</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1123077"></a><span class="fm-combinumeral">❸</span> Does this for each triangle in the list of original triangles</p>
+
+  <p class="body"><a id="pgfId-1107790"></a>Now that we’ve got a new set of triangles, we can draw them by calling <code class="fm-code-in-text">draw_model(scaled_triangles)</code>. Figure 4.5 shows the teapot after this call, and you can reproduce this by running the file scale_teapot.py in the source code.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F05_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124030"></a>Figure 4.5 Applying <code class="fm-code-in-text">scale2</code> to each vertex of each triangle gives us a teapot that is twice as big.</p>
+
+  <p class="body"><a id="pgfId-1107796"></a>This teapot looks bigger than the original, and in fact, it is twice as big because we multiplied each vector by 2. Let’s apply another transformation to each vector: translation by the vector (−1, 0, 0).</p>
+
+  <p class="body"><a id="pgfId-1107798"></a>Recall that “translating by a vector<a id="marker-1107797"></a>” is another way of saying “adding the vector,” so what I’m really talking about is adding (−1, 0, 0) to every vertex of the teapot. This should move the whole teapot one unit in the negative <i class="fm-in-times-italic">x</i> direction, which is to the left from our perspective. This function accomplishes the translation for a single vertex:</p>
+  <pre class="programlisting">from vectors import add
+def translate1left(<i class="fm-in-times-italic1">v</i>):
+    return add((−1,0,0), v)</pre>
+
+  <p class="body"><a id="pgfId-1107800"></a>Starting with the original triangles, we now want to scale each of their vertices as before and then apply the translation. <a id="id_Hlk42882847"></a>Figure 4.6 shows the result. You can reproduce it with the source file scale_translate_teapot.py:</p>
+  <pre class="programlisting">scaled_translated_triangles = [
+    [translate1left(scale2(vertex)) for vertex in triangle]
+    for triangle in original_triangles
+]
+draw_model(scaled_translated_triangles)</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F06_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124073"></a>Figure 4.6 The teapot is bigger and moved to the left as we hoped!</p>
+
+  <p class="body"><a id="pgfId-1107810"></a>Different scalar multiples change the size of the teapot by different factors, and different translation vectors move the teapot to different positions in space. In the exercises that follow, you’ll have a chance to try different <a id="marker-1122592"></a>scalar <a id="marker-1122597"></a>multiples and translations, but for now, let’s focus on combining and applying more transformations.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1107812"></a><a id="id_ixsmv71x4mms"></a>4.1.2 Composing vector transformations</h3>
+
+  <p class="body"><a id="pgfId-1107813"></a>Applying <a id="marker-1122602"></a>any <a id="marker-1122607"></a>number of transformations sequentially defines a new transformation. In the previous section, for instance, we transformed the teapot by scaling it and then translating it. We can package this new transformation as its own Python function:</p>
+  <pre class="programlisting">def scale2_then_translate1left(<i class="fm-in-times-italic1">v</i>):
+    return translate1left(scale2(<i class="fm-in-times-italic1">v</i>))</pre>
+
+  <p class="body"><a id="pgfId-1107815"></a>This is an important principle! Because vector transformations take vectors as inputs and return vectors as outputs, we can combine as many of them as we want by <i class="fm-italics">composition of functions</i> <a id="marker-1107816"></a>. If you haven’t heard this term before, it means defining new functions by applying two or more existing ones in a specified order. If we picture the functions <code class="fm-code-in-text">scale2</code> and <code class="fm-code-in-text">translate1left</code> as machines that take in 3D models and output new ones (figure 4.7), we can combine them by passing the outputs of the first machine as inputs to the second.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F07_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1107821"></a>Figure 4.7 Calling <code class="fm-code-in-text">scale2</code> and then <code class="fm-code-in-text">translate1left</code> on a teapot to output a transformed version</p>
+
+  <p class="body"><a id="pgfId-1107822"></a>We can imagine hiding the intermediate step by welding the output slot of the first machine to the input slot of the second machine (figure 4.8).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F08_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1107827"></a>Figure 4.8 Welding the two function machines together to get a new one, which performs both transformations in one step</p>
+
+  <p class="body"><a id="pgfId-1107828"></a>We can think of the result as a new machine that does the work of both the original functions in one step. This “welding” of functions can be done in code as well. We can write a general-purpose <code class="fm-code-in-text">compose</code> function that takes two Python functions (for vector transformations, for instance) and returns a new function, which is their composition:</p>
+  <pre class="programlisting">def compose(f1,f2):
+    def new_function(input):
+        return f1(f2(input))
+    return new_function</pre>
+
+  <p class="body"><a id="pgfId-1107830"></a>Instead of defining <code class="fm-code-in-text">scale2_then_translate1left</code> as its own function, we could write</p>
+  <pre class="programlisting">scale2_then_translate1left = compose(translate1left, scale2)</pre>
+
+  <p class="body"><a id="pgfId-1107832"></a>You might have heard of the idea that Python treats functions as “first-class objects.” What is usually meant by this slogan is that Python functions can be assigned to variables, passed as inputs to other functions, or created on-the-fly and returned as output values. These are <i class="fm-italics">functional programming</i> techniques<a id="marker-1107833"></a>, meaning that they help us build complex programs by combining existing functions to make new ones.</p>
+
+  <p class="body"><a id="pgfId-1107834"></a>There is some debate about whether functional programming is kosher in Python (or as a Python fan would say, whether or not functional programming is “Pythonic”). I won’t opine about coding style, but I use functional programming because functions, namely vector transformations, are our central objects of study. With the <code class="fm-code-in-text">compose</code> function covered, I’ll show you a few more functional “recipes” that justify this digression. Each of these is added in a new helper file called transforms.py in the source code for this book.</p>
+
+  <p class="body"><a id="pgfId-1107835"></a>Something we’ll be doing repeatedly is taking a vector transformation and applying it to every vertex in every triangle defining a 3D model. We can write a reusable function for this rather than writing a new list comprehension each time. The following <code class="fm-code-in-text">polygon_map</code> function takes a vector transformation and a list of polygons (usually triangles) and applies the transformation to each vertex of each polygon, yielding a new list of new polygons:</p>
+  <pre class="programlisting">def polygon_map(transformation, polygons):
+    return [
+        [transformation(vertex) for vertex in triangle]
+        for triangle in polygons
+    ]</pre>
+
+  <p class="body"><a id="pgfId-1107837"></a>With this helper function, we can apply <code class="fm-code-in-text">scale2</code> to the original teapot in one line:</p>
+  <pre class="programlisting">draw_model(polygon_map(scale2, load_triangles()))</pre>
+
+  <p class="body"><a id="pgfId-1107839"></a>The <code class="fm-code-in-text">compose</code> and <code class="fm-code-in-text">polygon_map</code> functions both take vector transformations as arguments, but it’s also useful to have functions that return vector transformations. For instance, it might have bothered you that we named a function <code class="fm-code-in-text">scale2</code> and hard-coded the number two into its definition. A replacement for this could be a <code class="fm-code-in-text">scale_by</code> function that returns a scaling transformation for a specified scalar:</p>
+  <pre class="programlisting">def scale_by(scalar):
+    def new_function(<i class="fm-in-times-italic1">v</i>):
+        return scale(scalar, v)
+    return new_function</pre>
+
+  <p class="body"><a id="pgfId-1115701"></a>With this function, we can write <code class="fm-code-in-text">scale_by(2)</code> and the return value would be a new function that behaves identically to <code class="fm-code-in-text">scale2</code>. While we’re picturing functions as machines with input and output slots, you can picture <code class="fm-code-in-text">scale_by</code> as a machine that takes numbers in its input slot and outputs new function machines from its output slot as shown in figure 4.9.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F09_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124144"></a>Figure 4.9 A function machine that takes numbers as inputs and produces new function machines as outputs</p>
+
+  <p class="body"><a id="pgfId-1107847"></a>As an exercise, you can write a similar <code class="fm-code-in-text">translate_by</code> function that takes a translation vector as input and returns a translation function as output. In the terminology of functional programming, this process is called <i class="fm-italics">currying</i> <a id="marker-1107848"></a> <i class="fm-italics">.</i> Currying takes a function that accepts multiple inputs and refactors it to a function that returns another function.</p>
+
+  <p class="body"><a id="pgfId-1107849"></a>The result is a programmatic machine that behaves identically but is invoked differently; for instance, <code class="fm-code-in-text">scale_by(s)(<i class="fm-in-times-italic2">v</i>)</code> gives the same result as <code class="fm-code-in-text">scale(s,v)</code> for any inputs <i class="fm-in-times-italic">s</i> and <i class="fm-in-times-italic">v</i>. The advantage is that <code class="fm-code-in-text">scale(...)</code> and <code class="fm-code-in-text">add(...)</code> accept different kinds of arguments, so the resulting functions, <code class="fm-code-in-text">scale_by(s)</code> and <code class="fm-code-in-text">translate _by(<i class="fm-in-times-italic2">w</i>)</code>, are interchangeable. Next, we’ll think similarly about rotations: for any given angle, we can produce a vector transformation <a id="marker-1122612"></a>that rotates <a id="marker-1122617"></a>our model by that angle.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1107851"></a><a id="id_wsulw56qvr8r"></a>4.1.3 Rotating an object about an axis</h3>
+
+  <p class="body"><a id="pgfId-1107853"></a>You <a id="marker-1122622"></a>already <a id="marker-1122627"></a>saw <a id="marker-1122632"></a>how to do rotations in 2D in chapter 2: you convert the Cartesian<a id="marker-1107852"></a> coordinates to polar<a id="marker-1107854"></a> coordinates, increase or decrease the angle by the rotation factor, and then convert back. Even though this is a 2D trick, it is helpful in 3D because all 3D</p>
+
+  <p class="body"><a id="pgfId-1115835"></a>vector rotations are, in a sense, isolated in planes. Picture, for instance, a single point in 3D being rotated about the <i class="fm-in-times-italic">z</i> -axis. Its <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates change, but its <i class="fm-in-times-italic">z</i>-coordinate remains the same. If a given point is rotated around the <i class="fm-in-times-italic">z</i> -axis, it stays in a circle with a constant <i class="fm-in-times-italic">z</i>-coordinate, regardless of the rotation angle (figure 4.10).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F10_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124194"></a>Figure 4.10 Rotating a point around the z-axis</p>
+
+  <p class="body"><a id="pgfId-1107860"></a>What this means is that we can rotate a 3D point around the <i class="fm-in-times-italic">z</i> -axis by holding the <i class="fm-in-times-italic">z</i>-coordinate constant and applying our 2D rotation function only to the <i class="fm-in-times-italic">x</i> − and <i class="fm-in-times-italic">y</i>-coordinates. We’ll work through the code here, and you can also find it in rotate_teapot.py in the source code. First, we write a 2D rotation function adapted from the strategy we used in chapter 2:</p>
+  <pre class="programlisting">def rotate2d(angle, vector):
+    l,a = to_polar(vector)
+    return to_cartesian((l, a+angle))</pre>
+
+  <p class="body"><a id="pgfId-1107862"></a>This function takes an angle and a 2D vector and returns a rotated 2D vector. Now, let’s create a function, <code class="fm-code-in-text">rotate_z</code>, that applies this function only to the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> components of a 3D vector:</p>
+  <pre class="programlisting">def rotate_z(angle, vector):
+    x,y,z = vector
+    new_x, new_y = rotate2d(angle, (x,y))
+    return new_x, new_y, z</pre>
+
+  <p class="body"><a id="pgfId-1107865"></a>Continuing to think in the functional programming paradigm, we can curry<a id="marker-1107864"></a> this function. Given any angle, the curried version produces a vector transformation that does the corresponding rotation:</p>
+  <pre class="programlisting">def rotate_z_by(angle):
+    def new_function(<i class="fm-in-times-italic1">v</i>):
+        return rotate_z(angle,v)
+    return new_function</pre>
+
+  <p class="body"><a id="pgfId-1122911"></a>Let’s see it in action. The following line yields the teapot in figure 4.11, which is rotated by <i class="fm-in-cambria2">π</i>/4 or <span class="fm-in-cambria">45°</span>:</p>
+  <pre class="programlisting">draw_model(polygon_map(rotate_z_by(pi/4.), load_triangles()))</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F11_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124238"></a>Figure 4.11 The teapot is rotated <span class="fm-in-cambria">45°</span> counterclockwise about the z-axis.</p>
+
+  <p class="body"><a id="pgfId-1107874"></a>We can write a similar function to rotate the teapot about the x-axis, meaning the rotation affects only the <i class="fm-in-times-italic">y</i> and <i class="fm-in-times-italic">z</i> components of the vector:</p>
+  <pre class="programlisting">def rotate_x(angle, vector):
+    x,y,z = vector
+    new_y, new_z = rotate2d(angle, (y,z))
+    return x, new_y, new_z
+def rotate_x_by(angle):
+    def new_function(<i class="fm-in-times-italic1">v</i>):
+        return rotate_x(angle,v)
+    return new_function</pre>
+
+  <p class="body"><a id="pgfId-1107876"></a>In the function <code class="fm-code-in-text">rotate_x_by</code>, a rotation about the x-axis is achieved by fixing the <i class="fm-in-times-italic">x</i> coordinate and executing a 2D rotation in the <i class="fm-in-times-italic">y</i>,<i class="fm-in-times-italic">z</i> plane. The following code draws a <span class="fm-in-cambria">90°</span> or <i class="fm-in-cambria2">π</i>/2 radian rotation (counterclockwise) about the x-axis, resulting in the upright teapot shown in figure 4.12:</p>
+  <pre class="programlisting">draw_model(polygon_map(rotate_x_by(pi/2.), load_triangles()))</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F12_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124282"></a>Figure 4.12 The teapot rotated by <i class="fm-in-cambria2">π</i>/2 about the x-axis.</p>
+
+  <p class="body"><a id="pgfId-1107884"></a>You can reproduce figure 4.12 with the source file rotate_teapot_x.py. The shading is consistent among these rotated teapots; their brightest polygons are toward the top-right of the figures, which is expected because the light source remains at (1, 2, 3). This is a good sign that we are successfully moving the teapot and not just changing our OpenGL perspective as before.</p>
+
+  <p class="body"><a id="pgfId-1107885"></a> It turns out that it’s possible to get <i class="fm-italics">any</i> rotation we want by composing rotations in the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">z</i> directions. In the exercises at the end of the section, you can try your hand at some more rotations, <a id="marker-1122637"></a>but for <a id="marker-1122642"></a>now, <a id="marker-1122855"></a>we’ll move on to other kinds of vector transformations.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1107887"></a><a id="id_j9nmnuclf1pd"></a>4.1.4 Inventing your own geometric transformations</h3>
+
+  <p class="body"><a id="pgfId-1107888"></a>So far, <a id="marker-1122647"></a>I’ve <a id="marker-1122652"></a>focused on the vector transformations we already saw in some way in the preceding chapters. Now, let’s throw caution to the wind and see what other interesting transformations we can come up with. Remember, the only requirement for a 3D vector transformation is that it accepts a single 3D vector as input and returns a new 3D vector as its output. Let’s look at a few transformations that don’t quite fall in any of the categories we’ve seen so far.</p>
+
+  <p class="body"><a id="pgfId-1107889"></a>For our teapot, let’s modify one coordinate at a time. This function stretches vectors by a (hard-coded) factor of four, but only in the <i class="fm-in-times-italic">x</i> direction:</p>
+  <pre class="programlisting">def stretch_x(vector):
+    x,y,z = vector
+    return (4.*x, y, z)</pre>
+
+  <p class="body"><a id="pgfId-1107891"></a>The result is a long, skinny teapot along the x-axis or in the handle-to-spout direction (figure 4.13). This is fully implemented in stretch_teapot.py.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F13_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124332"></a>Figure 4.13 A teapot stretched along the x-axis.</p>
+
+  <p class="body"><a id="pgfId-1107897"></a>A similar <code class="fm-code-in-text">stretch_y</code> function elongates the teapot from top-to-bottom. You can implement <code class="fm-code-in-text">stretch_y</code> and apply it to a teapot yourself, and you should get the image in figure 4.14. Otherwise, you can look at the implementation in stretch_teapot_y.py in the source code.</p>
+
+  <p class="body"><a id="pgfId-1107903"></a>We can get even more creative, stretching the teapot by cubing the <i class="fm-in-times-italic">y</i>-coordinate rather than just multiplying it by a number. This transformation gives the teapot a disproportionately elongated lid as implemented in cube_teapot.py and shown in figure 4.15:</p>
+  <pre class="programlisting">def cube_stretch_z(vector):
+    x,y,z = vector
+    return (x, y*y*y, z)</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F14_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124388"></a>Figure 4.14 Stretching the teapot in the y direction instead</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F15_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124427"></a>Figure 4.15 Cubing the vertical dimension of the teapot</p>
+
+  <p class="body"><a id="pgfId-1107910"></a>If we selectively add two of the three coordinates in the formula for the transformation, for instance the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> coordinates, we can cause the teapot to slant. This is implemented in slant_teapot.py and shown in figure 4.16:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F16_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124491"></a>Figure 4.16 Adding the y-coordinate to the existing x-coordinate causes the teapot to slant in the <i class="fm-in-times-italic">x</i> direction.</p>
+  <pre class="programlisting">def slant_xy(vector):
+    x,y,z = vector
+    return (x+y, y, z)</pre>
+
+  <p class="body"><a id="pgfId-1107917"></a>The point is not that any one of these transformations is important or useful, but that any mathematical transformation of the vectors constituting a 3D model have <i class="fm-italics">some</i> geometric consequence on the appearance of the model. It is possible to go too crazy with the transformation, at which point the model can become too distorted to recognize or even to draw successfully. Indeed, some transfor-mations are better-behaved in general, <a id="marker-1122657"></a>and <a id="marker-1122667"></a>we’ll classify them in the next section.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1107919"></a><a id="id_hs8j37wsqfgx"></a>4.1.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1110646"></a><b class="fm-exercise-head">Exercise 4.1</b>: <a id="marker-1122672"></a>Implement a <code class="fm-code-in-text1">translate_by</code> function <a id="marker-1122677"></a>(referred to in section 4.1.2), taking a translation vector as input and returning a translation function as output.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1110647"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def translate_by(translation):
+    def new_function(<i class="fm-in-times-italic1">v</i>):
+        return add(translation,v)
+    return new_function</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1116540"></a><b class="fm-exercise-head">Exercise 4.2</b>: Render the teapot translated by 20 units in the negative <i class="fm-in-times-italic1">z</i> direction. What does the resulting image look like?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1116541"></a><b class="fm-exercise-head">Solution</b>: We can accomplish this by applying <code class="fm-code-in-text1">translate_by((0,0,−20))</code> to every vector of every polygon with <code class="fm-code-in-text1">polgyon_map</code> :</p>
+        <pre class="programlisting">draw_model(polygon_map(translate_by((0,0,−20)), load_triangles()))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1116543"></a>Remember, we are looking at the teapot from five units up the z-axis. This transformation brings the teapot 20 units further from us, so it looks much smaller than the original. You can find the complete implementation in translate_teapot_down_z.py in the source code.</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F16_Orland_UN01.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1116547"></a>The teapot translated 20 units down the z-axis. It appears smaller because it is further from the viewpoint.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1120099"></a><b class="fm-exercise-head">Exercise 4.3-Mini Project</b>: What happens to the teapot when you scale every vector by a scalar between 0 and 1? What happens when you scale it by a factor of −1?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1116632"></a><b class="fm-exercise-head">Solution</b>: We can apply <code class="fm-code-in-text1">scale_by(0.5)</code> and <code class="fm-code-in-text1">scale_by(−1)</code> to see the results:</p>
+        <pre class="programlisting">draw_model(polygon_map(scale_by(0.5), load_triangles()))
+draw_model(polygon_map(scale_by(−1), load_triangles()))</pre>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F16_Orland_UN02.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1116637"></a>Left-to-right, the original teapot, the teapot scaled by 0.5, and the teapot scaled by −1.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1116638"></a>As you can see, <code class="fm-code-in-text1">scale_by(0.5)</code> shrinks the teapot to half its original size. The action of <code class="fm-code-in-text1">scale_by(−1)</code> seems to rotate the teapot by <span class="fm-in-cambria">180°</span>, but the situation is a bit more complicated. It’s actually turned inside-out as well! Each triangle has been reflected, so each normal vector now points into the teapot rather than outward from its surface.</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F16_Orland_UN03.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1124533"></a>Reflection changes the orientation of a triangle. The indexed vertices are in counterclockwise order on the left and clockwise order in the reflection on the right. The normal vectors to these triangles point in opposite directions.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1116643"></a>Rotating the teapot, you can see that it is not quite rendering correctly as a result. We should be careful with reflections of our graphics for this reason!</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F16_Orland_UN04.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1124565"></a>The rotated, reflected teapot does not look quite right. Some features appear but should be concealed. For instance, we can see both the lid and the hollow bottom in the bottom right frame.</p>
+
+        <p class="body"><a id="pgfId-1124566"></a> </p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="fm-sidebar"><a id="pgfId-1117222"></a>  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1117179"></a><b class="fm-exercise-head">Exercise 4.4</b>: First apply <code class="fm-code-in-text1">translate1left</code> to the teapot and then apply <code class="fm-code-in-text1">scale2</code>. How is the result different from the opposite order of composition? Why?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1117180"></a><b class="fm-exercise-head">Solution</b>: We can compose these two functions in the specified order and then apply them with <code class="fm-code-in-text1">polygon_map:</code></p>
+        <pre class="programlisting">draw_model(polygon_map(compose(scale2, translate1left), load_triangles()))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1117182"></a>The result is that the teapot is still twice as large as the original, but this one is translated further to the left. This is because when a scaling factor of 2 is applied after a translation, the distance of the translation doubles as well. You can convince yourself by running the source files scale_translate _teapot.py and translate_scale_teapot .py and comparing the results.</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F16_Orland_UN05.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1124598"></a>Scaling and then translating the teapot (left) vs. translating and then scaling (right)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1117191"></a><b class="fm-exercise-head">Exercise 4.5</b>: What is the effect of the transformation <code class="fm-code-in-text1">compose(scale_by (0.4), scale_by(1.5))</code> ?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1117192"></a><b class="fm-exercise-head">Solution</b>: Applying this to a vector scales it by 1.5 and then by 0.4 for a net scaling factor of 0.6. The resulting figure will be 60% of the size of the original.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1117195"></a><b class="fm-exercise-head">Exercise 4.6</b>: Modify the <code class="fm-code-in-text1">compose(f,g)</code> function to <code class="fm-code-in-text1">compose(*args)</code>, which takes several functions as arguments and returns a new function that is their composition.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1117196"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def compose(*args):
+    def new_function(input):         <span class="fm-combinumeral">❶</span>
+        state = input                <span class="fm-combinumeral">❷</span>
+        for f in reversed(args):     <span class="fm-combinumeral">❸</span>
+            state = f(state)         <span class="fm-combinumeral">❹</span>
+        return state
+    return new_function</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1123237"></a><span class="fm-combinumeral">❶</span> Starts defining the function that compose returns</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1123258"></a><span class="fm-combinumeral">❷</span> Sets the current state equal to the input</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1123275"></a><span class="fm-combinumeral">❸</span> Iterates over the input functions in reverse order because the inner functions of a composition are applied first. For example, compose(f,g,h)(<i class="fm-in-times-italic1">x</i>) should equal <i class="fm-in-times-italic1">f</i>(g(h(<i class="fm-in-times-italic1">x</i>))), so the first function to apply is h.</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1123292"></a><span class="fm-combinumeral">❹</span> At each step, updates the state by applying the next function. The final state has all the</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1117253"></a>To check our work, we can build some functions and compose them:</p>
+        <pre class="programlisting">def prepend(string):
+    def new_function(input):
+        return string + input
+    return new_function
+
+f = compose(prepend("P"), prepend("y"), prepend("t"))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1117255"></a>Then running <code class="fm-code-in-text1"><i class="fm-in-times-italic">f</i>(“hon”)</code> returns the string <code class="fm-code-in-text1">“Python”</code>. In general, the constructed function <code class="fm-code-in-text1">f</code> appends the string <code class="fm-code-in-text1">“Pyt”</code> to whatever string it is given.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1117287"></a><b class="fm-exercise-head">Exercise 4.7</b>: Write a <code class="fm-code-in-text1">curry2(f)</code> function that takes a Python function <code class="fm-code-in-text1">f(x,y)</code> with two arguments and returns a curried version. For instance, once you write <code class="fm-code-in-text1">g = curry2(f)</code>, the two expressions <code class="fm-code-in-text1">f(x,y)</code> and <code class="fm-code-in-text1"><i class="fm-in-times-italic">g</i>(<i class="fm-in-times-italic">x</i>)(<i class="fm-in-times-italic">y</i>)</code> should return the same result.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1117288"></a><b class="fm-exercise-head">Solution</b>: The return value should be a new function that, in turn, produces a new function when called:</p>
+        <pre class="programlisting">def curry2(f):
+    def <i class="fm-in-times-italic1">g</i>(<i class="fm-in-times-italic1">x</i>):
+        def new_function(<i class="fm-in-times-italic1">y</i>):
+            return f(x,y)
+        return new_function
+    return g</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1117290"></a>As an example, we could have built the <code class="fm-code-in-text1">scale_by</code> function like this:</p>
+        <pre class="programlisting">&gt;&gt;&gt; scale_by = curry2(scale)
+&gt;&gt;&gt; scale_by(2)((1,2,3))
+
+(2, 4, 6)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1117362"></a><b class="fm-exercise-head">Exercise 4.8</b>: Without running it, what is the result of applying the transformation <code class="fm-code-in-text1">compose(rotate_z_by(pi/2),rotate_x_by(pi/2))</code> ? What if you switch the order of the composition?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1117363"></a><b class="fm-exercise-head">Solution</b>: This<a id="marker-1122682"></a> composition <a id="marker-1122687"></a>is equivalent <a id="marker-1122692"></a>to a clockwise rotation by <i class="fm-in-cambria2">π</i>/2 about the y-axis. Reversing the order gives a counterclockwise rotation by <i class="fm-in-cambria2">π</i>/2 about the y-axis.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1117460"></a><b class="fm-exercise-head">Exercise 4.9</b>: Write a function <code class="fm-code-in-text1">stretch_x(scalar,vector)</code> that scales the target vector by the given factor but only in the <i class="fm-in-times-italic1">x</i> direction. Also write a curried version <code class="fm-code-in-text1">stretch_x_by</code> so that <code class="fm-code-in-text1">stretch_x_by(scalar)(vector)</code> returns the same result.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1117461"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def stretch_x(scalar,vector):
+    x,y,z = vector
+    return (scalar*x, y, z)
+
+def stretch_x_by(scalar):
+    def new_function(vector):
+        return stretch_x(scalar,vector)
+    return new_function</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_9"><a id="pgfId-1108010"></a>4.2 Linear transformations</h2>
+
+  <p class="body"><a id="pgfId-1108011"></a>The <a id="marker-1122702"></a>well-behaved <a id="marker-1122707"></a>vector transformations we’re going to focus on are called <i class="fm-italics">linear transformations</i>. Along with vectors, linear transformations are the other main objects of study in linear algebra. Linear transformations are special transformations where vector arithmetic looks the same before and after the transformation. Let’s draw some diagrams to show exactly what that means.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1108013"></a><a id="id_nhtlpg8eq14o"></a>4.2.1 Preserving vector arithmetic</h3>
+
+  <p class="body"><a id="pgfId-1108014"></a>The <a id="marker-1122712"></a>two most <a id="marker-1122717"></a>important arithmetic operations on vectors are addition and scalar multiplication. Let’s return to our 2D pictures of these operations and see how they look before and after a transformation is applied.</p>
+
+  <p class="body"><a id="pgfId-1108015"></a> We can picture the sum of two vectors as the new vector we arrive at when we place them tip-to-tail, or as the vector to the tip of the parallelogram they define. For instance, figure 4.17 represents the vector sum <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F17_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124666"></a>Figure 4.17 Geometric demonstration of the vector sum <i class="fm-in-times-italic">z</i> + <i class="fm-in-times-italic">v</i> = w</p>
+
+  <p class="body"><a id="pgfId-1108021"></a>The question we want to ask is, if we apply the same vector transformation to all three of the vectors in this diagram, will it still look like a vector sum? Let’s try a vector transformation, which is a counterclockwise rotation about the origin, and call this transformation <i class="fm-in-times-italic">R</i>. Figure 4.18 shows <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> rotated by the same angle by the transformation <i class="fm-in-times-italic">R</i>.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F18_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124736"></a>Figure 4.18 After rotating <i class="fm-in-times-italic">u</i>, <i class="fm-in-times-italic">v</i>, and <i class="fm-in-times-italic">w</i> by the same rotation R, the sum still holds.</p>
+
+  <p class="body"><a id="pgfId-1108027"></a>The rotated diagram is exactly the diagram representing the vector sum <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic">u</i>) + <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic">v</i>) = <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic">w</i>). You can draw the picture for any three vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, and as long as <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> and if you apply the same rotation transformation <i class="fm-in-times-italic">R</i> to each of the vectors, you find that <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic">u</i>) + <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic">v</i>) = <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic">w</i>) as well. To describe this property, we say that rotations <i class="fm-italics">preserve</i> vector sums<a id="marker-1108028"></a>.</p>
+
+  <p class="body"><a id="pgfId-1108029"></a>Similarly, rotations preserve scalar multiples. If <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a vector and s<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a multiple of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> by a scalar <i class="fm-in-times-italic">s</i>, then s<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> points in the same direction but is scaled by a factor of <i class="fm-in-times-italic">s</i>. If we rotate <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and s<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> by the same rotation <i class="fm-in-times-italic">R</i>, we’ll see that <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic">s</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) is a scalar multiple of <i class="fm-in-times-italic">R</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) by the same factor <i class="fm-in-times-italic">s</i>(figure 4.19).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F19_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124780"></a>Figure 4.19 Scalar multiplication is preserved by rotation.</p>
+
+  <p class="body"><a id="pgfId-1108035"></a>Again, this is only a visual example and not a proof, but you’ll find that for any vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, scalar <i class="fm-in-times-italic">s</i>, and rotation <i class="fm-in-times-italic">R</i>, the same picture holds. Rotations or any other vector transformations that preserve vector sums and scalar multiples are called <i class="fm-italics">linear transformations.</i></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar-title"><a class="calibre10" id="pgfId-1114363"></a>Linear transformation</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1114364"></a>A <i class="fm-italics">linear transformation</i> is a vector transformation <i class="fm-in-times-italic1">T</i> that preserves vector addition and scalar multiplication. That is, for any input vectors <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, we have</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1114365"></a><i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">u</i>) + <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>) = <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">u</i> + v)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1114366"></a>and for any pair of a scalar <i class="fm-in-times-italic1">s</i> and a vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, we have</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1114367"></a><i class="fm-in-times-italic1">T</i>(<i class="fm-italics">sv</i>) = <i class="fm-italics">sT</i>(<i class="fm-in-times-italic1">v</i>)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1108043"></a>Make sure you pause to digest this definition; linear transformations are so important that the whole subject of linear algebra is named after them. To help you recognize linear transformations when you see <a id="marker-1122722"></a>them, we’ll <a id="marker-1122727"></a>look at a few more examples.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1108045"></a><a id="id_7npd7itfn808"></a>4.2.2 Picturing linear transformations</h3>
+
+  <p class="body"><a id="pgfId-1108046"></a>First, <a id="marker-1122751"></a>let’s look <a id="marker-1122758"></a>at a counterexample: a vector transformation that’s <i class="fm-italics">not</i> linear. Such an example is a transformation <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic">v</i>) that takes a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) and outputs a vector with both coordinates squared: <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic">v</i>) = (<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup>). As an example, let’s look at the sum of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (2, 3) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (1, −1). The sum is (2, 3) + (1, −1) = (3, 2). This is shown with vector addition in figure 4.20.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F20_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1108051"></a>Figure 4.20 Picturing the vector sum of <i class="fm-in-times-italic">z</i> = (2, 3) and <i class="fm-in-times-italic">v</i> = (1, −1), <i class="fm-in-times-italic">z</i> + <i class="fm-in-times-italic">v</i> = (3, 2)</p>
+
+  <p class="body"><a id="pgfId-1117605"></a>Now let’s apply <i class="fm-in-times-italic">S</i> to each of these: <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) = (4, 9), <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) = (1, 1), and <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) = (9, 4). Figure 4.21 clearly shows that <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) + <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) does <i class="fm-italics">not</i> agree with <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F21_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124831"></a>Figure 4.21 S does not respect sums! S(<i class="fm-in-times-italic">u</i>) + S(<i class="fm-in-times-italic">v</i>) is far from S(<i class="fm-in-times-italic">u + v</i>).</p>
+
+  <p class="body"><a id="pgfId-1108058"></a>As an exercise, you can try to find a counterexample demonstrating that <i class="fm-in-times-italic">S</i> does not preserve scalar multiples either. For now, let’s examine another transformation. Let <i class="fm-in-times-italic">D</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) be the vector transformation that scales the input vector by a factor of 2. In other words, <i class="fm-in-times-italic">D</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) = 2<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. This <i class="fm-italics">does</i> preserve vector sums: if <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, then 2<i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + 2<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = 2<i class="fm-in-times-italic"><b class="fm-bold">w</b></i> as well. Figure 4.22 provides a visual example.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F22_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124890"></a>Figure 4.22 Doubling the lengths of vectors preserves their sums: if <i class="fm-in-times-italic">z</i> + <i class="fm-in-times-italic">v</i> = <i class="fm-in-times-italic">w</i>, then <i class="fm-in-times-italic">D</i>(<i class="fm-in-times-italic">u</i>) + <i class="fm-in-times-italic">D</i>(<i class="fm-in-times-italic">v</i>) = <i class="fm-in-times-italic">D</i>(<i class="fm-in-times-italic">w</i>)</p>
+
+  <p class="body"><a id="pgfId-1108064"></a>Likewise, <i class="fm-in-times-italic">D</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) preserves scalar multiplication. This is a bit harder to draw, but you can see it algebraically. For any scalar <i class="fm-in-times-italic">s</i>, <i class="fm-in-times-italic">D</i>(<i class="fm-italics">sv</i>) = 2(<i class="fm-italics">sv</i>) = <i class="fm-in-times-italic">s</i>(2<i class="fm-in-times-italic">v</i>) = <i class="fm-italics">sD</i>(<i class="fm-in-times-italic">v</i>).</p>
+
+  <p class="body"><a id="pgfId-1108065"></a>How about translation? Suppose <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) translates any input vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> by (7, 0). Surprisingly, this is <i class="fm-italics">not</i> a linear transformation. Figure 4.23 provides a visual counterexample where <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>, but <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) + <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">w</b></i>) is not the same as <i class="fm-italics">B</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F23_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124934"></a>Figure 4.23 The translation transformation B does not preserve a vector sum because <i class="fm-in-times-italic">B</i>(<i class="fm-in-times-italic">u</i>) + <i class="fm-in-times-italic">B</i>(<i class="fm-in-times-italic">v</i>) is not equal to <i class="fm-in-times-italic">B</i>(<i class="fm-in-times-italic">u + v</i>).</p>
+
+  <p class="body"><a id="pgfId-1108071"></a>It turns out that for a transformation to be linear, it must not move the origin (see why as an exercise later). Translation by any non-zero vector transforms the origin, which ends up at a different point, so it cannot be linear.</p>
+
+  <p class="body"><a id="pgfId-1108072"></a>Other examples of linear transformations include reflection, projection, shearing, and any 3D analogy of the preceding linear transformations. These are defined in the exercises section and you should convince yourself with several examples that each of these transformations preserves vector addition and scalar multiplication. With practice, you can recognize which transformations are linear and which are not. Next, we’ll look at why the special properties of linear<a id="marker-1122763"></a> transformations <a id="marker-1122768"></a>are useful.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1108073"></a>4.2.3 Why linear transformations?</h3>
+
+  <p class="body"><a id="pgfId-1108074"></a>Because<a id="marker-1122773"></a> linear <a id="marker-1122778"></a>transformations preserve vector sums and scalar multiples, they also preserve a broader class of vector arithmetic operations. The most general operation is called a <i class="fm-italics">linear combination</i> <a id="marker-1108075"></a>. A linear combination of a collection of vectors is a sum of scalar multiples of them. For instance, one linear combination of two vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> would be 3<i class="fm-in-times-italic"><b class="fm-bold">u</b></i> − 2<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Given three vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> <i class="fm-italics">,</i> the expression 0.5<i class="fm-in-times-italic">u</i> − <i class="fm-in-times-italic">v</i> + 6 <i class="fm-italics">w is a linear combination of</i> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <i class="fm-italics">,</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> <i class="fm-italics">, and</i> <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. Because linear transformations preserve vector sums and scalar multiples, these preserve linear combinations as well.</p>
+
+  <p class="body"><a id="pgfId-1108076"></a>We can restate this fact algebraically. If you have a collection of <i class="fm-in-times-italic">n</i> vectors, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">2</sub>, ..., <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> <i class="fm-in-times-italic">n</i>, as well as any choice of <i class="fm-in-times-italic">n</i> scalars, <i class="fm-in-times-italic">s</i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic">s</i><sub class="fm-subscript">2</sub>, <i class="fm-in-times-italic">s</i><sub class="fm-subscript">3</sub>, ..., <i class="fm-in-times-italic">s<sub class="fm-subscript1">n</sub></i>, a linear transformation <i class="fm-in-times-italic">T</i> preserves the linear combination:</p>
+
+  <p class="fm-equation"><a id="pgfId-1108077"></a><i class="fm-in-times-italic2">T</i>(<i class="fm-in-times-italic2">s</i><sub class="fm-subscript">1</sub> <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">1</sub> + <i class="fm-in-times-italic2">s</i><sub class="fm-subscript">2</sub> <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">2</sub> + <i class="fm-in-times-italic2">s</i><sub class="fm-subscript">3</sub> <i class="fm-in-times-italic2">v</i><sub class="fm-subscript">3</sub> + ... + <i class="fm-in-times-italic2">s<sub class="fm-subscript">n</sub>v<sub class="fm-subscript">n</sub></i>) = <i class="fm-in-times-italic2">s</i><sub class="fm-subscript">1</sub> <i class="fm-in-times-italic2">T</i>(<i class="fm-in-times-italic2">v</i><sub class="fm-subscript">1</sub>) + <i class="fm-in-times-italic2">s</i><sub class="fm-subscript">2</sub> <i class="fm-in-times-italic2">T</i>(<i class="fm-in-times-italic2">v</i><sub class="fm-subscript">2</sub>) + <i class="fm-in-times-italic2">s</i><sub class="fm-subscript">3</sub> <i class="fm-in-times-italic2">T</i>(<i class="fm-in-times-italic2">v</i><sub class="fm-subscript">3</sub>) + ... + <i class="fm-in-times-italic2">s<sub class="fm-subscript">n</sub>T</i>(<i class="fm-in-times-italic2">v<sub class="fm-subscript">n</sub></i>)</p>
+
+  <p class="body"><a id="pgfId-1118268"></a>One easy-to-picture linear combination we’ve seen before is <span class="fm-in-cambria">½</span> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <span class="fm-in-cambria">½</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> <i class="fm-italics">for vectors</i> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <i class="fm-italics">and</i> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, which is equivalent to <span class="fm-in-cambria">½</span> (<i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). Figure 4.24 shows that this linear combination of two vectors gives us the midpoint of the line segment connecting them.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F24_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1118272"></a>Figure 4.24 The midpoint between the tips of two vectors <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">v</i> can be found as the linear combination <span class="fm-in-cambria">½</span> <i class="fm-in-times-italic">z</i> + <span class="fm-in-cambria">½</span> <i class="fm-in-times-italic">v</i> = <span class="fm-in-cambria">½</span> (<i class="fm-in-times-italic">u + v</i>).</p>
+
+  <p class="body"><a id="pgfId-1108084"></a>This means linear transformations send midpoints to other midpoints: for example, <i class="fm-in-times-italic">T</i>(<span class="fm-in-cambria">½</span> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + <span class="fm-in-cambria">½</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) = <span class="fm-in-cambria">½</span> <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) + <span class="fm-in-cambria">½</span> <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>), which is the midpoint of the segment connecting <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) and <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) as figure 4.25 shows.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F25_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1108089"></a>Figure 4.25 Because the midpoint between two vectors is a linear combination of the vectors, the linear transformation T sets the midpoint between <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">v</i> to the midpoint between T(<i class="fm-in-times-italic">u</i>) and T(<i class="fm-in-times-italic">v</i>).</p>
+
+  <p class="body"><a id="pgfId-1108090"></a>It’s less obvious, but a linear combination like 0.25<i class="fm-in-times-italic">u</i> + 0.75<i class="fm-in-times-italic">v</i> also lies on the line segment between <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> (figure 4.26). Specifically, this is the point 75% of the way from <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Likewise, 0.6<i class="fm-in-times-italic">u</i> + 0.4<i class="fm-in-times-italic">v</i> is 40% of the way from <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and so on.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F26_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1125006"></a>Figure 4.26 The point 0.25<i class="fm-in-times-italic">u</i> + 0.75<i class="fm-in-times-italic">v</i> lies on the line segment connecting <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">v</i>, 75% of the way from <i class="fm-in-times-italic">z</i> to <i class="fm-in-times-italic">v</i>. You can see this concretely with <i class="fm-in-times-italic">u</i> = (−2, 2) and <i class="fm-in-times-italic">v</i> = (6, 6).</p>
+
+  <p class="body"><a id="pgfId-1108096"></a>In fact, <i class="fm-italics">every</i> point on the line segment between two vectors is a “weighted average” like this, having the form <i class="fm-italics">su</i> + (1 − <i class="fm-in-times-italic">s</i>)<i class="fm-in-times-italic">v</i> for some number <i class="fm-in-times-italic">s</i> between 0 and 1. To convince you, figure 4.27 shows the vectors <i class="fm-italics">su</i> + (1 − <i class="fm-in-times-italic">s</i>)<i class="fm-in-times-italic">v</i> for <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (−1, 1) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (3, 4) for 10 values of <i class="fm-in-times-italic">s</i> between 0 and 1 and then for 100 values of <i class="fm-in-times-italic">s</i> between 0 and 1.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F27a_Orland.png"/><img alt="" class="calibre1" src="../Images/CH04_F27b_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1108104"></a>Figure 4.27 Plotting various weighted averages of (−1, 1) and (3, 4) with 10 values of s between 0 and 1 (left) and 100 values of s between 0 and 1 (right)</p>
+
+  <p class="body"><a id="pgfId-1108105"></a>The key idea here is that every point on a line segment connecting two vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a weighted average and, therefore, a linear combination of points <i class="fm-in-times-italic">u</i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. With this in mind, we can think about what a linear transformation does to a whole line segment.</p>
+
+  <p class="body"><a id="pgfId-1108106"></a>Any point on the line segment connecting <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a weighted average of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, so it has the form <i class="fm-in-times-italic">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + (1 − <i class="fm-in-times-italic">s</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> for some value <i class="fm-in-times-italic">s</i>. A linear transformation, <i class="fm-in-times-italic">T</i>, transforms <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> to some new vectors <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) and <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). The point on the line segment is transformed to some new point <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> + (1 − <i class="fm-in-times-italic">s</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) or <i class="fm-in-times-italic">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) + (1 − <i class="fm-in-times-italic">s</i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). This is, in turn, a weighted average of <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) and <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>), so it is a point that lies on the segment connecting <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) and <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) as shown in figure 4.28.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F28_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1108111"></a>Figure 4.28 A linear transformation T transforms a weighted average of <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">v</i> to a weighted average of T(<i class="fm-in-times-italic">u</i>) and T(<i class="fm-in-times-italic">v</i>). The original weighted average lies on the segment connecting <i class="fm-in-times-italic">z</i> and <i class="fm-in-times-italic">v</i>, and the transformed one lies on the segment connecting T(<i class="fm-in-times-italic">u</i>) and T(<i class="fm-in-times-italic">v</i>).</p>
+
+  <p class="body"><a id="pgfId-1108112"></a>Because of this, a linear transformation <i class="fm-in-times-italic">T</i> takes every point on the line segment connecting <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> to a point on the line segment connecting <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>) and <b class="fm-bold1">T</b>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). This is a key property of linear transformations: they send every existing line segment to a new line segment. Because our 3D models are made up of polygons and polygons are outlined by line segments, linear transformations can be expected to preserve the structure of our 3D models to some extent (figure 4.29).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F29_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1125092"></a>Figure 4.29 Applying a linear transformation (rotation by <span class="fm-in-cambria">60°</span>) to points making up a triangle. The result is a rotated triangle (on the left).</p>
+
+  <p class="body"><a id="pgfId-1112156"></a>By contrast, if we use the non-linear transformation <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) sending <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) to (<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup>, <i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup>), we can see that line segments are distorted. This means that a triangle defined by vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> is not really sent to another triangle defined by <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>), <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>), and <i class="fm-in-times-italic">S</i>(<i class="fm-in-times-italic"><b class="fm-bold">w</b></i>) as shown in figure 4.30.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F30_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1125124"></a>Figure 4.30 Applying the non-linear transformation S does not preserve the straightness of edges of the triangle.</p>
+
+  <p class="body"><a id="pgfId-1108124"></a> In summary, linear transformations respect the algebraic properties of vectors, preserving sums, scalar multiples, and linear combinations. They also respect the geometric properties of collections of vectors, sending line segments and polygons defined by vectors to new ones defined by the transformed vectors. Next, we’ll see that linear transformations are not only special from a<a id="marker-1122783"></a> geometric <a id="marker-1122788"></a>perspective; they’re also easy to compute.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1108126"></a><a id="id_5847chwuuhg7"></a>4.2.4 Computing linear transformations</h3>
+
+  <p class="body"><a id="pgfId-1108127"></a>In chapters 2 and 3, <a id="marker-1122793"></a>you <a id="marker-1122798"></a>saw how to break 2D and 3D vectors into components. For instance, the vector (4, 3, 5) can be decomposed as a sum (4, 0, 0) + (0, 3, 0) + (0, 0, 5). This makes it easy to picture how far the vector extends in each of the three dimensions of the space that we’re in. We can decompose this even further into a linear combination (figure 4.31):</p>
+
+  <p class="body"><a id="pgfId-1108128"></a>(4, 3, 5) = 4 <span class="fm-in-cambria">·</span> (1, 0, 0) + 3 <span class="fm-in-cambria">·</span> (0, 1, 0) + 5 <span class="fm-in-cambria">·</span> (0, 0, 1)</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F31_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1108133"></a>Figure 4.31 The 3D vector (4, 3, 5) as a linear combination of (1, 0, 0), (0, 1, 0), and (0, 0, 1)</p>
+
+  <p class="body"><a id="pgfId-1108134"></a>This might seem like a boring fact, but it’s one of the profound insights from linear algebra: any 3D vector can be decomposed into a linear combination of three vectors (1, 0, 0), (0, 1, 0), and (0, 0, 1). The scalars appearing in this decomposition for a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> are exactly the coordinates of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>.</p>
+
+  <p class="body"><a id="pgfId-1108138"></a>The three vectors (1, 0, 0), (0, 1, 0), and (0, 0, 1) are called the <i class="fm-italics">standard basis</i> for three-dimensional space. These are denoted <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>, and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>, so we could write the previous linear combination as (3, 4, 5) = 3 <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> + 4 <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> + 5 <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>. When we’re working in 2D space, we call <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0) and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1); so, for example, (7, <span class="fm-in-cambria">−</span>4) = 7 <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> − 4 <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>(figure 4.32). (When we say <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>, we could mean (1, 0) or (1, 0, 0), but usually it’s clear which one we mean once we’ve established whether we’re working in two or three dimensions.)</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F32_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1125197"></a>Figure 4.32 The 2D vector (7, <span class="fm-in-cambria">−</span>4) as a linear combination of the standard basis vectors e1 and e2</p>
+
+  <p class="body"><a id="pgfId-1108144"></a>We’ve only written the same vectors in a slightly different way, but it turns out this change in perspective makes it easy to compute linear transformations. Because linear transformations respect linear combinations, all we need to know to compute a linear transformation is how it affects standard basis vectors.</p>
+
+  <p class="body"><a id="pgfId-1108145"></a>Let’s look at a visual example (figure 4.33). Say we know nothing about a 2D vector transformation <i class="fm-in-times-italic">T</i> except that it is linear and we know what <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) and <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) are.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F33_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1108150"></a>Figure 4.33 When a linear transformation acts on the two standard basis vectors in 2D, we get two new vectors as a result.</p>
+
+  <p class="body"><a id="pgfId-1118447"></a>For any other vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, we automatically know where <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) ends up. Say <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (3, 2), then we can assert:</p>
+
+  <p class="fm-equation"><a id="pgfId-1118448"></a><i class="fm-in-times-italic2">T</i>(<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) = <i class="fm-in-times-italic2">T</i>(3e<sub class="fm-subscript">1</sub> + 2e<sub class="fm-subscript">2</sub>) = 3<i class="fm-in-times-italic2">T</i>(e<sub class="fm-subscript">1</sub>) + 2<i class="fm-in-times-italic2">T</i>(e<sub class="fm-subscript">2</sub>)</p>
+
+  <p class="body"><a id="pgfId-1108153"></a>Because we already know where <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) and <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) are, we can locate <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>) as shown in figure 4.34.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F34_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1125269"></a>Figure 4.34 We can compute T(<i class="fm-in-times-italic">v</i>) for any vector <i class="fm-in-times-italic">v</i> as a linear combination of T(e1) and T(e2).</p>
+
+  <p class="body"><a id="pgfId-1108159"></a>To make this more concrete, let’s do a complete example in 3D. Say <i class="fm-in-times-italic">a</i> is a linear transformation, and all we know about <i class="fm-in-times-italic">a</i> is that <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) = (1, 1, 1), <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>) = (1, 0, −1), and <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>) = (0, 1, 1). If <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (−1, 2, 2), what is <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>)? Well, first we can expand <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> as a linear combination of the three standard basis vectors. Because <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (−1, 2, 2) = <i class="fm-in-times-italic"><b class="fm-bold"><span class="calibre24">−</span>e</b></i><sub class="fm-subscript">1</sub> + 2<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> + 2<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>, we can make the substitution:</p>
+
+  <p class="fm-equation"><a id="pgfId-1108160"></a> <i class="fm-in-times-italic2">a</i>(<i class="fm-in-times-italic2">v</i>) = <i class="fm-in-times-italic2">a</i>(−e<sub class="fm-subscript">1</sub> + 2e<sub class="fm-subscript">2</sub> + 2e<sub class="fm-subscript">3</sub>)</p>
+
+  <p class="body"><a id="pgfId-1108161"></a>Next, we can use the fact that <i class="fm-in-times-italic">a</i> is linear and preserves linear combinations:</p>
+
+  <p class="fm-equation"><a id="pgfId-1108162"></a>= <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">a</i>(e<sub class="fm-subscript">1</sub>) + 2<i class="fm-in-times-italic2">a</i>(e<sub class="fm-subscript">2</sub>) + 2<i class="fm-in-times-italic2">a</i>(e<sub class="fm-subscript">3</sub>)</p>
+
+  <p class="body"><a id="pgfId-1108163"></a>Finally, we can substitute in the known values of <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>), <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>), and <i class="fm-in-times-italic">a</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>), and simplify:</p>
+
+  <p class="fm-equation"><a id="pgfId-1108164"></a>= − (1, 1, 1) + 2 <span class="fm-in-cambria">·</span> (1, 0, −1) + 2 <span class="fm-in-cambria">·</span> (0, 1, 1)</p>
+
+  <p class="fm-equation"><a id="pgfId-1108165"></a>= (1, 1, −1)</p>
+
+  <p class="fm-equation"><a id="pgfId-1108166"></a>As proof we really know how <i class="fm-in-times-italic2">a</i> works, we can apply it to the teapot:</p>
+  <pre class="programlisting">Ae1 = (1,1,1)                                        <span class="fm-combinumeral">❶</span>
+Ae2 = (1,0,−1)
+Ae3 = (0,1,1)
+
+def apply_A(v):                                      <span class="fm-combinumeral">❷</span>
+    return add(                                      <span class="fm-combinumeral">❸</span>
+        scale(v[0], Ae1),
+        scale(v[1], Ae2),
+        scale(v[2], Ae3)
+    )
+ 
+draw_model(polygon_map(apply_A, load_triangles()))   <span class="fm-combinumeral">❹</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1108172"></a><span class="fm-combinumeral">❶</span> The known results of applying A to the standard basis vectors</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1123564"></a><span class="fm-combinumeral">❷</span> Builds a function apply_A(<i class="fm-in-times-italic1">v</i>) that returns the result of A on the input vector v</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1123581"></a><span class="fm-combinumeral">❸</span> The result should be a linear combination of these vectors, where the scalars are taken to be the coordinates of the target vector v.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1123598"></a><span class="fm-combinumeral">❹</span> Uses polygon_map to apply A to every vector of every triangle in the teapot</p>
+
+  <p class="body"><a id="pgfId-1118614"></a>Figure 4.35 shows the result of this transformation.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH04_F35_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1125313"></a>Figure 4.35 In this rotated, skewed configuration, we see that the teapot does not have a bottom!</p>
+
+  <p class="body"><a id="pgfId-1108178"></a>The takeaway here is that a 2D linear transformation <i class="fm-in-times-italic">T</i> is defined completely by the values of <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>) and <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>); that’s two vectors or four numbers in total. Likewise, a 3D linear transformation <i class="fm-in-times-italic">T</i> is defined completely by the values of <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub>), <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub>), and <i class="fm-in-times-italic">T</i>(<i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub>), which are three vectors or nine numbers in total. In any number of dimensions, the behavior of a linear transformation is specified by a list of vectors or an array-of-arrays of numbers. Such an array-of-arrays is called a <i class="fm-italics">matrix</i>, and we’ll see how <a id="marker-1122803"></a>to use<a id="marker-1122808"></a> matrices in the next chapter.</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1108179"></a>4.2.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1112373"></a><b class="fm-exercise-head">Exercise 4.10</b>: <a id="marker-1122813"></a>Considering <i class="fm-in-times-italic1">S</i> again, <a id="marker-1122818"></a>the vector transformation that squares all coordinates, show algebraically that <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>) = <i class="fm-italics">sS</i>(<i class="fm-in-times-italic1">v</i>) does not hold for all choices of scalars <i class="fm-in-times-italic1">s</i> and 2D vectors <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1112355"></a><b class="fm-exercise-head">Solution</b>: Let <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>). Then <i class="fm-in-times-italic1">s</i> <i class="fm-in-times-italic1">v</i> = (<i class="fm-italics">sx</i>, <i class="fm-italics">sy</i>) and <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>) = (<i class="fm-in-times-italic1">s</i><sup class="fm-superscript1">2</sup> <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>, <i class="fm-in-times-italic1">s</i><sup class="fm-superscript1">2</sup> <i class="fm-in-times-italic1">y</i><sup class="fm-superscript1">2</sup>) = <i class="fm-in-times-italic1">s</i><sup class="fm-superscript1">2</sup> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup>, <i class="fm-in-times-italic1">y</i><sup class="fm-superscript1">2</sup>) = <i class="fm-in-times-italic1">s</i><sup class="fm-superscript1">2</sup> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>). For most values of <i class="fm-in-times-italic1">s</i> and most vectors <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>) = <i class="fm-in-times-italic1">s</i><sup class="fm-superscript1">2</sup> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">v</i>) won’t equal <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>). A specific counterexample is <i class="fm-in-times-italic1">s</i> = 2 and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (1, 1, 1), where <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>) = (4, 4, 4) while <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) = (2, 2, 2). This counterexample shows that <i class="fm-in-times-italic1">S</i> is not linear.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1112416"></a><b class="fm-exercise-head">Exercise 4.11</b>: Suppose <i class="fm-in-times-italic1">T</i> is a vector transformation and <i class="fm-in-times-italic1">T</i>(<b class="fm-bold1">0</b>) ≠ 0, where <b class="fm-bold1">0</b> represents the vector with all coordinates equal to zero. Why is <i class="fm-in-times-italic1">T</i> not linear according to the definition?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1112417"></a><b class="fm-exercise-head">Solution</b>: For any vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>, <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> + <b class="fm-bold1">0</b> = <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>. For <i class="fm-in-times-italic1">T</i> to preserve vector addition, it should be that <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i> + <b class="fm-bold1">0</b>) = <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>) + <i class="fm-in-times-italic1">T</i>(0). Because <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i> + <b class="fm-bold1">0</b>) = <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>), this requires that <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>) = <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>) + <i class="fm-in-times-italic1">T</i>(<b class="fm-bold1">0</b>) or <b class="fm-bold1">0</b> = <i class="fm-in-times-italic1">T</i>(<b class="fm-bold1">0</b>). Given that this is not the case, <i class="fm-in-times-italic1">T</i> cannot be linear.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1112472"></a><b class="fm-exercise-head">Exercise 4.12</b>: The <i class="fm-italics">identity transformation</i> <a id="marker-1112471"></a> is the vector transformation that returns the same vector it is passed. It is denoted with a capital <i class="fm-italics">I</i>, so we could write its definition as <i class="fm-italics">I</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) = <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> for all vectors <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>. Explain why <i class="fm-italics">I</i> is a linear transformation.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1112473"></a><b class="fm-exercise-head">Solution</b>: For any vectors <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i>, <i class="fm-italics">I</i>(v + w) = <i class="fm-in-times-italic1">v</i> + <i class="fm-in-times-italic1">w</i> = <i class="fm-italics">I</i>(<i class="fm-in-times-italic1">v</i>) + <i class="fm-italics">I</i>(<i class="fm-in-times-italic1">w</i>), and for any scalar <i class="fm-in-times-italic1">s</i>, <i class="fm-italics">I</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>) = <i class="fm-in-times-italic1">s</i> <i class="fm-in-times-italic1">v</i> = <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-italics">I</i>(<i class="fm-in-times-italic1">v</i>). These equalities show that the identity transformation preserves vector sums and scalar multiples.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1112684"></a><b class="fm-exercise-head">Exercise 4.13</b>: What is the midpoint between (5, 3) and (−2, 1)? Plot all three of these points to see that you are correct.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1119122"></a><b class="fm-exercise-head">Solution</b>: The midpoint is <span class="fm-in-cambria">½</span> (5, 3) + <span class="fm-in-cambria">½</span> (−2, 1) or (5/2, 3/2) + (−1, <span class="fm-in-cambria">½</span>), which equals (3/2, 2). This is seen to be correct when drawn to scale in the diagram that follows:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F35_Orland_UN06.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1119126"></a>The midpoint of the segment connecting (5, 3) and (−2, 1) is (3/2, 2).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1112760"></a><b class="fm-exercise-head">Exercise 4.14</b>: Consider again the non-linear transformation <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) sending <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">y</i>) to (<i class="fm-in-times-italic1">x<sup class="fm-superscript">2</sup>, y<sup class="fm-superscript">2</sup>). Plot all 36 vectors <b class="fm-bold">v</b> with integer coordinates 0 to 5 as points using the drawing code from chapter 2 and then plot S(<b class="fm-bold">v</b>) for each of them. What happens geometrically to vectors under the action of S ?</i></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1112761"></a><b class="fm-exercise-head">Solution</b>: The space between points is uniform to begin with, but in the transformed picture, the spacing increases in the horizontal and vertical directions as the <i class="fm-in-times-italic1">x</i> − and <i class="fm-in-times-italic1">y</i>-coordinates increase, respectively.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH04_F35_Orland_UN07a.png"/> <span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F35_Orland_UN07b.png"/></span><br class="calibre15"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1112769"></a>The grid of points is initially uniformly spaced, but after applying the transformation S, the spacing varies between points, even on the same lines.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1112924"></a><b class="fm-exercise-head">Exercise 4.15-Mini Project</b>: <i class="fm-italics">Property-based testing</i> <a id="marker-1112923"></a> is a type of unit testing that involves inventing arbitrary input data for a program and then checking that the outputs satisfy desired conditions. There are popular Python libraries like Hypothesis (available through pip) that make it easy to set this up. Using your library of choice, implement property-based tests that check if a vector transformation is linear.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1112925"></a>Specifically, given a vector transformation <i class="fm-in-times-italic1">T</i> implemented as a Python function, generate a large number of pairs of random vectors and assert for all of those that their sum is preserved by <i class="fm-in-times-italic1">T</i>. Then, do the same thing for pairs of a scalar and a vector, and ensure that <i class="fm-in-times-italic1">T</i> preserves scalar multiples. You should find that linear transformations like <code class="fm-code-in-text1">rotate_x_by(pi/2)</code> pass the test, but non-linear transformations like the coordinate-squaring transformation do not pass.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1119274"></a><b class="fm-exercise-head">Exercise 4.16</b>: One 2D vector transformation is <i class="fm-italics">reflection</i> <a id="marker-1119273"></a> across the <i class="fm-in-times-italic1">x</i> -axis. This transformation takes a vector and returns another one, which is the mirror image with respect to the x-axis. Its <i class="fm-in-times-italic1">x</i>-coordinate should be unchanged, and its <i class="fm-in-times-italic1">y</i>-coordinate should change its sign. Denoting this transformation <i class="fm-in-times-italic1">S<sub class="fm-subscript">x</sub></i>, here is an image of a vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (3, 2) and the transformed vector <i class="fm-in-times-italic1">S<sub class="fm-subscript">x</sub></i>(<i class="fm-in-times-italic1">v</i>).</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F35_Orland_UN08.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1119278"></a>A vector <i class="fm-in-times-italic">v</i> = (3, 2) and its reflection over the x-axis (3, −2)</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1119279"></a>Draw two vectors and their sum, as well as the reflection of these three vectors to demonstrate that this transformation preserves vector addition. Draw another diagram to show similarly that scalar multiplication is preserved, thereby demonstrating both criteria for linearity.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1119371"></a><b class="fm-exercise-head">Solution</b>: Here’s an example of reflection over the x-axis that preserves a vector sum:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F35_Orland_UN09.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1119372"></a>For <i class="fm-in-times-italic">z</i> + <i class="fm-in-times-italic">v</i> = <i class="fm-in-times-italic">w</i> as shown, reflection over the x-axis preserves the sum; that is, <i class="fm-in-times-italic">S<sub class="fm-subscript1">x</sub></i>(<i class="fm-in-times-italic">u</i>) + <i class="fm-in-times-italic">S<sub class="fm-subscript1">x</sub></i>(<i class="fm-in-times-italic">v</i>) = <i class="fm-in-times-italic">S<sub class="fm-subscript1">x</sub></i>(<i class="fm-in-times-italic">w</i>).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1119373"></a>Here’s an example showing reflection preserving a scalar multiple: <i class="fm-in-times-italic1">S<sub class="fm-subscript">x</sub></i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>) lies where <i class="fm-in-times-italic1">sS<sub class="fm-subscript">x</sub></i>(<i class="fm-in-times-italic1">v</i>) is expected to be.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1119527"></a>To <i class="fm-italics">prove</i> that <i class="fm-in-times-italic1">S<sub class="fm-subscript">x</sub></i> is linear, you would need to show that you can draw analogous pictures for every vector sum and every scalar multiple. There are infinitely many of these, so it’s better to use an algebraic proof. (Can you figure out how to show these two facts algebraically?)</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F35_Orland_UN10.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1125351"></a>Reflection across the x-axis preserves this scalar multiple.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1113487"></a><b class="fm-exercise-head">Exercise 4.17-Mini Project</b>: Suppose <i class="fm-in-times-italic1">S</i> and <i class="fm-in-times-italic1">T</i> are both linear transformations. Explain why the composition of <i class="fm-in-times-italic1">S</i> and <i class="fm-in-times-italic1">T</i> is also linear.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113488"></a><b class="fm-exercise-head">Solution</b>: The composition <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)) is linear if for any vector sum <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i>, we have <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">u</i>)) + <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)) = <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">w</i>)), and for any scalar multiple <i class="fm-in-times-italic1">s</i> <i class="fm-in-times-italic1">v</i>, we have <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>)) = <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)). This is only a statement of the definition that must be satisfied.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113489"></a>Now let’s see why it’s true. Suppose first that <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> + <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = <i class="fm-in-times-italic1"><b class="fm-bold">w</b></i> for any given input vectors <i class="fm-in-times-italic1"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>. Then by the linearity of <i class="fm-in-times-italic1">T</i>, we also know that <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">u</i>) + <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>) = <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">w</i>). Because this sum holds, the linearity of <i class="fm-in-times-italic1">S</i> tells us that the sum is preserved under <i class="fm-in-times-italic1">S</i> : <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">u</i>)) + <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)) = <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">w</i>)). That means that <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)) preserves vector sums<a id="marker-1113490"></a>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113491"></a>Similarly, for any scalar multiple <i class="fm-in-times-italic1">s</i> <i class="fm-in-times-italic1">v</i>, the linearity of <i class="fm-in-times-italic1">T</i> tells us that <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>) = <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>). By linearity of <i class="fm-in-times-italic1">S</i>, <i class="fm-in-times-italic1">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)) = <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">s<b class="fm-bold">v</b></i>)) as well. This means <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)) preserves scalar multiplication and, therefore, that <i class="fm-in-times-italic1">S</i>(<i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1">v</i>)) satisfies the full definition of linearity as previously stated. We can conclude that the composition of two linear transformations is linear.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1113527"></a><b class="fm-exercise-head">Exercise 4.18</b>: Let <i class="fm-in-times-italic1">T</i> be the linear transformation done by the Python function <code class="fm-code-in-text1">rotate_x_by(pi/2)</code>, what are <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>), <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>), and <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113528"></a><b class="fm-exercise-head">Solution</b>: Any rotation about an axis leaves points on the axis unaffected, so because <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>) is on the x-axis, <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>) = <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub> = (1, 0, 0). A counterclockwise rotation of <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub> = (0, 1, 0) in the <i class="fm-in-times-italic1">y</i>,<i class="fm-in-times-italic1">z</i> plane takes this vector from the point one unit in the</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1119544"></a>positive <i class="fm-in-times-italic1">y</i> direction to the point one unit in the positive <i class="fm-in-times-italic1">z</i> direction, so <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>) = <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub> = (0, 0, 1). Likewise, <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub> is rotated counterclockwise from the positive <i class="fm-in-times-italic1">z</i> direction to the negative <i class="fm-in-times-italic1">y</i> direction. <i class="fm-in-times-italic1">T</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>) still has length one in this direction, so it is -<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub> or (0, −1, 0).</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH04_F35_Orland_UN11.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1125383"></a>A quarter-turn counterclockwise in the y,z plane sends <i class="fm-in-times-italic">e</i><sub class="fm-subscript">2</sub> to <i class="fm-in-times-italic">e</i><sub class="fm-subscript">3</sub> and <i class="fm-in-times-italic">e</i><sub class="fm-subscript">3</sub> to − <i class="fm-in-times-italic">e</i><sub class="fm-subscript">2</sub>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1113610"></a><b class="fm-exercise-head">Exercise 4.19</b>: Write a <code class="fm-code-in-text1">linear_combination(scalars,</code> <code class="fm-code-in-text1">*vectors)</code> that takes a list of scalars and the same number of vectors, and returns a single vector. For example, <code class="fm-code-in-text1">linear_combination([1,2,3],</code> <code class="fm-code-in-text1">(1,0,0),</code> <code class="fm-code-in-text1">(0,1,0),</code> <code class="fm-code-in-text1">(0,0, 1))</code> should return 1 <span class="fm-in-cambria">·</span> (1, 0, 0) + 2 <span class="fm-in-cambria">·</span> (0, 1, 0) + 3 <span class="fm-in-cambria">·</span> (0, 0, 1) or (1, 2, 3).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113611"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">from vectors import *
+def linear_combination(scalars,*vectors):
+    scaled = [scale(s,v) for s,v in zip(scalars,vectors)]
+    return add(*scaled)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1113613"></a>We can confirm this gives the expected result as previously described:</p>
+        <pre class="programlisting">&gt;&gt;&gt; linear_combination([1,2,3], (1,0,0), (0,1,0), (0,0,1))
+(1, 2, 3)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1113645"></a><b class="fm-exercise-head">Exercise 4.20</b>: Write a function <code class="fm-code-in-text1">transform_standard_basis(transform)</code> that takes a 3D vector transformation as an input and outputs the effect it has on the standard basis. It should output a tuple of 3 vectors that are the results of <code class="fm-code-in-text1">transform</code> acting on <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>, <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>, and <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>, respectively.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113646"></a><b class="fm-exercise-head">Solution</b>: As suggested, we just need to apply <code class="fm-code-in-text1">transform</code> to each standard basis vector:</p>
+        <pre class="programlisting">def transform_standard_basis(transform):
+    return transform((1,0,0)), transform((0,1,0)), transform((0,0,1))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1113648"></a>It confirms (within the floating-point error) our solution to a previous exercise, where we sought this output for <code class="fm-code-in-text1">rotate_x_by(pi/2)</code> :</p>
+        <pre class="programlisting">&gt;&gt;&gt; from math import *
+&gt;&gt;&gt; transform_standard_basis(rotate_x_by(pi/2))
+((1, 0.0, 0.0), (0, 6.123233995736766e−17, 1.0), (0, −1.0,
+    1.2246467991473532e−16))</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1113650"></a>These vectors are approximately (1, 0, 0), (0, 0, 1), and (0, −1, 0).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1113297"></a><b class="fm-exercise-head">Exercise 4.21</b>: Suppose <i class="fm-italics">B</i> is a linear transformation, with <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>) = (0, 0, 1), <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>) = (2, 1, 0), <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>) = (−1, 0, −1), and <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (−1, 1, 2). What is <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113298"></a><b class="fm-exercise-head">Solution</b>: Because <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i> = (−1, 1, 2) = -<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub> + 2<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>, <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) = <i class="fm-italics">B</i>(−<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub> + <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub> + 2<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>). Because <i class="fm-italics">B</i> is linear, it preserves this linear combination: <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) = <span class="fm-in-cambria">−</span> <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>) + <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>) + 2 <span class="fm-in-cambria">·</span> <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>). Now we have all <a id="marker-1122823"></a>the<a id="marker-1122828"></a> information <a id="marker-1122833"></a>we <a id="marker-1122838"></a>need: <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>) = −(0, 0, 1) + (2, 1, 0) + 2 <span class="fm-in-cambria">·</span> (−1, 0, −1) = (0, 1, <span class="fm-in-cambria">−</span>3).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1113267"></a><b class="fm-exercise-head">Exercise 4.22</b>: Suppose <i class="fm-in-times-italic1">a</i> and <i class="fm-italics">B</i> are both linear transformations with <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>) = (1, 1, 1), <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>) = (1, 0, −1), and <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>) = (0, 1, 1), and <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>) = (0, 0, 1), <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>) = (2, 1, 0), and <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>) = (−1, 0, −1). What is <i class="fm-in-times-italic1">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>)), <i class="fm-in-times-italic1">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>)), and <i class="fm-in-times-italic1">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>))?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113268"></a><b class="fm-exercise-head">Solution</b>: <i class="fm-in-times-italic1">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>)) is <i class="fm-in-times-italic1">a</i> applied to <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>) = (0, 0, 1) = <i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>. We already know <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>) = (0, 1, 1), so <i class="fm-italics">B</i>(<i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>)) = (0, 1, 1).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113269"></a> <i class="fm-in-times-italic1">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>)) is <i class="fm-in-times-italic1">a</i> applied to <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>) = (2, 1, 0). This is a linear combination of <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">1</sub>), <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">2</sub>), and <i class="fm-in-times-italic1">a</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>) with scalars (2, 1, 0): 2 <span class="fm-in-cambria">·</span> (1, 1, 1) + 1 <span class="fm-in-cambria">·</span> (1, 0, −1) + 0 <span class="fm-in-cambria">·</span> (0, 1, 1) = (3, 2, 1).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113270"></a>Finally, <i class="fm-in-times-italic1">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>)) is <i class="fm-in-times-italic1">a</i> applied to <i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">e</b></i><sub class="fm-subscript2">3</sub>) = (−1, 0, −1). This is the linear combination −1 <span class="fm-in-cambria">·</span> (1, 1, 1) + 0 <span class="fm-in-cambria">·</span> (1, 0, −1) + −1 <span class="fm-in-cambria">·</span> (0, 1, 1) = (−1, −2, −2).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1113271"></a>Note that now we know the result of the composition of <i class="fm-in-times-italic1">a</i> and <i class="fm-italics">B</i> for all of the standard basis vectors, so we can calculate <i class="fm-in-times-italic1">a</i>(<i class="fm-italics">B</i>(<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>)) for any vector <i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1108284"></a>Linear transformations are both well-behaved and easy-to-compute because these can be specified with so little data. We explore this more in the next chapter when we compute linear transformations with <i class="fm-italics">matrix</i> notation.</p>
+
+  <h2 class="fm-head" id="heading_id_15"><a id="pgfId-1108286"></a><a id="id_vsfli07mdocr"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108287"></a>Vector transformations are functions that take vectors as inputs and return vectors as outputs. Vector transformations can operate on 2D or 3D vectors.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108288"></a>To effect a geometric transformation of the model, apply a vector transformation to every vertex of every polygon of a 3D model.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108289"></a>You can combine existing vector transformations by composition of functions to create new transformations, which are equivalent to applying the existing vector transformations sequentially.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108290"></a>Functional programming is a programming paradigm that emphasizes composing and, otherwise, manipulating functions.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108291"></a>The functional operation of currying turns a function that takes multiple arguments into a function that takes one argument and returns a new function. Currying lets you turn existing Python functions (like <code class="fm-code-in-text">scale</code> and <code class="fm-code-in-text">add</code>) into vector transformations.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108292"></a>Linear transformations are vector transformations that preserve vector sums and scalar multiples. In particular, points lying on a line segment still lie on a line segment after a linear transformation is applied.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108293"></a>A linear combination is the most general combination of scalar multiplication and vector addition. Every 3D vector is a linear combination of the 3D standard basis vectors, which are denoted <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0, 0), <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1, 0), and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">3</sub> = (0, 0, 1). Likewise, every 2D <a id="id_Hlk42887946"></a>vector is a linear combination of the 2D standard basis vectors, which are <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">1</sub> = (1, 0) and <i class="fm-in-times-italic"><b class="fm-bold">e</b></i><sub class="fm-subscript">2</sub> = (0, 1).</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1108295"></a>Once you know how a given linear transformation acts on the standard basis vectors, you can determine how it acts on any vector by writing the vector as a linear combination of the standard basis and using the fact that linear combinations are preserved.</p>
+
+      <ul class="calibre9">
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-1108296"></a>In 3D, three vectors or nine total numbers specify a linear transformation.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-1108297"></a>In 2D, two vectors or four total numbers do the same.</li>
+      </ul>
+
+      <p class="list"><a id="pgfId-1108298"></a>This last point is critical: linear transformations are both well-behaved and easy-to-compute with because they can be specified with so <a id="marker-1122843"></a>little data.</p>
+    </li>
+  </ul>
+</body>
+</html>

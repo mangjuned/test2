@@ -1,0 +1,214 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Unknown</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2">front matter</h1>
+  </div>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-465294"></a>preface</h2>
+
+  <p class="body"><a id="pgfId-486323"></a>I started working on this book in 2017, when I was CTO of Tachyus, a company I founded that builds predictive analytics software for oil and gas companies. By that time, we had finished building our core product: a fluid-flow simulator powered by physics and machine learning, along with an optimization engine. These tools let our customers look into the future of their oil reservoirs and helped them to discover hundreds of millions of dollars of optimization opportunities.</p>
+
+  <p class="body"><a id="pgfId-486324"></a>My task as CTO was to productize and scale-out this software as some of the biggest companies in the world began to use it. The challenge was that this was not only a complex software project, but the code was very mathematical. Around that time, we started hiring for a position called “scientific software engineer,” with the idea that we needed skilled professional software engineers who also had solid backgrounds in math, physics, and machine learning. In the process of searching for and hiring scientific software engineers, I realized that this combination was both rare and in high demand. Our software engineers realized this as well and were eager to hone their math skills to contribute to our specialized back-end components of our stack. With eager math learners on our team already, as well as in our hiring pipeline, I started to think about the best way to train a strong software engineer to become a formidable math user.</p>
+
+  <p class="body"><a id="pgfId-486325"></a>I realized there were no books with the right math content, presented at the right level. While there are probably hundreds of books and thousands of free online articles on topics like linear algebra and calculus, I’m not aware of any I could hand to a typical professional software engineer, and expect them to come back in a few months having mastered the material. I don’t say this to disparage software engineers, I just mean that reading and understanding math books is a difficult skill to learn on its own. To do so, you often need to figure out what specific topics you need to learn (which is hard if you don’t know anything about the material yet!), read them, and then choose some high quality exercises to practice applying those topics. If you were less discerning, you could read every word of a textbook and solve <i class="fm-italics">all</i> of its exercises, but it could take months of full-time study to do that!</p>
+
+  <p class="body"><a id="pgfId-486326"></a>With <i class="fm-italics">Math for Programmers</i>, I hope to offer an alternative. I believe it’s possible to read this book cover-to-cover in a reasonable amount of time, including completing all the exercises, and then to walk away having mastered some key math concepts.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-486328"></a><a id="id_jkoe3btiabmo"></a>How this book was designed</h3>
+
+  <p class="body"><a id="pgfId-486329"></a>In the fall of 2017, I got in touch with Manning and learned that they were interested in publishing this book. That started a long process of converting my vision for this book into a concrete plan, which was much more difficult than I imagined, being a first-time author. Manning asked some hard questions of my original table of contents, like</p>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet">
+      <p class="list"><a id="pgfId-486330"></a>Will anyone be interested in this topic?</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-486331"></a>Will this be too abstract?</p>
+    </li>
+
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-486332"></a>Can you really teach a semester of calculus in one chapter?</p>
+    </li>
+  </ul>
+
+  <p class="body"><a id="pgfId-486333"></a>All of these questions forced me to think a lot more carefully about what was achievable. I’ll share some of the ways we answered these questions because they’ll help you understand exactly how this book works.</p>
+
+  <p class="body"><a id="pgfId-486334"></a>First, I decided to focus this book around one core skill--expressing mathematical ideas in code. I think this is a great way to learn math, even if you aren’t a programmer by trade. When I was in high school, I learned to program on my TI-84 graphing calculator. I had the grand idea that I could write programs to do my math and science homework for me, giving me the right answer <i class="fm-italics">and</i> outputting the steps along the way. As you might expect, this was more difficult than just doing my homework in the first place, but it gave me some useful perspective. For any kind of problem I wanted to program, I had to clearly understand the inputs and outputs, and what happened in each of the steps of the solution. By the end, I was sure I knew the material, and I had a working program to prove it.</p>
+
+  <p class="body"><a id="pgfId-486335"></a>That’s the experience I’ll try to share with you in this book. Each chapter is organized around a tangible example program, and to get it working, you need to put all the mathematical pieces together correctly. Once you’re done, you’ll have confidence that you’ve understood the concept and can apply it again in the future. I’ve included plenty of exercises to help you check your understanding on the math and code I’ve included, as well as mini-projects which invite you to experiment with new variations on the material.</p>
+
+  <p class="body"><a id="pgfId-486336"></a>Another question I discussed with Manning was what programming language I should use for the examples. Originally, I wanted to write the book in a functional programming language because math is a functional language itself. After all, the concept of a “function” originated in math, long before computers even existed. In various parts of math, you have functions that return other functions like integrals and derivatives in calculus. However, asking readers to learn an unfamiliar language like LISP, Haskell, or F# <i class="fm-italics">while</i> learning new math concepts would make the book more difficult and less accessible. Instead, we settled on Python, a popular, easy-to-learn language with great mathematical libraries. Python also happens to be a favorite for “real world” users of math in academia and in industry.</p>
+
+  <p class="body"><a id="pgfId-486337"></a>The last major question that I had to answer with Manning was what specific math topics I would include and which ones wouldn’t make the cut. This was a difficult decision, but at least we agreed on the title <i class="fm-italics">Math for Programmers</i>, the broadness of which gave us some flexibility for what to include. My main criterion became the following: this was going to be “Math for Programmers,” not “Math for Computer Scientists.” With that in mind, I could leave out topics like discrete math, combinatorics, graphs, logic, Big O notation, and so on, that are covered in computer science classes and mostly used to <i class="fm-italics">study</i> programs.</p>
+
+  <p class="body"><a id="pgfId-486338"></a>Even with that decision made, there was still plenty of math to choose from. Ultimately, I chose to focus on linear algebra and calculus. I have some strong pedagogical views on these subjects, and there are plenty of good example applications in both that can be visual and interactive. You can write a big textbook on either linear algebra <i class="fm-italics">or</i> calculus alone, so I had to get even more specific. To do that, I decided the book would build up to some applications in the trendy field of machine learning. With those decisions made, the contents of the book became clearer.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-486340"></a><a id="id_hjjlah4w5bms"></a>Mathematical ideas we cover</h3>
+
+  <p class="body"><a id="pgfId-486341"></a>This book covers a lot of mathematical topics, but there are a few major themes. Here are a few that you can keep an eye out for as you start reading:</p>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet">
+      <p class="list"><a id="pgfId-486342"></a><i class="fm-italics">Multi-dimensional spaces--</i>Intuitively, you probably have a sense what the words two-dimensional (2D) and three-dimensional (3D) mean. We live in a 3D world, while a 2D world is flat like a piece of paper or a computer screen. A location in 2D can be described by two numbers (often called <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i>-coordinates), while you need three numbers to identify a location in 3D. We can’t picture a 17-dimensional space, but we can describe its points by lists of 17 numbers. Lists of numbers like these are called <i class="fm-italics">vectors</i>, and vector math helps illuminate the notion of “dimension.”</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-486343"></a><i class="fm-italics">Spaces of functions--</i>Sometimes a list of numbers can specify a function. With two numbers like <i class="fm-in-times-italic">a</i> = 5 and <i class="fm-italics">b</i> = 13, you can create a (linear) function of the form <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>) = <i class="fm-italics">ax</i> + <i class="fm-italics">b</i>, and in this case, the function would be <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>) = 5<i class="fm-in-times-italic">x</i> + 13. For every point in 2D space, labeled by coordinates (a, b), there’s a linear function that goes with it. So we can think of the set of all linear functions as a 2D space.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-486344"></a><i class="fm-italics">Derivatives and gradients</i>--These are calculus operations that measure the rates of change of functions. The <i class="fm-italics">derivative</i> tells you how rapidly a function <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>) is increasing or decreasing as you increase the input value <i class="fm-in-times-italic">x</i>. A function in 3D might look like <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) and can increase or decrease as you change the values of either <i class="fm-in-times-italic">x</i> or <i class="fm-in-times-italic">y</i>. Thinking of (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) pairs as points in a 2D space, you could ask what direction you could go in this 2D space to make <i class="fm-italics">f</i> increase most rapidly. The gradient answers this question.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-486345"></a><i class="fm-italics">Optimizing a function--</i>For a function of the form <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>) or <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), you could ask an even broader version of the previous question: what inputs to the function yield the biggest output? For <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>), the answer would be some value <i class="fm-in-times-italic">x</i>, and for <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), it would be a point in 2D. In the 2D case, the gradient can help us. If the gradient tells us <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) is increasing in some direction, we can find a maximum value of <i class="fm-italics">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) if we explore in that direction. A similar strategy applies if you want to find a minimum value of a function.</p>
+    </li>
+
+    <li class="fm-list-bullet-last">
+      <p class="list"><a id="pgfId-486346"></a><i class="fm-italics">Predicting data with functions--</i>Say you want to predict a number, like the price of a stock at a given time. You could create a function <i class="fm-italics">p</i>(<i class="fm-italics">t</i>) that takes a time <i class="fm-italics">t</i> and outputs a price <i class="fm-italics">p</i>. The measure of predictive quality of your function is how close it comes to actual data. In that sense, finding a predictive function means minimizing the error between your function and real data. To do that, you need to explore a space of functions and find a minimum value. This is called <i class="fm-italics">regression</i>.</p>
+    </li>
+  </ul>
+
+  <p class="body"><a id="pgfId-486347"></a>I think this is a useful collection of mathematical concepts for anyone to have in their toolbelt. Even if you’re not interested in machine learning, these concepts--and others in this book--have plenty of other applications.</p>
+
+  <p class="body"><a id="pgfId-486348"></a>The subjects I’m saddest to leave out of the book are probability and statistics. Probability and the concept of quantifying uncertainty in general is important in machine learning as well. This is a big book already, so there just wasn’t time or room to squeeze a meaningful introduction for these topics. Stay tuned for a sequel to this book. There’s a lot more fun and useful math out there, beyond what I’ve been able to cover in these pages, and I hope to be able to share it with you in the future.</p>
+
+  <h2 class="fm-head" id="heading_id_6"><a id="pgfId-446160"></a>acknowledgments</h2>
+
+  <p class="body"><a id="pgfId-486299"></a>From start to finish, this book has taken about three years to create. I have gotten a lot of help in that time, and so I have quite a few people to thank and acknowledge.</p>
+
+  <p class="body"><a id="pgfId-486300"></a>First and foremost, I want to thank Manning for making this book happen. I’m grateful they bet on me to write a big, challenging book as a first-time author and had a lot of patience with me as the book fell behind schedule a few times. In particular, I want to thank Marjan Bace and Michael Stephens for pushing the project forward and for helping define what exactly it would be. My original development editor, Richard Wattenbarger, was also critical to keeping the book alive as we iterated on the content. I think he reviewed six total drafts of chapters 1 and 2 before we settled on how the book would be structured.</p>
+
+  <p class="body"><a id="pgfId-486301"></a>I wrote most of the book in 2019 under the expert guidance of my second editor, Jennifer Stout, who both got the project over the finish line and taught me a lot about technical writing. My technical editor, Kris Athi, and technical reviewer, Mike Shepard, also made it to the end with us, and thanks to them reading every word and line of code, we’ve caught and fixed countless errors. Outside of Manning, I got a lot of editing help from Michaela Leung, who also reviewed the whole book for grammatical and technical accuracy. I’d also like to thank the marketing team at Manning. With the MEAP program, we’ve been able to validate that this is a book people are interested in. It’s been a great motivator to know a book will be at least a modest commercial success while working on the intensive final steps to get it published.</p>
+
+  <p class="body"><a id="pgfId-486302"></a>My current and former coworkers at Tachyus have taught me a lot about programming, and many of those lessons have made their way into this book. I credit Jack Fox for first getting me to think about the connections between functional programming and math, which comes up in chapters 4 and 5. Will Smith taught me about video game design, and we have had many good discussions about vector geometry for 3D rendering. Most notably, Stelios Kyriacou taught me most of what I know about optimization algorithms and helped me get some of the code in this book to work. He also introduced me to the philosophy that “everything is an optimization problem,” a theme that you should pick up on in the latter half of the book.</p>
+
+  <p class="body"><a id="pgfId-492494"></a>To all the reviewers: Adhir Ramjiawan, Anto Aravinth, Christopher Haupt, Clive Harber, Dan Sheikh, David Ong, David Trimm, Emanuele Piccinelli, Federico Bertolucci, Frances Buontempo, German Gonzalez-Morris, James Nyika, Jens Christian B. Madsen, Johannes Van Nimwegen, Johnny Hopkins, Joshua Horwitz, Juan Rufes, Kenneth Fricklas, Laurence Giglio, Nathan Mische, Philip Best, Reka Horvath, Robert Walsh, Sébastien Portebois, Stefano Paluello, and Vincent Zhu, your suggestions helped make this a better book.</p>
+
+  <p class="body"><a id="pgfId-486303"></a>I’m by no means a machine learning expert, so I consulted a number of resources to make sure I introduced it correctly and effectively. I was most influenced by Andrew Ng’s “Machine Learning” course on Coursera and the “Deep Learning” series by 3Blue1Brown on YouTube. These are great resources, and if you’ve seen them, you’ll notice that part 3 of this book is influenced by the way they introduce the subject. I also need to thank Dan Rathbone, whose handy website CarGraph.com was the source of the data for many of my examples.</p>
+
+  <p class="body"><a id="pgfId-486304"></a>I also want to thank my wife Margaret, an astronomer, for introducing me to Jupyter notebooks. Switching the code for this book to Jupyter has made it much easier to follow. My parents have also been very supportive as I’ve written this book; on a few occasions, I’ve scrambled to get a chapter finished during a holiday visit with them. They also personally guaranteed that I would sell at least one copy (thanks, Mom!).</p>
+
+  <p class="body"><a id="pgfId-486305"></a>Finally, this book is dedicated to my Dad, who first showed me how to do math in code when he taught me how to program in APL when I was in fifth grade. If there’s a second edition of this book, I might enlist his help to rewrite all of the Python in a single line of APL code!</p>
+
+  <h2 class="fm-head" id="heading_id_7"><a id="pgfId-446165"></a>about this book</h2>
+
+  <p class="body"><a id="pgfId-486239"></a><i class="fm-italics">Math for Programmers</i> teaches you how to solve mathematical problems with code using the Python programming language. Math skills are more and more important for professional software developers, especially as companies are staffing up teams for data science and machine learning. Math also plays an integral role in other modern applications like game development, computer graphics and animation, image and signal processing, pricing engines, and stock market analysis.</p>
+
+  <p class="body"><a id="pgfId-486240"></a>The book starts by introducing 2D and 3D vector geometry, vector spaces, linear transformations, and matrices; these are the bread and butter of the subject of linear algebra. In part 2, it introduces calculus with a focus on a few particularly useful subjects for programmers: derivatives, gradients, Euler’s method, and symbolic evaluation. Finally, in part 3, all the pieces come together to show you how some important machine learning algorithms work. By the last chapter of the book, you’ll have learned enough math to code-up your own neural network from scratch.</p>
+
+  <p class="body"><a id="pgfId-486241"></a>This isn’t a textbook! It’s designed to be a friendly introduction to material that can often seem intimidating, esoteric, or boring. Each chapter features a complete, real-world application of a mathematical concept, complemented by exercises to help you check your understanding as well as mini-projects to help you continue your exploration.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-486243"></a><a id="id_msduqivnudx4"></a>Who should read this book?</h3>
+
+  <p class="body"><a id="pgfId-486244"></a>This book is for anyone with a solid programming background who wants to refresh their math skills or to learn more about applications of math in software. It doesn’t require any previous exposure to calculus or linear algebra, just high-school level algebra and geometry (even if that feels long ago!). This book is designed to be read at your keyboard. You’ll get the most out of it if you follow along with the examples and try all the exercises.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-486246"></a><a id="id_p42hj4f0r1e"></a>How this book is organized</h3>
+
+  <p class="body"><a id="pgfId-486247"></a>Chapter 1 invites you into the world of math. It covers some of the important applications of mathematics in computer programming, introduces some of the topics that appear in the book, and explains how programming can be a valuable tool to a math learner. After that, this book is divided into three parts:</p>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-486248"></a>Part 1 focuses on vectors and linear algebra.</p>
+
+      <ul class="calibre9">
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486249"></a>Chapter 2 covers vector math in 2D with an emphasis on using coordinates to define 2D graphics. It also contains a review of some basic trigonometry.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486250"></a>Chapter 3 extends the material of the previous chapter to 3D, where points are labeled by three coordinates instead of two. It introduces the dot product and cross product, which are helpful to measure angles and render 3D models.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486251"></a>Chapter 4 introduces linear transformations, functions that take vectors as inputs and return vectors as outputs and that have specific geometric effects like rotation or reflection.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486252"></a>Chapter 5 introduces matrices, which are arrays of numbers that can encode a linear vector transformation.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486253"></a>Chapter 6 extends the ideas from 2D and 3D so you can work with collections of vectors of <i class="fm-italics1">any</i> dimension. These are called vector spaces. As a main example, it covers how to process images using vector math.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486254"></a>Chapter 7 focuses on the most important computational problem in linear algebra: solving systems of linear equations. It applies this to a collision-detection system in a simple video game.</li>
+      </ul>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-486255"></a>Part 2 introduces calculus and applications to physics.</p>
+
+      <ul class="calibre9">
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486256"></a>Chapter 8 introduces the concept of the rate of change of a function. It covers derivatives, which calculate a functions rate of change, and integrals, which recover a function from its rate of change.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486257"></a>Chapter 9 covers an important technique for approximate integration called Euler’s method. It expands the game from chapter 7 to include moving and accelerating objects.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486258"></a>Chapter 10 shows how to manipulate algebraic expressions in code, including automatically finding the formula for the derivative of a function. It introduces symbolic programming, a different approach to doing math in code than used elsewhere in the book.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486259"></a>Chapter 11 extends the calculus topics to two-dimensions, defining the gradient operation and showing how it can be used to define a force field.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486260"></a>Chapter 12 shows how to use derivatives to find the maximum or minimum values of functions.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486261"></a>Chapter 13 shows how to think of sound waves as functions, and how to decompose them into sums of other simpler functions, called Fourier series. It covers how to write Python code to play musical notes and chords.</li>
+      </ul>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-486262"></a>Part 3 combines the ideas from the first two parts to introduce some important ideas in machine learning.</p>
+
+      <ul class="calibre9">
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486263"></a>Chapter 14 covers how to fit a line to 2D data, a process referred to as linear regression. The example we explore is finding a function to best predict the price of a used car based on its mileage.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486264"></a>Chapter 15 addresses a different machine learning problem: figuring out what model a car is based on some data about it. Figuring out what kind of object is represented by a data point is called classification.</li>
+
+        <li class="fm-list-bullet2"><a class="calibre10" id="pgfId-486265"></a>Chapter 16 shows how to design and implement a neural network, a special kind of mathematical function, and use it to classify images. This chapter combines ideas from almost every preceding chapter.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <p class="body"><a id="pgfId-486266"></a>Each chapter should be accessible if you’ve read and understand the previous ones. The cost of keeping all of the concepts in order is that the applications may seem eclectic. Hopefully the variety of examples make it an entertaining read, and show you the broad range of applications of the math we cover.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-486268"></a><a id="id_iplvrtxg408m"></a>About the code</h3>
+
+  <p class="body"><a id="pgfId-486269"></a>This book presents ideas in (hopefully) logical order. The ideas you learn in chapter 2 apply to chapter 3, then ideas in chapters 2 and 3 appear in chapter 4, and so on. Computer code is not always written “in order” like this. That is, the simplest ideas in a finished computer program are not always in the first lines of the first file of the source code. This difference makes it challenging to present source code for a book in an intelligible way.</p>
+
+  <p class="body"><a id="pgfId-486270"></a>My solution to this is to include a “walkthrough” code file in the form of a Jupyter notebook for each chapter. A Jupyter notebook is something like a recorded Python interactive session, with visuals like graphs and images built in. In a Jupyter notebook, you enter some code, run it, and then perhaps overwrite it later in your session as you develop your ideas. The notebook for each chapter has code for each section and subsection, run in the same order as it appears in the book. Most importantly, this means you can run the code for the book as you read. You don’t need to get to the end of a chapter before your code is complete enough to work. Appendix A shows you how to set up Python and Jupyter, and appendix B includes some handy Python features if you’re new to the language.</p>
+
+  <p class="body"><a id="pgfId-486271"></a>This book contains many examples of source code both in numbered listings and in line with normal text. In both cases, source code is formatted in a <code class="fm-code-in-text">fixed-width font like this</code> to separate it from ordinary text.</p>
+
+  <p class="body"><a id="pgfId-486272"></a>Additionally, comments in the source code have often been removed from the listings when the code is described in the text. Code annotations accompany many of the listings, highlighting important concepts. If errata or bugs are fixed in the source code online, I’ll include notes there to reconcile any differences from the code printed in the text.</p>
+
+  <p class="body"><a id="pgfId-486273"></a>In a few cases, the code for an example consists of a standalone Python script, rather than cells of the walkthrough Jupyter notebook for the chapter. You can either run it on its own as, for instance, <code class="fm-code-in-text">python script.py</code> or run it from within Jupyter notebook cell as <code class="fm-code-in-text">!python script.py</code>. I’ve included references to standalone scripts in some Jupyter notebooks, so you can follow along section-by-section and find the relevant source files.</p>
+
+  <p class="body"><a id="pgfId-486274"></a>One convention I’ve used throughout the book is to represent evaluation of individual Python commands with the <code class="fm-code-in-text">&gt;&gt;&gt;</code> prompt symbol you’d see in a Python interactive session. I suggest you use Jupyter instead of Python interactive, but in any case, lines with <code class="fm-code-in-text">&gt;&gt;&gt;</code> represent inputs and lines without represent outputs. Here’s an example of a code block representing an interactive evaluation of a piece of Python code, “<code class="fm-code-in-text">2 + 2</code>”:</p>
+  <pre class="programlisting">&gt;&gt;&gt; 2 + 2 4</pre>
+
+  <p class="body"><a id="pgfId-486276"></a>By contrast, this next code block doesn’t have any <code class="fm-code-in-text">&gt;&gt;&gt;</code> symbols, so it’s ordinary Python code rather than a sequence of inputs and outputs:</p>
+  <pre class="programlisting">def square(x):     return x * x</pre>
+
+  <p class="body"><a id="pgfId-486278"></a>This book has hundreds of exercises, which are intended to be straightforward applications of material already covered, as well as mini-projects, which either are more involved, require more creativity, or introduce new concepts. Most exercises and mini-projects in this book invite you to solve some math problem with working Python code. I’ve included solutions to almost all of them, excluding some of the more open-ended mini-projects. You can find the solution code in the corresponding chapter’s walkthrough Jupyter notebook.</p>
+
+  <p class="body"><a id="pgfId-486280"></a><a id="id_1hffdntl17ag"></a>The code for the examples in this book is available for download from the Manning website at <span class="fm-hyperlink"><a href="https://www.manning.com/books/math-for-programmers">https://www.manning.com/books/math-for-programmers</a></span> and from GitHub at <span class="fm-hyperlink"><a href="https://github.com/orlandpm/math-for-programmers">https://github.com/orlandpm/math-for-programmers</a></span>.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-486281"></a>liveBook discussion forum</h3>
+
+  <p class="body"><a id="pgfId-486282"></a>Purchase of <i class="fm-italics">Math for Programmers</i> includes free access to a private web forum run by Manning Publications where you can make comments about the book, ask technical questions, and receive help from the author and from other users. <a id="id_Hlk6318184"></a>To access the forum, go to <span class="fm-hyperlink"><a href="https://livebook.manning.com/#!/book/math-for-programmers/discussion">https://livebook.manning.com/#!/book/math-for-programmers/discussion</a></span>. You can also learn more about Manning's forums and the rules of conduct at <span class="fm-hyperlink"><a href="https://livebook.manning.com/#!/discussion">https://livebook.manning.com/#!/discussion</a></span>.</p>
+
+  <p class="body"><a id="pgfId-486284"></a>Manning’s commitment to our readers is to provide a venue where a meaningful dialogue between individual readers and between readers and the author can take place. It is not a commitment to any specific amount of participation on the part of the author, whose contribution to the forum remains voluntary (and unpaid). We suggest you try asking the author some challenging questions lest his interest stray! The forum and the archives of previous discussions will be accessible from the publisher’s website as long as the book is in print.</p>
+
+  <p class="body"><a id="pgfId-486285"></a></p>
+
+  <h2 class="fm-head" id="heading_id_12"><a id="pgfId-472245"></a>about the author</h2>
+
+  <p class="body"><a id="pgfId-485932"></a>Paul Orland is an entrepreneur, programmer, and math enthusiast. After a stint as a software engineer at Microsoft, he co-founded Tachyus, a start-up company building predictive analytics to optimize energy production in the oil and gas industry. As founding CTO of Tachyus, Paul led the productization of machine learning and physics-based modeling software, and later as CEO, he expanded the company to serve customers on five continents. Paul has a B.S. in math from Yale and an M.S. in physics from the University of Washington. His spirit animal is the lobster.</p>
+
+  <p class="body"><a id="pgfId-472248"></a></p>
+
+  <h2 class="fm-head" id="heading_id_13"><a id="pgfId-464520"></a>about the cover illustration</h2>
+
+  <p class="body"><a id="pgfId-485949"></a>The figure on the cover of <i class="fm-italics">Math for Progammers</i> is captioned “Femme Laponne,” or a woman from Lapp, now Sapmi, which includes parts of northern Norway, Sweden, Finland, and Russia. The illustration is taken from a collection of dress costumes from various countries by Jacques Grasset de Saint-Sauveur (1757-1810), titled Costumes de Différents Pays, published in France in 1797. Each illustration is finely drawn and colored by hand. The rich variety of Grasset de Saint-Sauveur’s collection reminds us vividly of how culturally apart the world’s towns and regions were just 200 years ago. Isolated from each other, people spoke different dialects and languages. In the streets or in the countryside, it was easy to identify where they lived and what their trade or station in life was just by their dress.</p>
+
+  <p class="body"><a id="pgfId-485950"></a>The way we dress has changed since then and the diversity by region, so rich at the time, has faded away. It is now hard to tell apart the inhabitants of different continents, let alone different towns, regions, or countries. Perhaps we have traded cultural diversity for a more varied personal life--certainly for a more varied and fast-paced technological life.</p>
+
+  <p class="body"><a id="pgfId-485951"></a>At a time when it is hard to tell one computer book from another, Manning celebrates the inventiveness and initiative of the computer business with book covers based on the rich diversity of regional life of two centuries ago, brought back to life by Grasset de Saint-Sauveur’s pictures.</p>
+</body>
+</html>

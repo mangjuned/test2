@@ -1,0 +1,1046 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>12</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1132322"></a><a id="pgfId-1156684"></a>12 <a id="id_4cwx06g7tma4"></a>Optimizing a physical system</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1157951"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1157952"></a>Building and visualizing a simulation for a projectile</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1157953"></a>Finding maximal and minimal values for a function using derivatives</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1157954"></a>Tuning simulations with parameters</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1157955"></a>Visualizing spaces of input parameters for simulations</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1157956"></a>Implementing gradient ascent to maximize functions of several variables</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1177485"></a><a id="marker-1177913"></a>For most of the last few chapters, we’ve focused on a physical simulation for a video game. This is a fun and simple example to work with, but there are far more important and lucrative applications. For any big feat of engineering like sending a rocket to Mars, building a bridge, or drilling an oil well, it’s important to know that it’s going to be safe, successful, and on budget before you attempt it. In each of these projects, there are quantities you want to optimize. For instance, you may want to minimize the travel time for your rocket, minimize the amount or cost of concrete in a bridge, or maximize the amount of oil produced by your well.</p>
+
+  <p class="body"><a id="pgfId-1177486"></a>To learn about optimization, we’ll focus on the simple example of a projectile− namely, a cannonball being fired from a cannon. Assuming the cannonball comes out of the barrel at the same speed every time, the launch angle will decide the trajectory (figure 12.1).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1181918"></a>Figure 12.1 Trajectories for a cannonball fired at four different launch angles</p>
+
+  <p class="body"><a id="pgfId-1156698"></a>As you can see in figure 12.1, four different launch angles produce four different trajectories. Among these, <span class="fm-in-cambria">45°</span> is the launch angle that sends the cannonball the furthest, while 80° is the angle that sends it the highest. These are only a few angles of all of the possible values between 0 and <span class="fm-in-cambria">90°</span>, so we can’t be sure they are the best. Our goal is to systematically explore the range of possible launch angles to be sure we’ve found the one that optimizes the range of the cannon.</p>
+
+  <p class="body"><a id="pgfId-1156699"></a>To do this, we first build a simulator for the cannonball. This simulator will be a Python function that takes a launch angle as input, runs Euler’s method (as we did in chapter 9) to simulate the moment-by-moment motion of the cannonball until it hits the ground, and outputs a list of positions of the cannonball over time. From the result, we’ll extract the final horizontal position of the cannonball, which will be the landing position or range. Putting these steps together, we implement a function that takes a launch angle and returns the range of the cannonball at that angle (figure 12.2).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1156704"></a>Figure 12.2 Computing the range of a projectile using a simulator</p>
+
+  <p class="body"><a id="pgfId-1156705"></a>Once we have encapsulated all of this logic in a single Python function called <code class="fm-code-in-text">landing_position</code>, which computes the range of a cannonball as a function of its launch angle, we can think about the problem of finding the launch angle that maximizes the range. We can do this in two ways: first, we make a graph of the range versus the launch angle and look for the largest value (figure 12.3).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1181974"></a>Figure 12.3 Looking at a plot of range vs. launch angle, we can see the approximate value of the launch angle that produces the longest range.</p>
+
+  <p class="body"><a id="pgfId-1161249"></a>The second way we can find the optimal launch angle is to set our simulator aside and find a formula for the range <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) of the projectile as a function of the launch angle <span class="fm-in-cambria">θ</span>. This should produce identical results as the simulation, but because it is a mathematical formula, we can take its derivative using the rules from chapter 10. The derivative of the landing position with respect to the launch angle tells us how much increase in the range we’ll get for small increases in the launch angle. At some angle, we can see that we get diminishing returns−increasing the launch angle causes the range to <i class="fm-italics">decrease</i> and we’ll have passed our optimal value. Before this, the derivative of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) will instantaneously be zero, and the value of <span class="fm-in-cambria">θ</span> where the derivative is zero happens to be the maximum value.</p>
+
+  <p class="body"><a id="pgfId-1176204"></a>Once we’ve warmed up using both of these optimization techniques on our 2D simulation, we can try a more challenging 3D simulation, where we can control the upward angle of the cannon as well as the lateral direction it is fired. If the elevation of the terrain varies around the cannon, the direction can have an impact on how far the cannonball flies before hitting the ground (figure 12.4).</p>
+
+  <p class="body"><a id="pgfId-1176205"></a>For this example, let’s build a function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>), taking two input angles <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span> and outputting a landing position. The challenge is to find the pair (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) that maximizes the range of the cannon. This example lets us cover our third and most important opti<a id="marker-1176206"></a>mization technique: <i class="fm-italics">gradient ascent</i>.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182057"></a>Figure 12.4 With uneven terrain, the direction we fire the cannon can affect the range of the cannonball as well.</p>
+
+  <p class="body"><a id="pgfId-1156720"></a>As we learned in the last chapter, the gradient of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) at a point (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) is a vector pointing in the direction that causes <i class="fm-in-times-italic">r</i> to increase most rapidly. We’ll write a Python function called <code class="fm-code-in-text">gradient_ascent</code> that takes as input a function to optimize, along with a pair of starting inputs, and uses the gradient to find higher and higher values until it reaches the optimal value.</p>
+
+  <p class="body"><a id="pgfId-1156721"></a>The mathematical field of optimization is a broad one, and I hope to give you a sense of some basic techniques. All of the functions we’ll work with are smooth, so you will be able to make use of the many calculus tools you’ve learned so far. Also, the way we approach optimization in this chapter sets the stage for optimizing computer “intelligence” in machine learning algorithms, which we turn to in the final chapters of the book.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1156723"></a><a id="id_p3s61itj8zt3"></a>12.1 Testing a projectile simulation<a id="marker-1178151"></a></h2>
+
+  <p class="body"><a id="pgfId-1156724"></a>Our first task is to build a simulator that computes the flight path of the cannonball. The simulator will be a Python function called <code class="fm-code-in-text">trajectory</code>. It takes the launch angle, as well as a few other parameters that we may want to control, and returns the positions of the cannonball over time until it collides with Earth. To build this simulation, we turn to our old friend from chapter 9−Euler’s method.</p>
+
+  <p class="body"><a id="pgfId-1156725"></a>As a reminder, we can simulate motion with Euler’s method by advancing through time in small increments (we’ll use 0.01 seconds). At each moment, we’ll know the position of the cannonball, as well as its derivatives: velocity and acceleration. The velocity and acceleration let us approximate the change in position to the next moment, and we’ll repeat the process until the cannonball hits the ground. As we go, we can save the time, <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> positions of the cannonball, at each step and output them as the result of the <code class="fm-code-in-text">trajectory</code> function.</p>
+
+  <p class="body"><a id="pgfId-1156726"></a>Finally, we’ll write functions that take the results we get back from the <code class="fm-code-in-text">trajectory</code> function and measure one numerical property. The functions <code class="fm-code-in-text">landing _position</code>, <code class="fm-code-in-text">hang_time</code>, and <code class="fm-code-in-text">max_height</code> tell us the range, the time in the air, and the maximum height of the cannonball, respectively. Each of these will be a value we can subsequently optimize for.<a id="marker-1178161"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1156728"></a><a id="id_ak16qfpknovf"></a>12.1.1 Building a simulation with Euler’s method<a id="marker-1177795"></a> <a id="marker-1177935"></a></h3>
+
+  <p class="body"><a id="pgfId-1156729"></a>In our first 2D simulation, we call the horizontal direction the <i class="fm-in-times-italic">x</i> direction and the vertical direction the <i class="fm-in-times-italic">z</i> direction. That way we won’t have to rename either of these when we add another horizontal direction. We call the angle that the cannonball is launched <span class="fm-in-cambria">θ</span> and the velocity of the cannonball <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> as shown in figure 12.5.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182120"></a>Figure 12.5 The variables in our projectile simulation</p>
+
+  <p class="body"><a id="pgfId-1156735"></a> The <i class="fm-italics">speed</i>, <i class="fm-in-times-italic">v</i>, of a moving object is defined as the magnitude of its velocity vector, so <i class="fm-in-times-italic">v</i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>|. Given the launch angle <span class="fm-in-cambria">θ</span>, the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">z</i> components of the cannonball’s velocity are <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>) and <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>). I’ll assume that the cannonball leaves the barrel of the cannon at time <i class="fm-in-times-italic">t</i> = 0 and with (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">z</i>) coordinates (0, 0), but I’ll also include a configurable launch height. Here’s the basic simulation using Euler’s method:</p>
+  <pre class="programlisting">def trajectory(theta,speed=20,height=0,
+               dt=0.01,g=−9.81):           <span class="fm-combinumeral">❶</span>
+    vx = speed * <span class="fm-in-times1">cos</span>(pi * theta / 180)     <span class="fm-combinumeral">❷</span>
+    vz = speed * <span class="fm-in-times1">sin</span>(pi * theta / 180)
+    t,x,z = 0, 0, height
+    ts, xs, zs = [t], [x], [z]             <span class="fm-combinumeral">❸</span>
+    while z &gt;= 0:                          <span class="fm-combinumeral">❹</span>
+        t += dt                            <span class="fm-combinumeral">❺</span>
+        vz += g * dt
+        <i class="fm-in-times-italic1">x</i> += vx * dt
+        z += vz * dt
+        ts.append(<i class="fm-char-times-italic1">t</i>)
+        xs.append(<i class="fm-in-times-italic1">x</i>)
+        zs.append(<i class="fm-in-times-italic1">z</i>)
+    return ts, xs, zs                      <span class="fm-combinumeral">❻</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178525"></a><span class="fm-combinumeral">❶</span> Additional inputs: the time step dt, gravitational field strength g, and angle theta (in degrees)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178570"></a><span class="fm-combinumeral">❷</span> Calculates the initial <i class="fm-in-times-italic1">x</i> and z components of velocity, converting the input angle from degrees to radians</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178587"></a><span class="fm-combinumeral">❸</span> Initializes lists that hold all the values of time and the <i class="fm-in-times-italic1">x</i> and z positions over the course of the simulation</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178604"></a><span class="fm-combinumeral">❹</span> Runs the simulation only while the cannonball is above ground</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178621"></a><span class="fm-combinumeral">❺</span> Updates time, z velocity, and position. There are no forces acting in the <i class="fm-in-times-italic1">x</i> direction, so the <i class="fm-in-times-italic1">x</i> velocity is unchanged.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178638"></a><span class="fm-combinumeral">❻</span> Returns the list of t, x, and z values, giving the motion of the cannonball</p>
+
+  <p class="body"><a id="pgfId-1156744"></a>You’ll find a <code class="fm-code-in-text">plot_trajectories</code> function in the source code for this book that takes the outputs of one or more results of the <code class="fm-code-in-text">trajectory</code> function and passes them to Matplotlib’s <code class="fm-code-in-text">plot</code> function, drawing curves that show the path of each cannonball. For instance, figure 12.6 shows plotting a <span class="fm-in-cambria">45°</span> launch next to a <span class="fm-in-cambria">60°</span> launch, which is done using the following code:</p>
+  <pre class="programlisting">plot_trajectories( 
+    trajectory(45),
+    trajectory(60))</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182164"></a>Figure 12.6 An output of the <code class="fm-code-in-text">plot_trajectories</code> function showing the results of a <span class="fm-in-cambria">45°</span> and <span class="fm-in-cambria">60°</span> launch angle.</p>
+
+  <p class="body"><a id="pgfId-1156751"></a>We can already see that the <span class="fm-in-cambria">45°</span> launch angle produces a greater range and that the <span class="fm-in-cambria">60°</span> launch angle produces a greater maximum height. To be able to optimize these properties, we need to measure them from the trajectorie<a id="marker-1177951"></a>s.<a id="marker-1177808"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1156753"></a><a id="id_76esfnna9n2z"></a>12.1.2 Measuring properties of the trajectory<a id="marker-1178215"></a></h3>
+
+  <p class="body"><a id="pgfId-1156754"></a>It’s useful to keep the raw output of the trajectory in case we want to plot it, but sometimes we’ll want to focus on one number that matters most. For instance, the range of the projectile is the last <i class="fm-in-times-italic">x</i>-coordinate of the trajectory, which is the last <i class="fm-in-times-italic">x</i> position before the cannonball hits the ground. Here’s a function that takes the result of the <code class="fm-code-in-text">trajectory</code> function (parallel lists with time and the <i class="fm-in-times-italic">x</i> and <i class="fm-italics">z</i> positions), and extracts the range or landing position. For the input trajectory, <code class="fm-code-in-text">traj</code>, <code class="fm-code-in-text">traj[1]</code> lists the <i class="fm-in-times-italic">x</i>-coordinates, and <code class="fm-code-in-text">traj[1][−1]</code> is the last entry in the list:</p>
+  <pre class="programlisting">def landing_position(traj):
+    return traj[1][−1]</pre>
+
+  <p class="body"><a id="pgfId-1156756"></a>This is the main metric of a projectile’s trajectory that interests us, but we can also measure some other ones. For instance, we might want to know the hang time (or how long the cannonball stays in the air) or its maximum height. We can easily create other Python functions that measure these properties from simulated trajectories; for example,</p>
+  <pre class="programlisting">def hang_time(traj):
+    return traj[0][−1]   <span class="fm-combinumeral">❶</span>
+def max_height(traj):
+    return max(traj[2])  <span class="fm-combinumeral">❷</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178959"></a><span class="fm-combinumeral">❶</span> Total time in the air is equal to the last time value, the time on the clock when the projectile hits the ground.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1178980"></a><span class="fm-combinumeral">❷</span> The maximum height is the maximum among the z positions, the third list in the trajectory output.</p>
+
+  <p class="body"><a id="pgfId-1156760"></a>To find an optimal value for any of these metrics, we need to explore how the parameters (namely, the launch angle) affect them. <a id="marker-1178220"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1156762"></a><a id="id_l05pth35l2iq"></a>12.1.3 Exploring different launch angles<a id="marker-1178200"></a></h3>
+
+  <p class="body"><a id="pgfId-1156763"></a>The <code class="fm-code-in-text">trajectory</code> function takes a launch angle and produces the full time and position data for the cannonball over its flight. A function like <code class="fm-code-in-text">landing_position</code> takes this data and produces a single number. Composing these two together (figure 12.7), we get a function for landing position in terms of the launch angle, where all other properties of the simulation are assumed constant.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1156768"></a>Figure 12.7 Landing position as a function of the launch angle</p>
+
+  <p class="body"><a id="pgfId-1156769"></a>One way to test the effect of the launch angle on a landing position is to make a plot of the resulting landing position for several different values of the launch angle (figure 12.8). To do this, we need to calculate the result of the composition <code class="fm-code-in-text">landing_position (trajectory(theta))</code> for several different values of <code class="fm-code-in-text">theta</code> and pass these to Matplotlib’s <code class="fm-code-in-text">scatter</code> function. Here, for example, I use <code class="fm-code-in-text">range(0,95,5)</code> as the launch angles. This is every angle from zero to 90 in increments of 5:</p>
+  <pre class="programlisting">import matplotlib.pyplot as plt
+angles = range(0,90,5)
+landing_positions = [landing_position(trajectory(theta)) 
+                     for theta in angles]
+plt.scatter(angles,landing_positions)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182234"></a>Figure 12.8 A plot of the landing position vs. the launch angle for the cannon for several different values of the launch angle</p>
+
+  <p class="body"><a id="pgfId-1161775"></a>From this plot, we can guess what the optimal value is. At a launch angle of <span class="fm-in-cambria">45°</span>, the landing position is maximized at a little over 40 meters from the launch position. In this case, <span class="fm-in-cambria">45°</span> turns out to be the <i class="fm-italics">exact</i> value of the angle that maximizes the landing position. In the next section, we’ll use calculus to confirm this maximum value without having to do any simulation.<a id="marker-1178210"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1161973"></a><a id="id_4t9x39v6jais"></a>12.1.4 Exercises<a id="marker-1178166"></a></h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1161964"></a><b class="fm-exercise-head">Exercise 12.1</b>: How far does the cannonball go when fired at an angle of 50° from an initial height of zero? How about if it is fired at an angle of 1<span class="fm-in-cambria">30°</span>?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1161965"></a><b class="fm-exercise-head">Solution</b>: At 50°, the cannonball goes about 40.1 meters in the positive direction, while at 1<span class="fm-in-cambria">30°</span>, it goes 40.1 meters in the negative direction:</p>
+        <pre class="programlisting">&gt;&gt;&gt; landing_position(trajectory(50))
+40.10994684444007
+&gt;&gt;&gt; landing_position(trajectory(130))
+<span class="fm-in-cambria">−</span>40.10994684444007</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1161967"></a>This is because 1<span class="fm-in-cambria">30°</span> from the positive x-axis is the same as 50° from the negative x-axis.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1161970"></a><b class="fm-exercise-head">Exercise 12.2-Mini Project</b>: Enhance the <code class="fm-code-in-text1">plot_trajectories</code> function to draw a large dot on the trajectory graph at each passing second so we can see the passing of time on the plot.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1161971"></a><b class="fm-exercise-head">Solution</b>: Here are the updates to the function. It looks for the index of the nearest time after each whole second and makes a scatter plot of (<i class="fm-in-times-italic1">x</i>, <i class="fm-in-times-italic1">z</i>) values at each of these indices:</p>
+        <pre class="programlisting">def plot_trajectories(*trajs,show_seconds=False):
+    for traj in trajs:
+        xs, zs = traj[1], traj[2]
+        plt.plot(xs,zs)
+        if show_seconds:
+            second_indices = []
+            second = 0
+            for i,t in enumerate(traj[0]):
+                if t&gt;= second:
+                    second_indices.append(i)
+                    second += 1
+            plt.scatter([xs[i] for i in second_indices], 
+                        [zs[i] for i in second_indices])
+      ...</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1162288"></a>As a result, you can picture the elapsed time for each of the trajectories you plot; for example,</p>
+        <pre class="programlisting">plot_trajectories(
+    trajectory(20), 
+    trajectory(45),
+    trajectory(60),
+    trajectory(80), 
+    show_seconds=True)</pre>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F08_Orland_UN01.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1162293"></a>Plots of four trajectories with dots showing their positions at each whole number of seconds.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1162296"></a><b class="fm-exercise-head">Exercise 12.3</b>: Make a scatter plot of hang time versus angle for angles between 0 and <span class="fm-in-cambria">180°</span>. Which launch angle produces the maximum hang time?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1162297"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">test_angles = range(0,181,5)
+hang_times = [hang_time(trajectory(theta)) for theta in test_angles]
+plt.scatter(test_angles, hang_times)
+ </pre>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F08_Orland_UN02.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1182273"></a>A plot of the hang time of the cannonball as a function of the launch angle</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1162329"></a></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1162308"></a>It appears that a launch angle of roughly <span class="fm-in-cambria">90°</span> yields the longest hang time of just about 4 seconds. This makes sense because <span class="fm-in-cambria">θ</span> = <span class="fm-in-cambria">90°</span> yields the initial velocity with the largest vertical component.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1162311"></a><b class="fm-exercise-head">Exercise 12.4−Mini Project</b>: Write a function <code class="fm-code-in-text1">plot_trajectory_metric</code> that plots the result of any metric we want over a given set of theta (<span class="fm-in-cambria">θ</span>) values. For instance,</p>
+        <pre class="programlisting">plot_trajectory_metric(landing_position,[10,20,30]) </pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1162313"></a>makes a scatter plot of landing positions versus launch angle for the launch angles <span class="fm-in-cambria">10°</span>, 20°, and <span class="fm-in-cambria">30°</span>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1162314"></a>As a bonus, pass the keyword arguments from <code class="fm-code-in-text1">plot_trajectory_metric</code> to the internal calls of the <code class="fm-code-in-text1">trajectory</code> function, so you can rerun the test with a different simulation parameter. For instance, this code makes the same plot but simulated with a 10-meter initial launch height:</p>
+        <pre class="programlisting">plot_trajectory_metric(landing_position,[10,20,30], height=10)</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1162316"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def plot_trajectory_metric(metric,thetas,**settings):
+    plt.scatter(thetas,
+                [metric(trajectory(theta,**settings)) 
+                 for theta in thetas])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1162318"></a>We can make the plot from the previous exercise by running the following:</p>
+        <pre class="programlisting">plot_trajectory_metric(hang_time, range(0,181,5))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1162322"></a><b class="fm-exercise-head">Exercise 12.5−Mini Project</b>: What is the approximate launch angle that yields the greatest range for the cannonball with a 10-meter initial launch height?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1162323"></a><b class="fm-exercise-head">Solution</b>: Using the <code class="fm-code-in-text1">plot_trajectory_metric</code> function from the preceding mini-project, we can simply run</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1162406"></a>plot_trajectory_metric(landing_position,range(0,90,5), height=10)</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F08_Orland_UN03.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1162352"></a>A plot of range of the cannonball vs. launch angle with a 10 meter launch height</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1162385"></a>The optimal launch angle from a height of 10 meters is about 40°.<a id="marker-1178187"></a></p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_9"><a id="pgfId-1156835"></a><a id="id_9s0ibbxe8rsq"></a>12.2 Calculating the optimal range<a id="marker-1177961"></a></h2>
+
+  <p class="body"><a id="pgfId-1156836"></a>Using calculus, we can compute the maximum range for the cannon, as well as the launch angle that produces it. This actually takes two separate applications of calculus. First, we need to come up with an exact function that tells us the range <i class="fm-in-times-italic">r</i> as a function of the launch angle <span class="fm-in-cambria">θ</span>. As a warning, this will take quite a bit of algebra. I’ll carefully walk you through all the steps, so don’t worry if you get lost; you’ll be able to jump ahead to the final form of the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) and continue reading.</p>
+
+  <p class="body"><a id="pgfId-1156837"></a>Then I show you a trick using derivatives to find the maximum value of this function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>), and the angle <span class="fm-in-cambria">θ</span> that produces it. Namely, a value of <span class="fm-in-cambria">θ</span> that makes the derivative <i class="fm-in-times-italic">r</i>'(<span class="fm-in-cambria">θ</span>) equal zero is also the value of <span class="fm-in-cambria">θ</span> that yields the maximum value of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>). It might not be immediately obvious why this works, but it will become clear once we examine the graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) and study its changing slope.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1156839"></a>12.2.1 <a id="id_dawqufzeje86"></a>Finding the projectile range as a function of <a id="marker-1178225"></a>the launch <a id="marker-1178239"></a>angle<a id="marker-1177971"></a></h3>
+
+  <p class="body"><a id="pgfId-1156840"></a>The horizontal distance traveled by the cannonball is actually pretty simple to calculate. The <i class="fm-in-times-italic">x</i> component of the velocity <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> is constant for its entire flight. For a flight of total time <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>, the projectile travels a total distance of <i class="fm-in-times-italic">r</i> = <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>. The challenge is finding the exact value of that elapsed time <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>.</p>
+
+  <p class="body"><a id="pgfId-1156841"></a>That time, in turn, depends on the <i class="fm-in-times-italic">z</i> position of the projectile over time, which is a function <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>). Assuming the cannonball is launched from an initial height of zero, the first time that <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) = 0 is when it’s launched at <i class="fm-in-times-italic">t</i> = 0. The second time is the elapsed time we’re looking for. Figure 12.9 shows the graph of <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) from the simulation with <span class="fm-in-cambria">θ</span> = <span class="fm-in-cambria">45°</span>. Note that its shape looks a lot like the trajectory, but the horizontal axis (<i class="fm-in-times-italic">t</i>) now represents time.</p>
+  <pre class="programlisting">trj = trajectory(45)
+ts, zs = trj[0], trj[2]
+plt.plot(ts,zs)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F09_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1175315"></a>Figure 12.9 A plot of z(<i class="fm-char-times-italic1">t</i>) for the projectile showing the launching and landing times where z = 0. We can see from the graph that the elapsed time is about 2.9 seconds.</p>
+
+  <p class="body"><a id="pgfId-1175316"></a>We know <i class="fm-in-times-italic">z</i> ''(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">g</i> = −9.81, which is the acceleration due to gravity. We also know the initial <i class="fm-italics">z</i> velocity, <i class="fm-in-times-italic">z</i>'(0) = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>), and the initial <i class="fm-italics">z</i> position, <i class="fm-in-times-italic">z</i>(0) = 0. To recover the position function <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>), we need to integrate the acceleration <i class="fm-in-times-italic">z</i> ''(<i class="fm-in-times-italic">t</i>) twice. The first integral gives us velocity:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F09_Orland_EQ01.png"/></p>
+
+  <p class="body"><a id="pgfId-1156854"></a>The second integral gives us position:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F09_Orland_EQ02.png"/></p>
+
+  <p class="body"><a id="pgfId-1156860"></a>We can confirm that this formula matches the simulation by plotting it (figure 12.10). It is nearly indistinguishable from the simulation.</p>
+  <pre class="programlisting">def z(t):                                         <span class="fm-combinumeral">❶</span>
+    return 20*<span class="fm-in-times1">sin</span>(45*pi/180)*t + (−9.81/2)*t**2
+
+plot_function(z,0,2.9)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179131"></a><span class="fm-combinumeral">❶</span> A direct translation of the result of the integral, z(<i class="fm-char-times-italic1">t</i>), into Python code</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F10_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182342"></a>Figure 12.10 Plotting the exact function z(<i class="fm-char-times-italic1">t</i>) on top of the simulated values</p>
+
+  <p class="body"><a id="pgfId-1156868"></a>For notational simplicity, let’s write the initial velocity |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>) as <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i> so that <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub>t</i> + <i class="fm-in-times-italic">gt</i><sup class="fm-superscript">2</sup>/2. We want to find the value of <i class="fm-in-times-italic">t</i> that makes <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) = 0, which is the total hang time for the cannonball. You may remember how to find that value from high school algebra, but if not, let me remind you quickly. If you want to know what value of <i class="fm-in-times-italic">t</i> solves an equation <i class="fm-italics">at</i><sup class="fm-superscript">2</sup> + <i class="fm-italics">bt</i> + <i class="fm-in-times-italic">c</i> = 0, all you have to do<a id="marker-1156869"></a> is plug the values <i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, and <i class="fm-in-times-italic">c</i> into the <i class="fm-italics">quadratic formula</i> :</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F10_Orland_EQ03.png"/></p>
+
+  <p class="body"><a id="pgfId-1156875"></a>An equation like <i class="fm-italics">at</i><sup class="fm-superscript">2</sup> + <i class="fm-italics">bt</i> + <i class="fm-in-times-italic">c</i> = 0 can be satisfied twice; both times when our projectile hits <i class="fm-in-times-italic">z</i> = 0. The symbol ± is shorthand to let you know that using a + or − at this point in the equation gives you two different (but valid) answers.</p>
+
+  <p class="body"><a id="pgfId-1156876"></a>In the case of solving <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub>t</i> + <i class="fm-in-times-italic">gt</i><sup class="fm-superscript">2</sup>/2 = 0, we have <i class="fm-in-times-italic">a</i> = <i class="fm-in-times-italic">g</i>/2, <i class="fm-in-times-italic">b</i> = <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i> and <i class="fm-in-times-italic">c</i> = 0. Plugging into the formula, we find</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F10_Orland_EQ04.png"/></p>
+
+  <p class="body"><a id="pgfId-1156882"></a>Treating the ± symbol as a + (plus), the result is <i class="fm-in-times-italic">t</i> = (− <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i> + <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i>)/<i class="fm-in-times-italic">g</i> = 0. This says that <i class="fm-in-times-italic">z</i> = 0 when <i class="fm-in-times-italic">t</i> = 0, which is a good sanity check; it confirms that the cannonball starts at <i class="fm-in-times-italic">z</i> = 0. The interesting solution is when we treat ± as a − (minus). In this case, the result is <i class="fm-in-times-italic">t</i> = (− <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i> − <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i>)/<i class="fm-in-times-italic">g</i> = −2<i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i>/<i class="fm-in-times-italic">g</i>.</p>
+
+  <p class="body"><a id="pgfId-1156883"></a>Let’s confirm the result makes sense. With an initial speed of 20 meters per second and a launch angle of <span class="fm-in-cambria">45°</span> as we used in the simulation, the initial <i class="fm-italics">z</i> velocity, <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i>, is −2 <span class="fm-in-cambria">·</span> (20 <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">45°</span>))/−9.81 ¼ 2.88. This closely matches the result of 2.9 seconds that we read from the graph.</p>
+
+  <p class="body"><a id="pgfId-1156884"></a>This gives us confidence in calculating the hang time <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> as <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> = −2<i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i>/<i class="fm-in-times-italic">g</i> or <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> = −2|<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>|<span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>)/<i class="fm-in-times-italic">g</i>. Because the range is <i class="fm-in-times-italic">r</i> = <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>|<span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>) <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic">t</i>, the full expression for the range <i class="fm-in-times-italic">r</i> as a function of the launch angle <span class="fm-in-cambria">θ</span> is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F10_Orland_EQ05.png"/></p>
+
+  <p class="body"><a id="pgfId-1156890"></a>We can plot this side by side with the simulated landing positions at various angles as in figure 12.11 and see that it agrees.</p>
+  <pre class="programlisting">def r(theta):
+    return (−2*20*20/−9.81)*<span class="fm-in-times1">sin</span>(theta*pi/180)*<span class="fm-in-times1">cos</span>(theta*pi/180)
+
+plot_function(r,0,90)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F11_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182387"></a>Figure 12.11 Our calculation of projectile range as a function of the launch angle <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>), which matches our simulated landing positions</p>
+
+  <p class="body"><a id="pgfId-1156897"></a>Having a function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) is a big advantage over repeatedly running the simulator. First of all, it tells us the range of the cannon at <i class="fm-italics">every</i> launch angle, not just a handful of angles that we simulated. Second, it is much less computationally expensive to evaluate this one function than to run hundreds of iterations of Euler’s method. For more complicated simulations, this could make a big difference. Additionally, this function gives us the exact result rather than an approximation. The final benefit, which we’ll make use of next, is that the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) is smooth, so we can take its derivatives. This gives us an understanding of how the range of the projectile changes with respect to the launch angle<a id="marker-1178244"></a>.<a id="marker-1177976"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1156899"></a><a id="id_qub1pd4xmi9k"></a>12.2.2 Solving for the maximum <a id="marker-1178269"></a>range<a id="marker-1178017"></a></h3>
+
+  <p class="body"><a id="pgfId-1156900"></a>Looking at the graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) in figure 12.12, we can set our expectations for what the derivative <i class="fm-in-times-italic">r</i>'(<span class="fm-in-cambria">θ</span>) will look like. As we increase the launch angle from zero, the range increases as well for a while but at a decreasing rate. Eventually, increasing the launch angle begins to decrease the range.</p>
+
+  <p class="body"><a id="pgfId-1156901"></a>The key observation to make is that while <i class="fm-in-times-italic">r</i>'(<span class="fm-in-cambria">θ</span>) is positive, the range is increasing with respect to <span class="fm-in-cambria">θ</span>. Then the derivative <i class="fm-in-times-italic">r</i>'(<span class="fm-in-cambria">θ</span>) crosses below zero, and the range decreases from there. It is precisely at this angle (where the derivative is zero) that the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) achieves its maximum value. You can visualize this by seeing that the graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) in figure 12.12 hits its maximum when the slope of the graph is zero.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F12_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1156906"></a>Figure 12.12 The graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) hits its maximum when the derivative is zero and, therefore, the slope of the graph is zero.</p>
+
+  <p class="body"><a id="pgfId-1156907"></a>We should be able to take the derivative of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>) symbolically, find where it equals zero between 0° and <span class="fm-in-cambria">90°</span>, and this should agree with the rough maximum value of <span class="fm-in-cambria">45°</span>. Remember that the formula for <i class="fm-in-times-italic">r</i> is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F12_Orland_EQ06.png"/></p>
+
+  <p class="body"><a id="pgfId-1156913"></a>Because −2|<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>|<sup class="fm-superscript">2</sup>/<i class="fm-in-times-italic">g</i> is constant with respect to <span class="fm-in-cambria">θ</span>, the only hard work is using the product rule on <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>)<span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>). The result is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F12_Orland_EQ07.png"/></p>
+
+  <p class="body"><a id="pgfId-1175731"></a>Notice that I factored out the minus sign. If you haven’t seen this notation before, sin<sup class="fm-superscript">2</sup>(<span class="fm-in-cambria">θ</span>) means (<span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>))<sup class="fm-superscript">2</sup>. The value of the derivative <i class="fm-in-times-italic">r</i>'(<span class="fm-in-cambria">θ</span>) is zero when the expression sin<sup class="fm-superscript">2</sup>(<span class="fm-in-cambria">θ</span>) − cos<sup class="fm-superscript">2</sup>(<span class="fm-in-cambria">θ</span>) is zero (in other words, we can ignore the constants). There are a few ways to figure out where this expression is zero, but a particularly nice one is to use the trigonometric identity, <span class="fm-in-times">cos</span>(2<span class="fm-in-cambria">θ</span>) = cos<sup class="fm-superscript">2</sup>(<span class="fm-in-cambria">θ</span>) − sin<sup class="fm-superscript">2</sup>(<span class="fm-in-cambria">θ</span>), which reduces our problem even further. Now we need to figure out where <span class="fm-in-times">cos</span>(2<span class="fm-in-cambria">θ</span>) = 0.</p>
+
+  <p class="body"><a id="pgfId-1156920"></a>The cosine function is zero at <i class="fm-in-cambria2">π</i>/2 plus any multiple of <i class="fm-in-cambria2">π</i>, or <span class="fm-in-cambria">90°</span> plus any multiple of <span class="fm-in-cambria">180°</span> (that is, <span class="fm-in-cambria">90°</span>, 270°, 4<span class="fm-in-cambria">30°</span>, and so on). If 2<span class="fm-in-cambria">θ</span> is equal to these values, <span class="fm-in-cambria">θ</span> could be half of any of these values: <span class="fm-in-cambria">45°</span>, 135°, 2<span class="fm-in-cambria">15°</span>, and so on.</p>
+
+  <p class="body"><a id="pgfId-1156921"></a>Of these, there are two interesting results. First, <span class="fm-in-cambria">θ</span> = <span class="fm-in-cambria">45°</span> is the solution between <span class="fm-in-cambria">θ</span> = 0 and <span class="fm-in-cambria">θ</span> = <span class="fm-in-cambria">90°</span>, so it is both the solution we expected and the solution we’re looking for! The second interesting solution is 135° because this is the same as shooting the cannonball at <span class="fm-in-cambria">45°</span> in the opposite direction (figure 12.13).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F13_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182453"></a>Figure 12.13 In our model, shooting the cannonball at 135° is like shooting at <span class="fm-in-cambria">45°</span> in the opposite direction.</p>
+
+  <p class="body"><a id="pgfId-1156927"></a>At angles of <span class="fm-in-cambria">45°</span> and 135°, the resulting ranges are</p>
+  <pre class="programlisting">&gt;&gt;&gt; r(45)
+40.774719673802245
+&gt;&gt;&gt; r(135)
+<span class="fm-in-cambria">−</span>40.77471967380224</pre>
+
+  <p class="body"><a id="pgfId-1156929"></a>It turns out that these are the extremes of where the cannonball can end up, with all other parameters equal. A launch angle of <span class="fm-in-cambria">45°</span> produces the maximum landing position, while a launch angle of 135° produces the minimum landing positio<a id="marker-1178274"></a>n.<a id="marker-1178022"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1156931"></a><a id="id_cjh5j0al9uhp"></a>12.2.3 Identifying maxima and <a id="marker-1178259"></a>minima<a id="marker-1177893"></a><a id="marker-1177903"></a></h3>
+
+  <p class="body"><a id="pgfId-1156932"></a>T<a id="marker-1178002"></a>o see the difference between the maximum range at <span class="fm-in-cambria">45°</span> and the minimum range at 135°, we can extend the plot of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>). Remember, we found both of these angles because they were at places where the derivative <i class="fm-in-times-italic">r</i>'(<span class="fm-in-cambria">θ</span>) was zero (figure 12.14).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F14_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182532"></a>Figure 12.14 The angles <span class="fm-in-cambria">θ</span> = <span class="fm-in-cambria">45°</span> and <span class="fm-in-cambria">θ</span> = 135° are the two values between 0 and 180 where r'(<span class="fm-in-cambria">θ</span>) = 0.</p>
+
+  <p class="body"><a id="pgfId-1156938"></a>While <i class="fm-italics">maxima</i>(the plural of “maximum”) of smooth functions occur where the derivative is zero, the converse is not always true; not every place where the derivative is zero yields a maximum value. As we see in figure 12.14 at <span class="fm-in-cambria">θ</span> = 135°, it can also yield a <i class="fm-italics">minimum</i> value of a function.</p>
+
+  <p class="body"><a id="pgfId-1156940"></a>You need to be cautious of the global behavior of functions<a id="marker-1156939"></a> as well, because the derivative can be zero at what’s called a <i class="fm-italics">local</i> maximum or minimum<a id="marker-1156941"></a>, where the function briefly obtains a maximum or minimum value, but it’s real, <i class="fm-italics">global</i> maximum<a id="marker-1156942"></a> or minimum<a id="marker-1156943"></a> values lie elsewhere. Figure 12.15 shows a classic example: <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> − <i class="fm-in-times-italic">x</i>. Zooming in on the region where −1 &lt; <i class="fm-in-times-italic">x</i> &lt; 1, there are two places where the derivative is zero, which look like a maximum and minimum, respectively. When you zoom out, you see that neither of these is the maximum or minimum value for the whole function because it goes off to infinity in both directions.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F15_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1156948"></a>Figure 12.15 Two points that are a local minimum and local maximum, but neither is the minimum or maximum value for the function</p>
+
+  <p class="body"><a id="pgfId-1156949"></a>As another confounding possibility, a point where the derivative is zero may not even be a local minimum or maximum. For instance, the function <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> has a derivative of zero at <i class="fm-in-times-italic">x</i> = 0 (figure 12.16). This point just happens to be a place where the function <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup> stops increasing momentaril<a id="marker-1177908"></a>y.<a id="marker-1177898"></a></p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F16_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182593"></a>Figure 12.16 For <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">x</i><sup class="fm-superscript">3</sup>, the derivative is zero at <i class="fm-in-times-italic">x</i> = 0, but this is not a minimum or maximum value.</p>
+
+  <p class="body"><a id="pgfId-1156955"></a>I won’t go into the technicalities of telling whether a point with a zero derivative is a minimum, maximum, or neither, or how to distinguish local minima and maxima from global ones. The key idea is that you need to fully understand the behavior of a function before you can confidently say you’ve found an optimal value. With this in mind, let’s move on to some more complicated functions to optimize and some new techniques for optimizin<a id="marker-1178264"></a>g them.<a id="marker-1178012"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1156957"></a><a id="marker-1177984"></a>12.2.4 Exercise<a id="marker-1178249"></a>s</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1163121"></a><b class="fm-exercise-head">Exercise 12.6</b>: Use the formula for elapsed time, <span class="fm-in-cambria">Δ</span><i class="fm-in-times-italic1">t</i>, in terms of the launch angle <span class="fm-in-cambria">θ</span> to find the angle that maximizes the hang time of the cannonball.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163122"></a><b class="fm-exercise-head">Solution</b>: The time in the air is <i class="fm-in-times-italic1">t</i> = 2<i class="fm-in-times-italic1">v<sub class="fm-subscript">z</sub></i>/<i class="fm-in-times-italic1">g</i> = 2<i class="fm-in-times-italic1">v</i> <span class="fm-in-times1">sin</span>(<span class="fm-in-cambria">θ</span>)/<i class="fm-in-times-italic1">g</i> where the initial speed of the cannonball is <i class="fm-in-times-italic1">v</i> = |<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>|. This is maximized when <span class="fm-in-times1">sin</span>(<span class="fm-in-cambria">θ</span>) is maximized. We don’t need calculus for this; the maximum value of <span class="fm-in-times1">sin</span>(<span class="fm-in-cambria">θ</span>) for 0 <span class="fm-in-cambria">≤</span> <span class="fm-in-cambria">θ</span> <span class="fm-in-cambria">≤</span> <span class="fm-in-cambria">180°</span> occurs at <span class="fm-in-cambria">θ</span> = <span class="fm-in-cambria">90°</span>. In other words, with all other parameters constant, the cannonball stays in the air longest when fired directly upward.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1163152"></a><b class="fm-exercise-head">Exercise 12.7</b>: Confirm that the derivative of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) is zero at <i class="fm-in-times-italic1">x</i> = 11<i class="fm-in-cambria2">π</i>/2. Is this a maximum or minimum value of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>)?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163153"></a><b class="fm-exercise-head">Solution</b>: The derivative of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) is <span class="fm-in-times1">cos</span>(<i class="fm-in-times-italic1">x</i>), and</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F16_Orland_EQ08.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163159"></a>so the derivative of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) is indeed zero at <i class="fm-in-times-italic1">x</i> = 11<i class="fm-in-cambria2">π</i>/2. Because <span class="fm-in-times1">sin</span>(11<i class="fm-in-cambria2">π</i>/2) = <span class="fm-in-times1">sin</span>(3<i class="fm-in-cambria2">π</i>/2) = −1 and the sine function ranges between −1 and 1, we can be sure this is a local maximum. Here’s a plot of <span class="fm-in-times1">sin</span>(<i class="fm-in-times-italic1">x</i>) to confirm that:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F16_Orland_UN04.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1156961"></a></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1163421"></a><b class="fm-exercise-head">Exercise 12.8</b>: Where does <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">3</sup> − <i class="fm-in-times-italic1">x</i> have its local maximum and minimum values? What are the values?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163422"></a><b class="fm-exercise-head">Solution</b>: You can see from plotting the function that <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) hits a local minimum value at some <i class="fm-in-times-italic1">x</i> &gt; 0 and a local maximum value at some <i class="fm-in-times-italic1">x</i> &lt; 0. Let’s find these two points.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163423"></a>The derivative is <i class="fm-in-times-italic1">f</i>'(<i class="fm-in-times-italic1">x</i>) = 3<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> − 1, so we want to find where 3<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> − 1 = 0. We could use the quadratic formula to solve for <i class="fm-in-times-italic1">x</i>, but it’s simple enough to eyeball a solution. If 3<i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> − 1 = 0 then <i class="fm-in-times-italic1">x</i><sup class="fm-superscript1">2</sup> = 1/3, so <i class="fm-in-times-italic1">x</i> = −1/ or <i class="fm-in-times-italic1">x</i> = 1/. These are the <i class="fm-in-times-italic1">x</i> values where <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>) hits its local minimum and maximum values.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163424"></a>The local maximum value is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F16_Orland_UN04_EQ09.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163430"></a>and the local minimum value is</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F16_Orland_UN04_EQ10.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1163514"></a><b class="fm-exercise-head">Exercise 12.9−Mini Project</b>: The graph of a quadratic function <i class="fm-in-times-italic1">q</i>(<i class="fm-in-times-italic1">x</i>) = <i class="fm-in-times-italic1">ax</i><sup class="fm-superscript1">2</sup> + <i class="fm-in-times-italic1">bx</i> + <i class="fm-in-times-italic1">c</i> with <i class="fm-in-times-italic1">a</i> ≠ 0 is a <i class="fm-italics">parabola</i>, an arch shape that<a id="marker-1163515"></a> either has a single maximum value or a single minimum value. Based on the numbers <i class="fm-in-times-italic1">a</i>, <i class="fm-in-times-italic1">b</i>, and <i class="fm-in-times-italic1">c</i>, what is the <i class="fm-in-times-italic1">x</i> value where <i class="fm-in-times-italic1">q</i>(<i class="fm-in-times-italic1">x</i>) is maximized or minimized? How can you tell if this point is a minimum or maximum?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163516"></a><b class="fm-exercise-head">Solution</b>: The derivative <i class="fm-in-times-italic1">q</i>'(<i class="fm-in-times-italic1">x</i>) is given by 2<i class="fm-in-times-italic1">ax</i> + <i class="fm-in-times-italic1">b</i>. This is zero when <i class="fm-in-times-italic1">x</i> =- <i class="fm-in-times-italic1">b</i>/2<i class="fm-in-times-italic1">a</i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163517"></a>If <i class="fm-in-times-italic1">a</i> is positive, the derivative starts negative at some low <i class="fm-in-times-italic1">x</i> value, then hits zero at <i class="fm-in-times-italic1">x</i> = <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic1">b</i>/2<i class="fm-in-times-italic1">a</i> and is positive from then on. That means <i class="fm-in-times-italic1">q</i> is decreasing before <i class="fm-in-times-italic1">x</i> = <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic1">b</i>/2<i class="fm-in-times-italic1">a</i> and increasing thereafter; this describes a <i class="fm-italics">minimum</i> value of <i class="fm-in-times-italic1">q</i>(<i class="fm-in-times-italic1">x</i>).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1163518"></a>You can tell the opposite story if <i class="fm-in-times-italic1">a</i> is negative. Therefore, <i class="fm-in-times-italic1">x</i> = <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic1">b</i>/2<i class="fm-in-times-italic1">a</i> is a minimum value of <i class="fm-in-times-italic1">q</i>(<i class="fm-in-times-italic1">x</i>) if <i class="fm-in-times-italic1">a</i> is positive and a maximum value <a id="marker-1177994"></a>if <i class="fm-in-times-italic1">a</i> is negat<a id="marker-1178234"></a>ive.<a id="marker-1177966"></a><a id="marker-1178254"></a></p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_14"><a id="pgfId-1157001"></a><a id="id_m5tf16kea5f6"></a>12.3 Enhancing our simulation<a id="marker-1178030"></a></h2>
+
+  <p class="body"><a id="pgfId-1157002"></a>As your simulator becomes more complicated, there can be multiple parameters governing its behavior. For our original cannon, the launch angle <span class="fm-in-cambria">θ</span> was the only parameter we were playing with. To optimize the range of the cannon, we worked with a function of one variable: <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>). In this section, we’ll make our cannon fire in 3D, meaning that we need to vary two launch angles as parameters to optimize the range of the cannonball.</p>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1157004"></a><a id="id_cgt0mh7imdla"></a>12.3.1 Adding another dimension<a id="marker-1178045"></a></h3>
+
+  <p class="body"><a id="pgfId-1157005"></a>The first thing is to add a <i class="fm-in-times-italic">y</i> dimension to our simulation. We can now picture the cannon sitting at the origin of the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane, shooting the cannonball up into the <i class="fm-in-times-italic">z</i> direction at some angle <span class="fm-in-cambria">θ</span>. In this version of the simulator, you can control the angle <span class="fm-in-cambria">θ</span> as well as a second angle, which we’ll call <span class="fm-in-cambria">φ</span> (the Greek letter phi). This measures how far the cannon is rotated laterally from the +<i class="fm-in-times-italic">x</i> direction (figure 12.17).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F17_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182683"></a>Figure 12.17 Picturing the cannon firing in 3D. Two angles <span class="fm-in-cambria">θ</span> and ϕ determine the direction the cannon is fired.</p>
+
+  <p class="body"><a id="pgfId-1157011"></a>To simulate the cannon in 3D, we need to add motion in the <i class="fm-in-times-italic">y</i> direction. The physics in the <i class="fm-in-times-italic">z</i> direction remains exactly the same, but the horizontal velocity is split between the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> direction, depending on the value of the angle <span class="fm-in-cambria">φ</span>. Whereas the previous <i class="fm-in-times-italic">x</i> component of the initial velocity was <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>|<span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>), it’s now scaled by a factor of <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">φ</span>) to give <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>|<span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>)<span class="fm-in-times">cos</span>(<span class="fm-in-cambria">φ</span>). The <i class="fm-in-times-italic">y</i> component of initial velocity is <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>|<span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>)<span class="fm-in-times">sin</span>(<span class="fm-in-cambria">φ</span>). Because gravity doesn’t act in the <i class="fm-in-times-italic">y</i> direction, we don’t have to update <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i> over the course of the simulation. Here’s the updated trajectory function:</p>
+  <pre class="programlisting">def trajectory3d(theta,phi,speed=20,
+                 height=0,dt=0.01,g=−9.81):          <span class="fm-combinumeral">❶</span>
+    vx = speed * <span class="fm-in-times1">cos</span>(pi*theta/180)*<span class="fm-in-times1">cos</span>(pi*phi/180)
+    vy = speed * <span class="fm-in-times1">cos</span>(pi*theta/180)*<span class="fm-in-times1">sin</span>(pi*phi/180)   <span class="fm-combinumeral">❷</span>
+    vz = speed * <span class="fm-in-times1">sin</span>(pi*theta/180)
+    t,x,y,z = 0, 0, 0, height
+    ts, xs, ys, zs = [t], [x], [y], [z]              <span class="fm-combinumeral">❸</span>
+    while z &gt;= 0:
+        t += dt
+        vz += g * dt
+        x += vx * dt
+        y += vy * dt                                 <span class="fm-combinumeral">❹</span>
+        z += vz * dt
+        ts.append(t)
+        xs.append(x)
+        ys.append(y)
+        zs.append(z)
+    return ts, xs, ys, zs</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179261"></a><span class="fm-combinumeral">❶</span> The lateral angle ϕ is the input parameter of the simulation.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179289"></a><span class="fm-combinumeral">❷</span> Calculates the initial y velocity</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179306"></a><span class="fm-combinumeral">❸</span> Stores the values of time and the x, y, and z positions throughout the simulation</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179323"></a><span class="fm-combinumeral">❹</span> Updates the y position in each iteration</p>
+
+  <p class="body"><a id="pgfId-1157019"></a>If this simulation is successful, we don’t expect it to change the angle <span class="fm-in-cambria">θ</span> that yields the maximum range. Whether you fire a projectile at <span class="fm-in-cambria">45°</span> above the horizontal in the +<i class="fm-in-times-italic">x</i> direction, the − <i class="fm-in-times-italic">x</i> direction, or any other direction in the plane, the projectile should go the same distance. That is to say that <span class="fm-in-cambria">φ</span> doesn’t affect the distance traveled. Next, we add the terrain with a variable elevation around the launch point so the distance traveled changes.<a id="marker-1178050"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1157021"></a><a id="id_makzmf6mibdg"></a>12.3.2 Modeling terrain around the cannon<a id="marker-1178060"></a></h3>
+
+  <p class="body"><a id="pgfId-1157022"></a>Hills and valleys around the cannon mean that its shots can stay in the air for different durations depending on where they’re aimed. We can model the elevation above or below the plane <i class="fm-in-times-italic">z</i> = 0 by a function that returns a number for every (<i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i>) point. For instance,</p>
+  <pre class="programlisting">def flat_ground(x,y):
+    return 0</pre>
+
+  <p class="body"><a id="pgfId-1157024"></a>represents flat ground, where the elevation at every (<i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i>) point is zero. Another function we’ll use is a ridge between two valleys:</p>
+  <pre class="programlisting">def ridge(x,y):
+    return (x**2 − 5*y**2) / 2500</pre>
+
+  <p class="body"><a id="pgfId-1157026"></a>On this ridge, the ground slopes upward from the origin in the positive and negative <i class="fm-in-times-italic">x</i> directions, and it slopes downward in the positive and negative <i class="fm-in-times-italic">y</i> directions. (You can plot the cross sections of this function at <i class="fm-in-times-italic">x</i> = 0 and <i class="fm-in-times-italic">y</i> = 0 to confirm this.)</p>
+
+  <p class="body"><a id="pgfId-1157027"></a>Whether we want to simulate the projectile on flat ground or on the ridge, we have to adapt the <code class="fm-code-in-text">trajectory3d</code> function to terminate when the projectile hits the ground, not just when its altitude is zero. To do this, we can pass the elevation function defining the terrain as a keyword argument, defaulting to flat ground, and revise the test for whether the projectile is above ground. Here are the changed lines in the function:</p>
+  <pre class="programlisting">def trajectory3d(theta,phi,speed=20,height=0,dt=0.01,g=−9.81,
+                    elevation=flat_ground):
+    ...
+    while z &gt;= elevation(x,y):
+       ...</pre>
+
+  <p class="body"><a id="pgfId-1157030"></a>In the source code, I also provide a function called <code class="fm-code-in-text">plot_trajectories_3d,</code> which plots the result of <code class="fm-code-in-text">trajectory3D</code> as well as the specified terrain. To confirm our simulation works, we see the trajectory end below <i class="fm-in-times-italic">z</i> = 0 when the cannonball is fired downhill and above <i class="fm-in-times-italic">z</i> = 0 when it is fired uphill (figure 12.18):</p>
+  <pre class="programlisting">plot_trajectories_3d(
+    trajectory3d(20,0,elevation=ridge),
+    trajectory3d(20,270,elevation=ridge),
+    bounds=[0,40,<span class="fm-in-cambria">−</span>40,0],
+    elevation=ridge)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F18_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157036"></a>Figure 12.18 A projectile fired downhill lands below z = 0 and a projectile fired uphill lands above z = 0.</p>
+
+  <p class="body"><a id="pgfId-1157037"></a>If you had to guess, it seems reasonable that the maximum range for the cannon is attained in the downhill direction rather than the uphill direction. On its way down, the cannonball has further to fall, taking more time and allowing it to travel further. It’s not clear if the vertical angle <span class="fm-in-cambria">θ</span> will yield the optimal range because our calculation of <span class="fm-in-cambria">45°</span> made the assumption that the ground was flat. To answer this question, we need to write the range <i class="fm-in-times-italic">r</i> of the projectile as a function of <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span>.<a id="marker-1178065"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1157039"></a><a id="id_f65l1is2z0lz"></a>12.3.3 Solving for <a id="marker-1178339"></a>the range of the projectile in 3D<a id="marker-1178070"></a></h3>
+
+  <p class="body"><a id="pgfId-1157040"></a>Even though the cannonball is fired in 3D space in our latest simulation, its trajectory lies in a vertical plane. As such, given an angle <span class="fm-in-cambria">φ</span>, we only need to work with the slice of the terrain in the direction the cannonball is fired. For instance, if the cannonball is fired at an angle <span class="fm-in-cambria">φ</span> = 240°, we only need to think about terrain values when (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) lies along a line at 240° from the origin. This is like thinking about the elevation of the terrain only at the points in the shadow cast by the trajectory (figure 12.19).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157045"></a>Figure 12.19 We only need to think about the elevation of the terrain in the plane where the projectile is fired. This is where the shadow of the trajectory is cast.</p>
+
+  <p class="body"><a id="pgfId-1157046"></a>Our goal is to do all of our calculations in the plane of the shadow’s trajectory, working with the distance <i class="fm-in-times-italic">d</i> from the origin in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane as our coordinate, rather than <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> themselves. At some distance, the trajectory of the cannonball and the elevation of the terrain will have the same <i class="fm-in-times-italic">z</i> value, which is where the cannonball stops. This distance is the range that we want to find an expression for.</p>
+
+  <p class="body"><a id="pgfId-1157047"></a>Let’s keep calling the height of the projectile <i class="fm-in-times-italic">z</i>. As a function of time, the height is exactly the same as in our 2D example</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ11.png"/></p>
+
+  <p class="body"><a id="pgfId-1157053"></a>where <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i> is the <i class="fm-in-times-italic">z</i> component of the initial velocity. The <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> positions are also given as simple functions of time <i class="fm-in-times-italic">x</i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub>t</i> and <i class="fm-in-times-italic">y</i>(<i class="fm-in-times-italic">t</i>) = <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub>t</i> because no forces act in the <i class="fm-in-times-italic">x</i> or <i class="fm-in-times-italic">y</i> direction.</p>
+
+  <p class="body"><a id="pgfId-1157054"></a>On the ridge, the elevation is given as a function of the <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i> position by (<i class="fm-in-times-italic">x</i><sup class="fm-superscript">2</sup> − 5<i class="fm-in-times-italic">y</i><sup class="fm-superscript">2</sup>)/2500. We can write this elevation as <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = <i class="fm-italics">B<sub class="fm-subscript">x</sub></i><sup class="fm-superscript">2</sup> − <i class="fm-italics">C<sub class="fm-subscript">y</sub></i><sup class="fm-superscript">2</sup> where <i class="fm-italics">B</i> = 1/2500 = 0.0004 and <i class="fm-italics">C</i> = 5/2500 = 0.002. It’s useful to know the elevation of the terrain directly under the projectile at a given time <i class="fm-in-times-italic">t</i>, which we can call <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">t</i>). We can calculate the value of <i class="fm-in-times-italic">h</i> under the projectile at any point in time <i class="fm-in-times-italic">t</i> because the projectile’s <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> positions are given by <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub>t</i> and <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub>t</i>, and the elevation at the same (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) point will be <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub>t</i>, <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub>t</i>) = <i class="fm-in-times-italic">Bv<sub class="fm-subscript1">x</sub></i><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic">t</i><sup class="fm-superscript">2</sup> − <i class="fm-in-times-italic">Cv<sub class="fm-subscript1">y</sub></i><sup class="fm-superscript">2</sup> <i class="fm-in-times-italic">t</i><sup class="fm-superscript">2</sup>.</p>
+
+  <p class="body"><a id="pgfId-1157055"></a>The altitude of the projectile above the ground at a time <i class="fm-in-times-italic">t</i> is the difference between <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">t</i>). The time of impact is the time when this difference is zero, that is <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) − <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">t</i>) = 0. We can expand that condition in terms of the definitions of <i class="fm-in-times-italic">z</i>(<i class="fm-in-times-italic">t</i>) and <i class="fm-in-times-italic">h</i>(<i class="fm-in-times-italic">t</i>):</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ12.png"/></p>
+
+  <p class="body"><a id="pgfId-1157061"></a>Once again, we can reshape this into the form <i class="fm-italics">at</i><sup class="fm-superscript">2</sup> + <i class="fm-italics">bt</i> + <i class="fm-in-times-italic">c</i> = 0:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ13.png"/></p>
+
+  <p class="body"><a id="pgfId-1157067"></a>Specifically, <i class="fm-in-times-italic">a</i> = <i class="fm-in-times-italic">g</i>/2 − <i class="fm-in-times-italic">Bv<sub class="fm-subscript1">x</sub></i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">Cv<sub class="fm-subscript1">y</sub></i><sup class="fm-superscript">2</sup>, <i class="fm-in-times-italic">b</i> = <i class="fm-in-times-italic">v<sub class="fm-subscript1">z</sub></i> and <i class="fm-in-times-italic">c</i> = 0. To find the time <i class="fm-in-times-italic">t</i> that satisfies this equation, we can use the quadratic formula:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ14.png"/></p>
+
+  <p class="body"><a id="pgfId-1157073"></a>Because <i class="fm-in-times-italic">c</i> = 0, the form is even simpler:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ15.png"/></p>
+
+  <p class="body"><a id="pgfId-1157080"></a>When we use the + operator, we find <i class="fm-in-times-italic">t</i> = 0, confirming that the cannonball<a id="marker-1157079"></a> is at ground level at the moment it is launched. The interesting solution is obtained using the − operator, which is the<a id="marker-1157081"></a> time the projectile lands. This time is <i class="fm-in-times-italic">t</i> = (− <i class="fm-in-times-italic">b</i> − <i class="fm-in-times-italic">b</i>)/2<i class="fm-in-times-italic">a</i> = <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic">b</i>/<i class="fm-in-times-italic">a</i>. Plugging in the expressions for <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i>, we get an expression for landing time in terms of quantities we know how to calculate:</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ16.png"/></p>
+
+  <p class="body"><a id="pgfId-1157087"></a>The distance in the (<i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i>) plane that the projectile lands is<img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ16a.png"/> for this time <i class="fm-in-times-italic">t</i>. That expands to <img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ16b.png"/>. You can think of <img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ16c.png"/> as the component of the initial velocity parallel to the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane, so I’ll call this number <i class="fm-italics">vxy</i>. The distance at landing is</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F19_Orland_EQ17.png"/></p>
+
+  <p class="body"><a id="pgfId-1157093"></a>All of these numbers in the expression are either constants that I specified or are computed in terms of the initial speed <i class="fm-in-times-italic">v</i> = |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| and the launch angles <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span>. It’s straightforward (albeit a bit tedious) to translate this to Python, where it becomes clear exactly how we can view the distance as a function of <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span>:</p>
+  <pre class="programlisting">B = 0.0004                                         <span class="fm-combinumeral">❶</span>
+C = 0.005
+v = 20
+g = −9.81
+
+def velocity_components(v,theta,phi):              <span class="fm-combinumeral">❷</span>
+    vx = v  * <span class="fm-in-times1">cos</span>(theta*pi/180) * <span class="fm-in-times1">cos</span>(phi*pi/180)
+    vy = v  * <span class="fm-in-times1">cos</span>(theta*pi/180) * <span class="fm-in-times1">sin</span>(phi*pi/180)
+    vz = v  * <span class="fm-in-times1">sin</span>(theta*pi/180)
+    return vx,vy,vz
+    
+def landing_distance(theta,phi):
+    vx, vy, vz = velocity_components(v, theta, phi)
+    v_xy = sqrt(vx**2 + vy**2)                     <span class="fm-combinumeral">❸</span>
+    a = (g/2) − B * vx**2 + C * vy**2              <span class="fm-combinumeral">❹</span>
+    b = vz
+    landing_time = -b/a                            <span class="fm-combinumeral">❺</span>
+    landing_distance = v_xy * landing_time         <span class="fm-combinumeral">❻</span>
+    return landing_distance</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179791"></a><span class="fm-combinumeral">❶</span> Constants for the shape of the ridge, launch speed, and acceleration due to gravity</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179819"></a><span class="fm-combinumeral">❷</span> A helper function that finds the x, y, and z components of the initial velocity</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179836"></a><span class="fm-combinumeral">❸</span> The horizontal component of initial velocity (parallel to the x,y plane)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179853"></a><span class="fm-combinumeral">❹</span> The constants a and b</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179870"></a><span class="fm-combinumeral">❺</span> Solves the quadratic equation for landing time, which is -b/a</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1179898"></a><span class="fm-combinumeral">❻</span> The horizontal distance traveled</p>
+
+  <p class="body"><a id="pgfId-1157102"></a>The horizontal distance traveled is the horizontal velocity times the elapsed time. Plotting this point alongside the simulated trajectory, we can verify that our calculated value for the landing position matches the simulation with Euler’s method (figure 12.20).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F20_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157107"></a>Figure 12.20 Comparing the calculated landing point with the result of the simulation for <span class="fm-in-cambria">θ</span> = <span class="fm-in-cambria">30°</span> and ϕ = 240°</p>
+
+  <p class="body"><a id="pgfId-1164674"></a>Now that we have a function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) for the range of the cannon in terms of the launch angles <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span>, we can turn our attention to finding the angles that <a id="marker-1178075"></a>optimize the range.<a id="marker-1178344"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1164676"></a><a id="id_gnpa1ur2mri0"></a>12.3.4 Exercise<a id="marker-1178055"></a>s</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1164720"></a><b class="fm-exercise-head">Exercise 12.10</b>: If |<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>| = <i class="fm-in-times-italic1">v</i> is the initial speed of the cannonball, verify that the initial velocity vector has a magnitude equal to <i class="fm-in-times-italic1">v</i>. In other words, show that the vector (<i class="fm-italics">v</i> cos <span class="fm-in-cambria">θ</span> cos <span class="fm-in-cambria">φ</span>, <i class="fm-italics">v cos</i> <span class="fm-in-cambria">θ</span> sin <span class="fm-in-cambria">φ</span>, <i class="fm-italics">v</i> sin <span class="fm-in-cambria">θ</span>) has length <i class="fm-in-times-italic1">v</i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1164721"></a><b class="fm-exercise-head">Hint</b>: By the definitions of sine and cosine and the Pythagorean theorem, sin<sup class="fm-superscript1">2</sup> <i class="fm-in-times-italic1">x</i> + cos<sup class="fm-superscript1">2</sup> <i class="fm-in-times-italic1">x</i> = 0 for any value of <i class="fm-in-times-italic1">x</i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1165099"></a><b class="fm-exercise-head">Solution</b>: The magnitude of (<i class="fm-italics">v</i> cos <span class="fm-in-cambria">θ</span> cos <span class="fm-in-cambria">φ</span>, <i class="fm-italics">v cos</i> <span class="fm-in-cambria">θ</span> sin <span class="fm-in-cambria">φ</span>, <i class="fm-italics">v</i> sin <span class="fm-in-cambria">θ</span>) is given by</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F20_Orland_EQ18.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1164818"></a><b class="fm-exercise-head">Exercise 12.11</b>: Explicitly write out the formula for the range of the cannonball on the ridge with elevation <i class="fm-italics">Bx</i><sup class="fm-superscript1">2</sup> − <i class="fm-italics">Cy</i><sup class="fm-superscript1">2</sup> as a function of <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span>. The constants that appear are <i class="fm-italics">B</i> and <i class="fm-italics">C</i>, as well as the initial launch speed <i class="fm-in-times-italic1">v</i> and the acceleration due to gravity <i class="fm-in-times-italic1">g</i>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1164819"></a><b class="fm-exercise-head">Solution</b>: Starting with the formula</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F20_Orland_EQ19.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1164825"></a>we can plug in <i class="fm-in-times-italic1">v<sub class="fm-subscript">z</sub></i> = <i class="fm-italics">v</i> sin <span class="fm-in-cambria">θ</span>, <i class="fm-italics">vxy</i> = <i class="fm-italics">v</i> cos <span class="fm-in-cambria">θ</span>, <i class="fm-in-times-italic1">v<sub class="fm-subscript">y</sub></i> = <i class="fm-italics">v</i> cos <span class="fm-in-cambria">θ</span> sin <span class="fm-in-cambria">φ</span>, and <i class="fm-in-times-italic1">v<sub class="fm-subscript">x</sub></i> = <i class="fm-italics">v</i> cos <span class="fm-in-cambria">θ</span> cos <span class="fm-in-cambria">φ</span> to get</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F20_Orland_EQ20.png"/></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1164831"></a><a id="marker-1178040"></a>With a little simplification in the denominator, this becomes</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F20_Orland_EQ21.png"/></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1157167"></a></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1165417"></a><b class="fm-exercise-head">Exercise 12.12-Mini Project</b>: When an object like a cannonball moves quickly through the air, it experiences frictional force from the air, called <i class="fm-italics">drag</i>, which pushes<a id="marker-1165418"></a> it in the opposite direction it’s moving. The drag force depends on a lot of factors, including the size and shape of the cannonball and the density of the air, but for simplicity, let’s assume it works as follows. If <i class="fm-in-times-italic1">v</i> is the cannonball’s velocity vector at any point, the drag force, <b class="fm-in-times3">F</b><sub class="fm-subscript2"><i class="fm-in-times-italic2">d</i></sub>, is</p>
+
+        <p class="fm-equation"><b class="fm-in-times4">F</b><sub class="fm-subscript"><i class="fm-in-times-italic2">d</i></sub> = <span class="fm-in-cambria">−α</span><b class="fm-in-times4">v</b></p>
+
+        <p class="fm-sidebar"><a id="pgfId-1165424"></a>where<span class="fm-in-cambria">α</span> (the Greek letter alpha) is a number giving the magnitude of drag felt by a particular object in the air. The fact that the drag force is proportional to the velocity means that as an object speeds up, it feels more and more drag. Figure out how to add a drag parameter to the cannonball simulation and show that drag causes the cannonball to slow down.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1177664"></a><b class="fm-exercise-head">Solution</b>: We want to add to our simulation is an acceleration based on drag. The force will be -α<i class="fm-in-times-italic1">v</i>, so the acceleration it causes is -α<i class="fm-in-times-italic1">v</i>/<i class="fm-in-times-italic1">m</i>. Because we’re not varying the mass of the cannonball, we can use a single drag constant, which is<span class="fm-in-cambria">α</span>/ <i class="fm-in-times-italic1">m</i>. The components of the acceleration due to drag is <i class="fm-in-times-italic1">v<sub class="fm-subscript">x</sub></i><span class="fm-in-cambria">α</span>/ <i class="fm-in-times-italic1">m</i>, <i class="fm-in-times-italic1">v<sub class="fm-subscript">y</sub></i><span class="fm-in-cambria">α</span>/ <i class="fm-in-times-italic1">m</i> and <i class="fm-in-times-italic1">v<sub class="fm-subscript">z</sub></i><span class="fm-in-cambria">α</span>/ <i class="fm-in-times-italic1">m</i>. Here’s the updated section of the code:</p>
+        <pre class="programlisting">def trajectory3d(theta,phi,speed=20,height=0,dt=0.01,g=−9.81,
+                 elevation=flat_ground, drag=0):
+    ...
+    while z &gt;= elevation(x,y):
+        t += dt
+        vx -= (drag * vx) * dt         <span class="fm-combinumeral">❶</span>
+        vy -= (drag * vy) * dt
+        vz += (g − (drag * vz)) * dt   <span class="fm-combinumeral">❷</span>
+        ...
+    return ts, xs, ys, zs</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1180269"></a><span class="fm-combinumeral">❶</span> Reduces both vx and vy in proportion to the drag force</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1180297"></a><span class="fm-combinumeral">❷</span> Changes the z velocity (vz) by the effects of gravity and drag</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1165596"></a>You can see that a small drag constant of 0.1 slows down the cannonball noticeably, causing it to fall short of the trajectory without drag.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1187344"></a></p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F20_Orland_UN05.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1165600"></a>Trajectories of the cannonball with <code class="fm-code-in-text">drag</code> <code class="fm-code-in-text">=</code> <code class="fm-code-in-text">0</code> and <code class="fm-code-in-text">drag</code> <code class="fm-code-in-text">=</code> <code class="fm-code-in-text">0.1</code></p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_19"><a id="pgfId-1157188"></a><a id="id_onnigx74p2lf"></a>12.4 Optimizing range using <a id="marker-1178279"></a>gradient <a id="marker-1178080"></a>ascent<a id="marker-1177818"></a></h2>
+
+  <p class="body"><a id="pgfId-1157189"></a>Let’s continue to assume that we’re firing the cannon on the ridge terrain with some launch angles <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span>, and all other launch parameters set to their defaults. In this case, the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) tells us what the range of the cannon is at these launch angles. To get a qualitative sense of how the angles affect the range, we can plot the function <i class="fm-in-times-italic">r</i> .</p>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1157191"></a><a id="id_8do5v61f1ngx"></a>12.4.1 Plotting <a id="marker-1178138"></a>range versus launch <a id="marker-1178329"></a>parameters<a id="marker-1177883"></a></h3>
+
+  <p class="body"><a id="pgfId-1160520"></a>I showed you a few different ways to plot a function of two variables in the last chapter. My preference for plotting <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) is to use a heatmap. On a 2D canvas, we can vary <span class="fm-in-cambria">θ</span> in one direction and vary <span class="fm-in-cambria">φ</span> in the other and then use color to indicate the corresponding range of the projectile (figure 12.21).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F21_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182807"></a>Figure 12.21 A heatmap of the range of the cannon as a function of the launch angles <span class="fm-in-cambria">θ</span> and ϕ</p>
+
+  <p class="body"><a id="pgfId-1160525"></a>This 2D space is an abstract one, having coordinates <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span>. That is to say that this rectangle isn’t a drawing of a 2D slice of the 3D world we’ve modelled. Rather, it’s just a convenient way to show how the range <i class="fm-in-times-italic">r</i> varies as the two parameters change.</p>
+
+  <p class="body"><a id="pgfId-1160549"></a>On the graph in figure 12.22, brighter values indicate higher ranges, and there appear to be two brightest points. These are possible maximum values of the range of the cannon.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F22_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182855"></a>Figure 12.22 The brightest spots occur when the range of the projectile is maximized.</p>
+
+  <p class="body"><a id="pgfId-1160554"></a>These spots occur at around <span class="fm-in-cambria">θ</span> = 40, <span class="fm-in-cambria">φ</span> = 90, and <span class="fm-in-cambria">φ</span> = 270. The <span class="fm-in-cambria">φ</span> values make sense because they are the downhill directions in the ridge. Our next goal is to find the exact values of <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span> to maximize <a id="marker-1178334"></a>the range<a id="marker-1178143"></a>.<a id="marker-1177888"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1157207"></a><a id="id_5zkpqw6sicdx"></a>12.4.2 The gradient of the range <a id="marker-1178309"></a>functio<a id="marker-1178123"></a>n<a id="marker-1177848"></a></h3>
+
+  <p class="body"><a id="pgfId-1157208"></a>Just as we used the derivative of a function of one variable to find its maximum, we’ll use the gradient <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) of the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) to find its maximum values. For a smooth function of one variable, <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>), we saw that <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 0 when <i class="fm-in-times-italic">f</i> attained its maximum value. This is when the graph of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) was momentarily flat, meaning the slope of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) was zero, or more precisely, that the slope of the line of best approximation at the given point was zero. Similarly, if we make a 3D plot of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>), we can see that it is flat at its maximum points (figure 12.23).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F23_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182907"></a>Figure 12.23 The graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, ϕ) is flat at its maximum points.</p>
+
+  <p class="body"><a id="pgfId-1174746"></a>Let’s be precise about what this means. Because <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) is smooth, there is a plane of best approximation. The slopes of this plane in the <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span> directions are given by the partial derivatives <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">r</i>/<span class="fm-in-cambria">∂</span><a id="id_Hlk44056656"></a><span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">r</i>/<span class="fm-in-cambria">∂</span><span class="fm-in-cambria">φ</span>, respectively. Only when both of these are zero is the plane flat, meaning the graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) is flat.</p>
+
+  <p class="body"><a id="pgfId-1157216"></a>Because the partial derivatives of <i class="fm-in-times-italic">r</i> are defined to be the components of the gradient of <i class="fm-in-times-italic">r</i> , this condition of flatness is equivalent to saying that <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) = 0. To find such points, we have to take the gradient of the full formula for <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) and then solve for values of <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span> that cause it to be zero. Taking these derivatives and solving them is a lot of work and not that enlightening, so I’ll leave it as an exercise for you. Next, I’ll show you a way to follow an <i class="fm-italics">approximate</i> gradient up the slope of t<a id="marker-1157217"></a>he graph toward the maximum point, which won’t require any algebra.</p>
+
+  <p class="body"><a id="pgfId-1157218"></a>Before I move on, I want to reiterate a point from the previous section. Just because you’ve found a point on the graph where the gradient is zero doesn’t mean that it’s a maximum value. For instance, on the graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>), there’s a point in between the two maxima where the graph is flat and the gradient is zero (figure 12.24).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F24_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1182958"></a>Figure 12.24 A point (<span class="fm-in-cambria">θ</span>, ϕ) where the graph of <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, ϕ) is flat. The gradient is zero, but the function does not attain a maximum value.</p>
+
+  <p class="body"><a id="pgfId-1157224"></a>This point isn’t meaningless, it happens to tell you the best angle <span class="fm-in-cambria">θ</span> when you’re shooting the projectile at <span class="fm-in-cambria">φ</span> = <span class="fm-in-cambria">180°</span>, which is the worst possible direction because it is the steepest uphill direction. A point like this is called a <i class="fm-italics">saddle point</i>, where the function <a id="marker-1157225"></a>simultaneously hits a maximum with respect to one variable and a minimum with respect to another. The name comes from the fact that the graph kind of looks like a saddle.</p>
+
+  <p class="body"><a id="pgfId-1157226"></a>Again, I won’t go into the details of how to identify maxima, minima, saddle points, or other kinds of places where the gradient is zero, but be warned: with more dimensions, there are weirder ways that a graph can <a id="marker-1178314"></a>be fla<a id="marker-1178118"></a>t.<a id="marker-1177853"></a></p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1157228"></a>12.4.3 <a id="id_brx7cr9zpt3z"></a>Finding the uphill direction with <a id="marker-1178299"></a>the <a id="marker-1178108"></a>gradient<a id="marker-1177838"></a></h3>
+
+  <p class="body"><a id="pgfId-1157229"></a>Rather than take the partial derivatives of the complicated function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) symbolically, we can find approximate values for the partial derivatives. The direction of the gradient that they give us tells us, for any given point, which direction the function increases the most quickly. If we jump to a new point in this direction, we should move uphill and towards a maximum value. This procedure is called <i class="fm-italics">gradient ascent</i>, and we’ll implement <a id="marker-1157230"></a>it in Python.</p>
+
+  <p class="body"><a id="pgfId-1157231"></a>The first step is to be able to approximate the gradient at any point. To do that, we use the approach I introduced in chapter 9: taking the slopes of small secant lines. Here are the functions as a reminder:</p>
+  <pre class="programlisting">def secant_slope(f,xmin,xmax):                <span class="fm-combinumeral">❶</span>
+    return (f(xmax) − f(xmin)) / (xmax − xmin)
+
+def approx_derivative(f,x,dx=1e<span class="fm-in-cambria">−</span>6):           <span class="fm-combinumeral">❷</span>
+    return secant_slope(f,x-dx,x+dx)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1180976"></a><span class="fm-combinumeral">❶</span> Finds the slope of a secant line, <i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x</i>), between <i class="fm-in-times-italic1">x</i> values of xmin and xmax</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181004"></a><span class="fm-combinumeral">❷</span> The approximate derivative is a secant line between <i class="fm-in-times-italic1">x</i> − 10 − 6 and <i class="fm-in-times-italic1">x</i> + 10 − 6.</p>
+
+  <p class="body"><a id="pgfId-1157235"></a>To find the approximate partial derivative of a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) at a point (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>), we want to fix <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub> and take the derivative with respect to <i class="fm-in-times-italic">y</i>, or fix <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub> and take the derivative with respect to <i class="fm-in-times-italic">x</i>. In other words, the partial derivative <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">f</i>/<span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">x</i> at (<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>) is the ordinary derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>) with respect to <i class="fm-in-times-italic">x</i> at <i class="fm-in-times-italic">x</i> = <i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>. Likewise, the partial derivative <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">f</i>/<span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">y</i> is the ordinary derivative of <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i><sub class="fm-subscript">0</sub>, <i class="fm-in-times-italic">y</i>) with respect to <i class="fm-in-times-italic">y</i> at <i class="fm-in-times-italic">y</i> = <i class="fm-in-times-italic">y</i><sub class="fm-subscript">0</sub>. The gradient is a vector (tuple) of these partial derivatives:</p>
+  <pre class="programlisting">def approx_gradient(f,x0,y0,dx=1e<span class="fm-in-cambria">−</span>6):
+    partial_x = approx_derivative(lambda x: f(x,y0), x0, dx=dx)
+    partial_y = approx_derivative(lambda y: f(x0,y), y0, dx=dx)
+    return (partial_x,partial_y)</pre>
+
+  <p class="body"><a id="pgfId-1157237"></a>In Python, the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) is encoded as the <code class="fm-code-in-text">landing_distance</code> function, and we can store a special function, <code class="fm-code-in-text">approx_gradient</code>, representing its gradient:</p>
+  <pre class="programlisting">def landing_distance_gradient(theta,phi):
+    return approx_gradient(landing_distance_gradient, theta, phi)</pre>
+
+  <p class="body"><a id="pgfId-1157239"></a>This, like all gradients, defines a vector field: an assignment of a vector to every point in space. In this case, it tells us the vector of steepest increase in <i class="fm-in-times-italic">r</i> at any point (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>). Figure 12.25 shows the plot of the <code class="fm-code-in-text">landing_distance_gradient</code> on top of the heatmap for <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F25_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1183010"></a>Figure 12.25 A plot of the gradient vector field <span class="fm-in-cambria">∇</span>r(<span class="fm-in-cambria">θ</span>, ϕ) on top of the heatmap of the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, ϕ). The arrows point in the direction of increase in r, toward brighter spots on the heatmap.</p>
+
+  <p class="body"><a id="pgfId-1157245"></a>It’s even clearer that the gradient arrows converge on maximum points for the function if you zoom in (figure 12.26).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F26_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157250"></a>Figure 12.26 The same plot as in figure 12.25 near (<span class="fm-in-cambria">θ</span>, ϕ) = (37.5°, <span class="fm-in-cambria">90°</span>), which is the approximate location of one of the maxima</p>
+
+  <p class="body"><a id="pgfId-1157252"></a>The next step is to implement the <i class="fm-italics">gradient ascent</i> algorithm, where we<a id="marker-1157251"></a> start at an arbitrarily chosen point (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) and follow the gradient field until we arrive at <a id="marker-1178304"></a><i class="fm-in-times-italic">a</i> maximu<a id="marker-1178113"></a>m<a id="marker-1177843"></a>.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1157254"></a><a id="id_f0kqouuu3ckw"></a>12.4.4 Implementing <a id="marker-1178319"></a>gradient <a id="marker-1178128"></a>ascent<a id="marker-1177858"></a></h3>
+
+  <p class="body"><a id="pgfId-1157255"></a>The gradient ascent algorithm takes as inputs the function we’re trying to maximize, as well as a starting point where we’ll begin our exploration. Our simple implementation calculates the gradient at the starting point and adds it to the starting point, giving us a new point some distance away from the original in the direction of the gradient. Repeating this process, we can move to points closer and closer to a maximum value.</p>
+
+  <p class="body"><a id="pgfId-1157256"></a>Eventually, as we approach a maximum, the gradient will get close to zero as the graph reaches a plateau. When the gradient is near zero, we have nowhere further uphill to go, and the algorithm should terminate. To make this happen, we can pass in a <i class="fm-italics">tolerance</i>, which is the<a id="marker-1157257"></a> smallest value of the gradient that we should follow. If the gradient is smaller, we can be assured the graph is flat, and we’ve arrived at a maximum for the function. Here’s the implementation:</p>
+  <pre class="programlisting">def gradient_ascent(f,xstart,ystart,tolerance=1e<span class="fm-in-cambria">−</span>6):
+    <i class="fm-in-times-italic1">x</i> = xstart                                       <span class="fm-combinumeral">❶</span>
+    y = ystart
+    grad = approx_gradient(f,x,y)                    <span class="fm-combinumeral">❷</span>
+    while length(grad) &gt; tolerance:                  <span class="fm-combinumeral">❸</span>
+        <i class="fm-in-times-italic1">x</i> += grad[0]                                 <span class="fm-combinumeral">❹</span>
+        y += grad[1]
+        grad = approx_gradient(f,x,y)                <span class="fm-combinumeral">❺</span>
+    return x,y                                       <span class="fm-combinumeral">❻</span></pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181156"></a><span class="fm-combinumeral">❶</span> Sets the initial values of (<i class="fm-in-times-italic1">x, y</i>) to the input values</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181184"></a><span class="fm-combinumeral">❷</span> Tells us how to move uphill from the current (<i class="fm-in-times-italic1">x, y</i>) value</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181201"></a><span class="fm-combinumeral">❸</span> Only steps to a new point if the gradient is longer than the minimum length</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181218"></a><span class="fm-combinumeral">❹</span> Updates (<i class="fm-in-times-italic1">x, y</i>) to (<i class="fm-in-times-italic1">x, y</i>) + <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic1">f</i>(<i class="fm-in-times-italic1">x, y</i>)</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181235"></a><span class="fm-combinumeral">❺</span> Updates the gradient at this new point</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1181252"></a><span class="fm-combinumeral">❻</span> When there’s nowhere further uphill to go, returns the values of <i class="fm-in-times-italic1">x</i> and <i class="fm-in-times-italic1">y</i></p>
+
+  <p class="body"><a id="pgfId-1157265"></a>Let’s test this, starting at the value of (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) = (36°, 83°), which appears to be fairly close to the maximum:</p>
+  <pre class="programlisting">&gt;&gt;&gt; gradient_ascent(landing_distance,36,83)
+(37.58114751557887, 89.99992616039857)</pre>
+
+  <p class="body"><a id="pgfId-1157267"></a>This is a promising result! On our heatmap in figure 12.27, we can see the movement from the initial point of (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) = (36°, 83°) to a new location of roughly (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) = (37.58, 90.00), which looks like it has the maximum brightness.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F27_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157272"></a>Figure 12.27 The starting and ending points for the gradient ascent</p>
+
+  <p class="body"><a id="pgfId-1157273"></a>To get a better sense of how the algorithm works, we can track the trajectory of the gradient ascent through the <span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span> plane. This is similar to how we tracked the time and position values as we iterated through Euler’s method:</p>
+  <pre class="programlisting">def gradient_ascent_points(f,xstart,ystart,tolerance=1e<span class="fm-in-cambria">−</span>6):
+    <i class="fm-in-times-italic1">x</i> = xstart
+    y = ystart
+    xs, ys = [x], [y]
+    grad = approx_gradient(f,x,y)
+    while length(grad) &gt; tolerance:
+        <i class="fm-in-times-italic1">x</i> += grad[0]
+        y += grad[1]
+        grad = approx_gradient(f,x,y)
+        xs.append(<i class="fm-in-times-italic1">x</i>)
+        ys.append(<i class="fm-in-times-italic1">y</i>)
+    return xs, ys</pre>
+
+  <p class="body"><a id="pgfId-1157275"></a>With this implemented, we can run</p>
+  <pre class="programlisting">gradient_ascent_points(landing_distance,36,83)</pre>
+
+  <p class="body"><a id="pgfId-1157277"></a>and we get back two lists, consisting of the <span class="fm-in-cambria">θ</span> values and the <span class="fm-in-cambria">φ</span> values at each step of the ascent. These lists both have 855 numbers, meaning that this gradient ascent took 855 steps to complete. When we plot the <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span> points on the heatmap (figure 12.28), we can see the path that our algorithm took to ascend the graph.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F28_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157282"></a>Figure 12.28 The path that the gradient ascent algorithm takes to reach the maximum value of the range function</p>
+
+  <p class="body"><a id="pgfId-1157283"></a>Note that because there are two maximum values, the path <i class="fm-italics">and</i> the destination depend on our choice of the initial point. If we start close to <span class="fm-in-cambria">φ</span> = <span class="fm-in-cambria">90°</span>, we’re likely to hit that maximum, but if we’re closer to <span class="fm-in-cambria">φ</span> = 270°, our algorithm finds that one instead (figure 12.29).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F29_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1157288"></a>Figure 12.29 Starting at different points, the gradient ascent algorithm can find different maximum values.</p>
+
+  <p class="body"><a id="pgfId-1157289"></a>The launch angles (37.58°, <span class="fm-in-cambria">90°</span>) and (37.58°, 270°) <i class="fm-italics">both</i> maximize the function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) and are, therefore, the launch angles that yield the greatest range for the cannon. That range is about 53 meters</p>
+  <pre class="programlisting">&gt;&gt;&gt; landing_distance(37.58114751557887, 89.99992616039857)
+52.98310689354378</pre>
+
+  <p class="body"><a id="pgfId-1157291"></a>and we can plot the associated trajectories as shown in figure 12.30.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F30_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1183115"></a>Figure 12.30 The trajectories for the cannon having maximum range</p>
+
+  <p class="body"><a id="pgfId-1157297"></a>As we explore some machine learning applications, we’ll continue to rely on the gradient to figure out how to optimize functions. Specifically, we’ll use the counterpart to gradient ascent, called <i class="fm-italics">gradient descent</i>. This finds the minimum values for functions by exploring the parameter space in the direction <i class="fm-italics">opposite</i> the gradient, thereby moving downhill instead of uphill. Because gradient ascent and descent can be performed automatically, we’ll see they give a way for machines to learn optimal solutions to problems <a id="marker-1178133"></a>on <a id="marker-1177873"></a>their own<a id="marker-1178324"></a>.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1166508"></a><a id="marker-1177828"></a>12.4.5 Ex<a id="marker-1178289"></a>ercise<a id="marker-1178093"></a>s</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1166497"></a><b class="fm-exercise-head">Exercise 12.13</b>: On the heatmap, simultaneously plot the paths of gradient ascent from 20 randomly chosen points. All of the paths should end up at one of the two maxima.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1166498"></a><b class="fm-exercise-head">Solution</b>: With a heatmap already plotted, we can run the following to execute and plot 20 random gradient ascents:</p>
+        <pre class="programlisting">from random import uniform
+for <i class="fm-in-times-italic1">x</i> in range(0,20):
+    gap = gradient_ascent_points(landing_distance, 
+                                 uniform(0,90), 
+                                 uniform(0,360))
+    plt.plot(*gap,c='k')</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1166506"></a>The result shows that all of the paths lead to the same places.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F30_Orland_UN06.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1166507"></a>The paths of gradient ascents from 20 random initial points</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1166512"></a></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1166511"></a><b class="fm-exercise-head">Exercise 12.14-Mini Project</b>: Find the partial derivatives <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic1">r</i>/<span class="fm-in-cambria">∂</span><span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic1">r</i>/<span class="fm-in-cambria">∂</span><span class="fm-in-cambria">φ</span> symbolically and write a formula for the gradient <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic1">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1166528"></a><b class="fm-exercise-head">Exercise 12.15</b>: Find the point on <i class="fm-in-times-italic1">r</i>(<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) where the gradient is zero, but the function is not maximized.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1166529"></a><b class="fm-exercise-head">Solution</b>: We can trick the gradient ascent by starting it with <span class="fm-in-cambria">φ</span> = <span class="fm-in-cambria">180°</span>. By the symmetry of the setup, we can see that <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic1">r</i>/<span class="fm-in-cambria">∂</span><span class="fm-in-cambria">φ</span> = 0 wherever <span class="fm-in-cambria">φ</span> = <span class="fm-in-cambria">180°</span>, so the gradient ascent never has a reason to leave the line where <span class="fm-in-cambria">φ</span> = 0:</p>
+        <pre class="programlisting">&gt;&gt;&gt; gradient_ascent(landing_distance,0,180)
+(46.122613357930206, 180.0)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1166513"></a></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1175166"></a>This is the optimal launch angle if you fix <span class="fm-in-cambria">φ</span> = 0 or <span class="fm-in-cambria">φ</span> = <span class="fm-in-cambria">180°</span>, which is the worst angle because you’re firing uphill.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F30_Orland_UN07.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1170262"></a>Tricking gradient ascent by initializing it on a cross section where <span class="fm-in-cambria">∂</span>r/<span class="fm-in-cambria">∂</span>ϕ = 0</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1170285"></a><b class="fm-exercise-head">Exercise 12.16</b>: How many steps does it take for gradient ascent to reach the origin from (36, 83)? Instead of jumping one gradient, jump 1.5 gradients. Show that you get there in fewer steps. What happens if you jump even further in each step?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170286"></a><b class="fm-exercise-head">Solution</b>: Let’s introduce a parameter <code class="fm-code-in-text1">rate</code> to the gradient ascent calculation, which indicates how fast the ascent tries to go. The higher the rate, the more we trust the current calculated gradient and jump in that direction:</p>
+        <pre class="programlisting">def gradient_ascent_points(f,xstart,ystart,rate=1,tolerance=1e<span class="fm-in-cambria">−</span>6):
+    ...
+    while length(grad) &gt; tolerance:
+        <i class="fm-in-times-italic1">x</i> += rate * grad[0]
+        y += rate * grad[1]
+        ...
+    return xs, ys</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1170383"></a>Here’s a function that counts the number of steps that a gradient ascent process takes to converge:</p>
+        <pre class="programlisting">def count_ascent_steps(f,x,y,rate=1):
+    gap = gradient_ascent_points(f,x,y,rate=rate)
+    print(gap[0][−1],gap[1][−1])
+    return len(gap[0])</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1170340"></a>It takes 855 steps to perform our original ascent, with the <code class="fm-code-in-text1">rate</code> parameter equal to 1:</p>
+        <pre class="programlisting">&gt;&gt;&gt; count_ascent_steps(landing_distance,36,83)
+855</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1170342"></a>With <code class="fm-code-in-text1">rate=1.5</code>, we jump one and a half gradients in each step. Not surprisingly, we get to the maximum faster, in only 568 steps:</p>
+        <pre class="programlisting">&gt;&gt;&gt; count_ascent_steps(landing_distance,36,83,rate=1.5)
+568</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1170344"></a>Trying some more values, we see that increasing the rate gets us to the solution in even fewer steps:</p>
+        <pre class="programlisting">&gt;&gt;&gt; count_ascent_steps(landing_distance,36,83,rate=3)
+282
+&gt;&gt;&gt; count_ascent_steps(landing_distance,36,83,rate=10)
+81
+&gt;&gt;&gt; count_ascent_steps(landing_distance,36,83,rate=20)
+38</pre>
+
+        <p class="fm-sidebar"><a id="pgfId-1170346"></a>Don’t get too greedy though! When we use a rate of 20, we get the answer in fewer steps, but some steps appear to overshoot the answer and the next step doubles back. If you set the rate too high, the algorithm can get further and further from the solution; in which case, it is said to diverge rather than converge.</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F30_Orland_UN08.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1170350"></a>A gradient ascent with a rate of 20. The algorithm initially overshoots the maximum <span class="fm-in-cambria">θ</span> value and has to double back.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1157316"></a></p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1170465"></a>If you up the rate to 40, your gradient ascent won’t converge. Each jump overshoots further than the last, and the exploration of the parameter space runs off into infinity.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-sidebar"><a id="pgfId-1171358"></a><b class="fm-exercise-head">Exercise 12.17</b>: What happens when you try to run <code class="fm-code-in-text1">gradient_ascent</code> directly using simulated results for <i class="fm-in-times-italic1">r</i> as a function of <span class="fm-in-cambria">θ</span> and <span class="fm-in-cambria">φ</span> instead of calculated results?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170482"></a><b class="fm-exercise-head">Solution</b>: The result is not pretty. This is because the simulated results depend on numerical estimations (like deciding when the projectile hits the ground), so these fluctuate rapidly for small changes in the launch angles. Here’s a plot of the cross section <i class="fm-in-times-italic1">r</i>(<span class="fm-in-cambria">θ</span>, 270°) that our derivative approximator would consider when calculating the partial derivative <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic1">r</i>/<span class="fm-in-cambria">∂</span><span class="fm-in-cambria">θ</span>:</p>
+
+        <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH12_F30_Orland_UN09.png"/></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1170486"></a>A cross section of simulated trajectories shows that our simulator doesn’t produce a smooth function <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>, ϕ).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1170487"></a>The value of the derivative fluctuates wildly, so the gradient ascent moves<a id="marker-1178085"></a> in random<a id="marker-1178294"></a> directio<a id="marker-1178284"></a>ns<a id="marker-1178103"></a>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_25"><a id="pgfId-1157358"></a><a id="id_bz3vbd8uggxy"></a><a id="marker-1177823"></a>Summary<a id="marker-1177833"></a></h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1157359"></a>We can simulate a moving object’s trajectory by using Euler’s method and recording all of the times and positions along the way. We can compute facts about the trajectory, like final position or elapsed time.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1174259"></a>Varying a parameter of our simulation, like the launch angle of the cannon, can lead to different results−for instance, a different range for the cannonball. If we want to find the angle that maximizes range, it helps to write range as a function of the angle <i class="fm-in-times-italic">r</i>(<span class="fm-in-cambria">θ</span>).</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1174260"></a>Maximum values of a smooth function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>) occur where the derivative <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) is zero. You need to be careful, though, because when <i class="fm-in-times-italic">f</i>'(<i class="fm-in-times-italic">x</i>) = 0, the function <i class="fm-in-times-italic">f</i> might be at a maximum value, or it could also be a minimum value or a point where function <i class="fm-in-times-italic">f</i> has temporarily stopped changing.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1174296"></a>To optimize a function of two variables, like the range <i class="fm-in-times-italic">r</i> as a function of the vertical launch angle <span class="fm-in-cambria">θ</span> and the lateral launch angle <span class="fm-in-cambria">φ</span>, you need to explore the 2D space of all possible inputs (<span class="fm-in-cambria">θ</span>, <span class="fm-in-cambria">φ</span>) and figure out which pair produces the optimal value.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1157363"></a>Maximum and minimum values of a smooth function of two variables <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) occur when <i class="fm-italics">both</i> partial derivatives are zero; that is, <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">f</i>/<span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">x</i> = 0 and <span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">f</i>/<span class="fm-in-cambria">∂</span><i class="fm-in-times-italic">y</i> = 0, so <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) = 0 as well (by definition). If the partial derivatives are zero, it might also be a <i class="fm-italics">saddle point</i>, which minimizes the function with respect to one variable while maximizing it with respect to the other.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1157364"></a>The gradient ascent algorithm finds an approximate maximum value for a function <i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i>) by starting at an arbitrarily chosen point in 2D and moving in the direction of the gradient <span class="fm-in-cambria">∇</span><i class="fm-in-times-italic">f</i>(<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>). Because the gradient points in the direction of most rapid increase in the function <i class="fm-in-times-italic">f</i> , this algorithm finds (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) points with increasing <i class="fm-in-times-italic">f</i> values. The algorithm terminates when the gradient is near zero.<a id="marker-1177918"></a></p>
+    </li>
+  </ul>
+</body>
+</html>

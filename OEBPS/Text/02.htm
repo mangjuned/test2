@@ -1,0 +1,1513 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>2</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1079817"></a><a id="id_tp8urkp66mni"></a>2 Drawing with 2D vectors</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1084564"></a>This chapter <a id="id_GoBack"></a>covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1084565"></a>Creating and manipulating 2D drawings as collections of vectors</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1084566"></a>Thinking of 2D vectors as arrows, locations, and ordered pairs of coordinates</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1084567"></a>Using vector arithmetic to transform shapes in the plane</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1084568"></a>Using trigonometry to measure distances and angles in the plane</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1079824"></a>You probably<a id="marker-1101728"></a> already have some intuition for what it means to be two-dimensional or three-dimensional. A <i class="fm-italics">two-dimensional</i>(2D) object is flat like an image on a piece of paper or a computer screen. It has only the dimensions of height and width. A <i class="fm-italics">three-dimensional</i>(3D) object in our physical world, however, has not only height and width but also depth.</p>
+
+  <p class="body"><a id="pgfId-1079825"></a>Models of 2D and 3D entities are important in programming. Anything that shows up on the screen of your phone, tablet, or PC is a 2D object, occupying some width and height of pixels. Any simulation, game, or animation that represents the physical world is stored as 3D data and eventually projected to the two dimensions of the screen. In virtual and augmented reality applications, the 3D models must be paired with real, measured 3D data about the user’s position and perspective.</p>
+
+  <p class="body"><a id="pgfId-1079826"></a>Even though our everyday experience takes place in three dimensions, it's useful to think of some data as higher dimensional. In physics, it’s common to consider time as the fourth dimension. While an object exists at a location in 3D space, an event occurs at a 3D location and at a specified moment. In data science problems, it’s common for data sets to have far more dimensions. For instance, a user tracked on a website can have hundreds of measurable attributes, which describe usage patterns. Grappling with these problems in graphics, physics, and data analysis requires a framework for dealing with data in higher dimensions. This framework is <i class="fm-italics">vector mathematics</i> <a id="marker-1079827"></a>.</p>
+
+  <p class="body"><a id="pgfId-1079828"></a>Vectors are objects that live in multi-dimensional spaces. These have their own notions of arithmetic (adding, multiplying, and so on). We start by studying <a id="marker-1102495"></a>2D vectors, which are easy to visualize and compute with. We use a lot of 2D vectors in this book, and we also use them as a mental model when reasoning about higher-dimensional problems.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1079830"></a><a id="id_qd13emm15mca"></a>2.1 Picturing 2D vectors<a id="marker-1102515"></a></h2>
+
+  <p class="body"><a id="pgfId-1079831"></a>The 2D world is flat like a piece of paper or a computer screen. In the language of math, a flat, 2D space is referred to as a <i class="fm-italics">plane</i> <a id="marker-1079832"></a>. An object living in a 2D plane has the two dimensions of height and width but no third dimension of depth. Likewise, you can describe locations in 2D by two pieces of information: their vertical and horizontal positions. To describe the location of points in the plane, you need a reference point. We call that special reference point the <i class="fm-italics">origin</i> <a id="marker-1079833"></a>. Figure 2.1 shows this relationship.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F01_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1102920"></a>Figure 2.1 Locating one of several points in the plane, relative to the origin</p>
+
+  <p class="body"><a id="pgfId-1079839"></a>There are many points to choose from, but we have to fix one of them as our origin. To distinguish it, we mark the origin with an <i class="fm-in-times-italic">x</i> instead of with a dot as in figure 2.1. From the origin, we can draw an arrow (like the solid one in figure 2.1) to show the relative location of another point.</p>
+
+  <p class="body"><a id="pgfId-1079841"></a>A <i class="fm-italics">two-dimensional vector</i> <a id="marker-1103092"></a> is a point in the plane relative to the origin. Equivalently, you can think of a vector as a straight arrow in the plane; any arrow can be placed to start at the origin, and it indicates a particular point (figure 2.2).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F02_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1079846"></a> Figure 2.2 Superimposing an arrow on the plane indicates a point relative to the origin.</p>
+
+  <p class="body"><a id="pgfId-1079847"></a>We’ll use both arrows and points to represent vectors in this chapter and beyond. Points are useful to work with because we can build more interesting drawings out of them. If I connect the points in figure 2.2 as in figure 2.3, I get a drawing of a dinosaur:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F03_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1102981"></a>Figure 2.3 Connecting points in the plane to draw a shape</p>
+
+  <p class="body"><a id="pgfId-1079853"></a>Any time a 2D or 3D drawing is displayed by a computer, from my modest dinosaur to a feature-length Pixar movie, it is defined by points−or vectors−connected to show the desired shape. To create the drawing you want, you need to pick vectors in the right places, requiring careful measurement. Let’s take a look <a id="marker-1101738"></a>at how to measure vectors in the plane.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1079855"></a><a id="id_sc402tv4ut7t"></a>2.1.1 Representing 2D vectors</h3>
+
+  <p class="body"><a id="pgfId-1079856"></a>With a ruler, <a id="marker-1101743"></a>we can measure one dimension such as the length of an object. To measure in two dimensions, we need two rulers <i class="fm-italics">.</i> These rulers are called <i class="fm-italics">axes</i> <a id="marker-1079857"></a> (the singular is <i class="fm-italics">axis</i>), and we lay them out in the plane perpendicular to one another, intersecting at the origin. Drawn with axes, figure 2.4 shows that our dinosaur has the notions of up and down as well as left and right. The horizontal axis is called the <i class="fm-in-times-italic">x-axis</i> and the vertical one is called the <i class="fm-italics">y-axis</i>.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F04_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103030"></a>Figure 2.4 The dinosaur drawn with an x-axis and a y-axis.</p>
+
+  <p class="body"><a id="pgfId-1079863"></a>With axes to orient us, we can say things like, “Four of the points are above and to the right of the origin.” But we’ll want to get more quantitative than that. A ruler has tick marks that show how many units along it we’ve measured. Likewise, in our 2D drawing, we can add grid lines perpendicular to the axes that show where points lie relative to them. By convention, we place the origin at tick 0 on both the x- and y-axes (figure 2.5).</p>
+
+  <p class="body"><a id="pgfId-1084747"></a>In the context of this grid, we can measure vectors in the plane. For example, in figure 2.5, the tip of the dinosaur’s tail lines up with positive 6 on the x-axis and positive 4 on the y-axis. We could think of these distances as centimeters, inches, pixels, or any other unit of length, but usually we leave the units unspecified unless we have a particular application in mind.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F05_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103193"></a>Figure 2.5 Grid lines let us measure the location of points relative to the axes.</p>
+
+  <p class="body"><a id="pgfId-1084754"></a>The numbers 6 and 4 are called the <i class="fm-in-times-italic">x- and y-coordinates</i> of the point, and this is enough to tell us exactly what point we’re talking about. We typically write coordinates as an <i class="fm-italics">ordered pair</i>(or <i class="fm-italics">tuple</i> <a id="marker-1103161"></a><a id="marker-1103162"></a>) with the <i class="fm-in-times-italic">x</i>-coordinate first and the <i class="fm-in-times-italic">y</i>-coordinate second, for example, (6, 4). Figure 2.6 shows how we can now describe the same vector in three ways.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F06_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1079877"></a>Figure 2.6 Three mental models describing the same vector.</p>
+
+  <p class="body"><a id="pgfId-1079878"></a>From another pair of coordinates like (−3, 4.5), we can find the point in the plane or the arrow that represents them. To get to the point in the plane with these coordinates, start at the origin and then travel three grid lines to the left (because the <i class="fm-in-times-italic">x</i>-coordinate is <span class="fm-in-cambria">−</span>3) and then four and a half grid lines up (where the <i class="fm-in-times-italic">y</i>-coordinate is 4.5). The point won’t lie at the intersection of two grid lines, but that’s fine; any pair of real numbers gives us some point on the plane. The corresponding arrow will be the straight-line path<a id="marker-1079879"></a> from the origin to that location, which points up and to the left (northwest, if you prefer). Try drawing this example for yourself as practice!</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1079881"></a><a id="id_1kgqt0bwsfa4"></a>2.1.2 2D drawing in Python</h3>
+
+  <p class="body"><a id="pgfId-1079882"></a>When you produce <a id="marker-1101758"></a>an image on a screen, you’re working in a 2D space. The pixels on the screen are the available points in that plane. These are labeled by whole number coordinates rather than real number coordinates, and you can’t illuminate the space between pixels. That said, most graphics libraries let you work with floating-point coordinates and automatically handle translating graphics to pixels on the screen.</p>
+
+  <p class="body"><a id="pgfId-1079883"></a>We have plenty of language choices and libraries to specify graphics and to get them on the screen: OpenGL, CSS, SVG, and so on. Python has libraries like Pillow and Turtle that are well equipped for creating drawings with vector data. In this chapter, I use a small set of custom-built functions to create drawings, built on top of another Python library called Matplotlib. This lets us focus on using Python to build images with vector data. Once you understand this process, you’ll be able to pick up any of the other libraries easily.</p>
+
+  <p class="body"><a id="pgfId-1079884"></a>The most important function I’ve included, called <code class="fm-code-in-text">draw</code>, takes inputs representing geometric objects and keyword arguments specifying how you want your drawing to look. The Python classes listed in table 2.1 represent each kind of drawable geometric object.</p>
+
+  <p class="fm-table-caption"><a id="pgfId-1084796"></a>Table 2.1 Some Python classes representing geometric figures, usable with the <code class="fm-code-in-text">draw</code> function.</p>
+
+  <table border="1" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1084837"></a>Class</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1084862"></a>Constructor example</p>
+      </th>
+
+      <th class="fm-contenttable1" colspan="1" rowspan="1">
+        <p class="fm-table-head"><a id="pgfId-1084841"></a>Description</p>
+      </th>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079895"></a><code class="fm-code-in-text1">Polygon</code> <a id="marker-1079894"></a></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079897"></a><code class="fm-code-in-text1">Polygon(*vectors)</code></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079899"></a>Draws a polygon whose vertices (corners) are represented by a list of vectors</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079902"></a><code class="fm-code-in-text1">Points</code> <a id="marker-1079901"></a></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079904"></a><code class="fm-code-in-text1">Points(*vectors)</code></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079906"></a>Represents a list of points (dots) to draw, one at each of the input vectors</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079909"></a><code class="fm-code-in-text1">Arrow</code> <a id="marker-1079908"></a></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079911"></a><code class="fm-code-in-text1">Arrow(tip)</code></p>
+
+        <p class="fm-table-body"><a id="pgfId-1079912"></a><code class="fm-code-in-text1">Arrow(tip, tail)</code></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079914"></a>Draws an arrow from the origin to the <code class="fm-code-in-text1">tip</code> vector or from the <code class="fm-code-in-text1">tail</code> vector to the <code class="fm-code-in-text1">head</code> vector if a tail is specified</p>
+      </td>
+    </tr>
+
+    <tr class="calibre5">
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079917"></a><code class="fm-code-in-text1">Segment</code> <a id="marker-1079916"></a></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079919"></a><code class="fm-code-in-text1">Segment(start,end)</code></p>
+      </td>
+
+      <td class="fm-contenttable2" colspan="1" rowspan="1">
+        <p class="fm-table-body"><a id="pgfId-1079921"></a>Draws a line segment from the start to the vector end</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1079923"></a>You can find these functions implemented in the file vector_drawing.py in the source code. At the end of the chapter, I’ll say a bit more about how these are implemented.</p>
+
+  <p class="fm-callout"><a id="pgfId-1079924"></a><span class="fm-callout-head">Note</span> For this chapter (and each subsequent chapter), there is a Jupyter notebook in the source code folder showing how to run (in order) all of the code in the chapter, including importing the functions from the <code class="fm-code-in-text1">vector_drawing</code> module<a id="marker-1079925"></a>. If you haven’t already, you can consult appendix A to get set up with Python and Jupyter.</p>
+
+  <p class="body"><a id="pgfId-1079926"></a>With these drawing functions in hand, we can draw the points outlining the dinosaur (figure 2.5):</p>
+  <pre class="programlisting">from vector_drawing import *
+dino_vectors = [(6,4), (3,1), (1,2), (−1,5), (−2,5), (−3,4), (−4,4),
+     # insert 16 remaining vectors here
+]
+ 
+draw(
+    Points(*dino_vectors)
+)</pre>
+
+  <p class="body"><a id="pgfId-1099483"></a>I didn’t write out the complete list of <code class="fm-code-in-text">dino_vectors</code>, but with the suitable collection of vectors, the code gives you the points shown in figure 2.7 (matching figure 2.5 as well).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F07_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1099487"></a>Figure 2.7 Plotting the dinosaur’s points with the <code class="fm-code-in-text">draw</code> function in Python</p>
+
+  <p class="body"><a id="pgfId-1079940"></a>As a next step in our drawing process, we can connect some dots. A first segment might connect the point (6, 4) with the point (3, 1) on the dinosaur’s tail. We can draw the points along with this new segment using this function call, and figure 2.8 shows the results:</p>
+  <pre class="programlisting">draw(
+    Points(*dino_vectors),
+    Segment((6,4),(3,1))
+)</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F08_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1079946"></a>Figure 2.8 The dinosaur’s points with a line segment connecting the first two points (6, 4) and (3, 1)</p>
+
+  <p class="body"><a id="pgfId-1079947"></a>The line segment is actually the collection consisting of the points (6, 4) and (3, 1) as well as all of the points lying on the straight line between them. The <code class="fm-code-in-text">draw</code> function automatically colors all of the pixels at those points blue. The <code class="fm-code-in-text">Segment</code> class<a id="marker-1079948"></a> is a useful abstraction because we don’t have to build every segment from the points that make up our geometric object (in this case, the dinosaur). Drawing 20 more segments, we get the complete outline of the dinosaur (figure 2.9).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F09_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1079953"></a>Figure 2.9 A total of 21 function calls give us 21 line segments, completing the outline of the dinosaur.</p>
+
+  <p class="body"><a id="pgfId-1079954"></a>In principle, we can now outline any kind of 2D shape we want, provided we have all of the vectors to specify it. Coming up with all of the coordinates by hand can be tedious, so we’ll start to look at ways to do computations <a id="marker-1101850"></a>with vectors to find their coordinates automatically.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1085096"></a><a id="id_sk7urvpygcg8"></a>2.1.3 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1085094"></a><b class="fm-exercise-head">Exercise 2.1</b>: What are the x- and y-coordinates of the point at the tip of the dinosaur’s toe?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085095"></a><b class="fm-exercise-head">Solution</b>: (−1, <span class="fm-in-cambria">−</span>4)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1085100"></a><b class="fm-exercise-head">Exercise 2.2</b>: Draw the point in the plane and the arrow corresponding to the point (2, −2).</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085104"></a><b class="fm-exercise-head">Solution</b>: Represented as a point on the plane and an arrow, (2, −2) looks like this:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F09_Orland_UN01.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1085105"></a>The point and arrow representing (2, −2)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1085121"></a><b class="fm-exercise-head">Exercise 2.3</b>: By looking at the locations of the dinosaur’s points, infer the remaining vectors not included in the <code class="fm-code-in-text2">dino_vectors</code> list. For instance, I already included (6, 4), which is the tip of the dinosaur’s tail, but I didn’t include the point (−5, 3), which is a point on the dinosaur’s nose. When you’re done, <code class="fm-code-in-text2">dino_vectors</code> should be a list of 21 vectors represented as coordinate pairs.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1099630"></a><b class="fm-exercise-head">Solution</b>: The complete set of vectors outlining the dinosaur is as follows:</p>
+        <pre class="programlisting">dino_vectors = [(6,4), (3,1), (1,2), (−1,5), (−2,5), (−3,4), (−4,4), 
+    (−5,3), (−5,2), (−2,2), (−5,1), (−4,0), (−2,1), (−1,0), (0,<span class="fm-in-cambria">−</span>3), 
+    (−1,<span class="fm-in-cambria">−</span>4), (1,<span class="fm-in-cambria">−</span>4), (2,<span class="fm-in-cambria">−</span>3), (1,−2), (3,−1), (5,1)
+]</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1085171"></a><b class="fm-exercise-head">Exercise 2.4</b>: Draw the dinosaur with the dots connected by constructing a <code class="fm-code-in-text2">Polygon</code> object with the <code class="fm-code-in-text2">dino_vectors</code> as its vertices.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1085172"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">draw(
+    Points(*dino_vectors),
+    Polygon(*dino_vectors)
+)</pre>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F09_Orland_UN02.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1085177"></a>The dinosaur drawn as a polygon.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1085245"></a><b class="fm-exercise-head">Exercise 2.5</b>: Draw the vectors <code class="fm-code-in-text2">(x,x**2)</code> for <i class="fm-in-times-italic2">x</i> in the range from <i class="fm-in-times-italic2">x</i> = −10 to <i class="fm-in-times-italic2">x</i> = 11) as points (dots) using the <code class="fm-code-in-text2">draw</code> function. What is the result?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085249"></a><b class="fm-exercise-head">Solution</b>: The pairs draw the graph for the function y = x<sup class="fm-superscript1">2</sup>, plotted for the integers from 10 to 10:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F09_Orland_UN03.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1085250"></a>Points on the graph for y = x<sup class="fm-superscript">2</sup></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085251"></a>To make this graph, I used two keyword arguments for the <code class="fm-code-in-text2">draw</code> function. The <code class="fm-code-in-text2">grid</code> keyword argument of (1, 10) draws vertical grid lines every one unit and horizontal grid lines every ten units. The <code class="fm-code-in-text2">nice_aspect_ratio</code> keyword argument set to <code class="fm-code-in-text2">False</code> tells the graph it doesn’t have to keep the <i class="fm-in-times-italic2">x</i> -axis and the y-axis scales the same:</p>
+        <pre class="programlisting">draw(
+    Points(*[(x,x**2) for <i class="fm-in-times-italic1">x</i> in range(−10,11)]),
+    grid=(1,10),
+    nice_aspect_ratio=False
+)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_7"><a id="pgfId-1079997"></a><a id="id_b4j6uucc8vjl"></a>2.2 Plane vector arithmetic</h2>
+
+  <p class="body"><a id="pgfId-1079998"></a>Like numbers, <a id="marker-1101865"></a>vectors <a id="marker-1101870"></a>have <a id="marker-1101875"></a>their own kind of arithmetic; we can combine vectors with operations to make new vectors. The difference with vectors is that we can visualize the results. Operations from vector arithmetic all accomplish useful geometric transformations, not just algebraic ones. We’ll start with the most basic operation: <i class="fm-italics">vector addition</i> <a id="marker-1079999"></a>.</p>
+
+  <p class="body"><a id="pgfId-1080000"></a>Vector addition is simple to calculate: given two input vectors, you add their <i class="fm-in-times-italic">x</i>-coordinates to get the resulting <i class="fm-in-times-italic">x</i>-coordinate and then you add their <i class="fm-in-times-italic">y</i>-coordinates to get the resulting <i class="fm-in-times-italic">y</i>-coordinate. Creating a new vector with these summed coordinates gives you the <i class="fm-italics">vector sum</i> <a id="marker-1080001"></a> of the original vectors. For instance, (4, 3) + (−1, 1) = (3, 4) because 4 + (−1) = 3 and 3 + 1 = 4. Vector addition is a one-liner to implement in Python:</p>
+  <pre class="programlisting">def add(v1,v2):
+    return (v1[0] + v2[0], v1[1] + v2[1])</pre>
+
+  <p class="body"><a id="pgfId-1080003"></a>Because we can interpret vectors as arrows or as points in the plane, we can visualize the result of the addition in both ways (figure 2.10). As a point in the plane, you can reach (−1, 1) by starting at the origin, which is (0, 0), and move one unit to the left and one unit up. You reach the vector sum of (4, 3) + (−1, 1) by starting instead at (4, 3) and moving one unit to the left and one unit up. This is the same as saying you traverse one arrow and then traverse the second.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F10_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103303"></a>Figure 2.10 Picturing the vector sum of (4, 3) and (−1, 1)</p>
+
+  <p class="body"><a id="pgfId-1080010"></a>The rule for vector addition of arrows is sometimes called <i class="fm-italics">tip-to-tail</i> addition<a id="marker-1080009"></a>. That’s because if you move the tail of the second arrow to the tip of the first (without changing its length or direction!), then the sum is the arrow from the start of the first to the end of the second (figure 2.11).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F11_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080015"></a>Figure 2.11 Tip-to-tail addition of vectors</p>
+
+  <p class="body"><a id="pgfId-1080016"></a>When we talk about arrows, we really mean “a specific distance in a specific direction.” If you walk one distance in one direction and another distance in another direction, the vector sum tells you the overall distance and direction you traveled (figure 2.12).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F12_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103356"></a>Figure 2.12 The vector sum as an overall distance and direction traveled in the plane.</p>
+
+  <p class="body"><a id="pgfId-1080022"></a>Adding a vector has the effect of moving or <i class="fm-italics">translating</i> an existing point or collection of points. If we add the vector (−1.5, −2.5) to every vector of <code class="fm-code-in-text">dino_vectors</code>, we get a new list of vectors, each of which is 1.5 units left and 2.5 units down from one of the original vectors. Here’s the code for that:</p>
+  <pre class="programlisting">dino_vectors2 = [add((−1.5,−2.5), v) for <i class="fm-in-times-italic1">v</i>  in dino_vectors]</pre>
+
+  <p class="body"><a id="pgfId-1080024"></a>The result is the same dinosaur shape shifted down and to the left by the vector (−1.5, −2.5). To see this (figure 2.13), we can draw both dinosaurs as polygons:</p>
+  <pre class="programlisting">draw(
+    Points(*dino_vectors, color=blue),
+    Polygon(*dino_vectors, color=blue),
+    Points(*dino_vectors2, color=red),
+    Polygon(*dino_vectors2, color=red)
+)</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F13_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080033"></a>Figure 2.13 The original dinosaur (blue) and the translated copy (red). Each point on the translated dinosaur is moved by (−1.5, −2.5) down and to the left from its location on the original dinosaur.</p>
+
+  <p class="body"><a id="pgfId-1080034"></a>The arrows in the copy on the right show that each point moved down and to the left by the same vector: (−1.5, −2.5). A translation like this is useful if, for instance, we want to make the dinosaur a moving character in a 2D computer game. Depending on the button pressed by the user, the dinosaur could translate in the corresponding direction on the screen. We’ll implement a real game like this with<a id="marker-1101885"></a> moving <a id="marker-1101905"></a>vector <a id="marker-1101910"></a>graphics in chapters 7 and 9.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1080036"></a>2.2.1 <a id="id_5kmr23rpmx6m"></a>Vector components and lengths</h3>
+
+  <p class="body"><a id="pgfId-1080037"></a>Sometimes it’s <a id="marker-1101880"></a>useful to<a id="marker-1101890"></a> take a <a id="marker-1101895"></a>vector <a id="marker-1101900"></a>we already have and decompose it as a sum of smaller vectors. For example, if I were asking for walking directions in New York City, it would be much more useful to hear “go four blocks east and three blocks north” rather than “go 800 meters northeast.” Similarly, it can be useful to think of vectors as a sum of a vector pointing in the <i class="fm-in-times-italic">x</i> direction and a vector pointing in the <i class="fm-in-times-italic">y</i> direction.</p>
+
+  <p class="body"><a id="pgfId-1080038"></a>As an example, figure 2.14 shows the vector (4, 3) rewritten as the sum (4, 0) + (0, 3). Thinking of the vector (4, 3) as a navigation path in the plane, the sum (4, 0) + (0, 3) gets us to the same point along a different path.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F14_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080043"></a>Figure 2.14 Breaking the vector (4, 3) into the sum (4, 0) + (0, 3)</p>
+
+  <p class="body"><a id="pgfId-1080044"></a>The two vectors (4, 0) and (0, 3) are called the <i class="fm-italics">x and y components</i>, respectively. If you couldn’t walk diagonally in this plane (as if it were New York City), you would need to walk four units to the right and then three units up to get to the same destination, a total of seven units.</p>
+
+  <p class="body"><a id="pgfId-1080045"></a>The <i class="fm-italics">length</i> of a vector is the length of the arrow that represents it, or equivalently, the distance from the origin to the point that represents it. In New York City, this could be the distance between two intersections “as the crow flies.” The length of a vector in the <i class="fm-in-times-italic">x</i> or <i class="fm-in-times-italic">y</i> direction can be measured immediately as a number of ticks passed on the corresponding axis: (4, 0) or (0, 4) are both vectors of the same length, 4, albeit in different directions. In general, though, vectors can lie diagonally, and we need to do a calculation to get their lengths.</p>
+
+  <p class="body"><a id="pgfId-1080047"></a>You may recall the relevant formula: the <i class="fm-italics">Pythagorean theorem</i> <a id="marker-1080046"></a>. For a right triangle (a triangle having two sides meeting at a <span class="fm-in-cambria">90°</span> angle), the Pythagorean theorem says that the square of the length of the longest side is the sum of squares of the lengths of the other two sides. The longest side is called the <i class="fm-italics">hypotenuse</i> <a id="marker-1080048"></a>, and its length is denoted by <i class="fm-in-times-italic">c</i> in the memorable formula <i class="fm-in-times-italic">a</i><sup class="fm-superscript">2</sup> + <i class="fm-in-times-italic">b</i><sup class="fm-superscript">2</sup> = <i class="fm-in-times-italic">c</i><sup class="fm-superscript">2</sup>, where <i class="fm-in-times-italic">a</i> and <i class="fm-in-times-italic">b</i> are the lengths of the other two sides. With <i class="fm-in-times-italic">a</i> = 4 and <i class="fm-in-times-italic">b</i> = 3, we can find <i class="fm-in-times-italic">c</i> as the square root of 4<sup class="fm-superscript">2</sup> + 3<sup class="fm-superscript">2</sup> (figure 2.15).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F15_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103434"></a>Figure 2.15 Using the Pythagorean theorem to find the length of a vector from the lengths of its x- and y- components</p>
+
+  <p class="body"><a id="pgfId-1080054"></a>Breaking a vector into components is handy because it always gives us a right triangle. If we know the lengths of the components, we can compute the length of the hypotenuse, which is the length of the vector. Our vector (4, 3) is equal to (4, 0) + (0, 3), a sum of two perpendicular vectors whose sides are 4 and 3, respectively. The length of the vector (4, 3) is the square root of 4<sup class="fm-superscript">2</sup> + 3<sup class="fm-superscript">2</sup>, which is the square root of 25, or 5. In a city with perfectly square blocks, traveling 4 blocks east and 3 blocks north would take us the equivalent of 5 blocks northeast.</p>
+
+  <p class="body"><a id="pgfId-1080055"></a>This is a special case where the distance turns out to be an integer, but typically, lengths that come out of the Pythagorean theorem are not whole numbers. The length of (−3, 7) is given in terms of the lengths of its components 3 and 7 by the following computation:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F15_Orland_EQ01.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1080060"></a>We can translate this formula into a <code class="fm-code-in-text">length</code> function in Python, <a id="marker-1101915"></a>which <a id="marker-1101920"></a>takes a <a id="marker-1101925"></a>2D <a id="marker-1101930"></a>vector and returns its floating-point length:</p>
+  <pre class="programlisting">from math import sqrt
+def length(<i class="fm-in-times-italic1">v</i>):
+    return sqrt(v[0]**2 + v[1]**2)</pre>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1080063"></a><a id="id_fawoypko3m48"></a>2.2.2 Multiplying vectors by numbers</h3>
+
+  <p class="body"><a id="pgfId-1080064"></a>Repeated addition <a id="marker-1103533"></a>of <a id="marker-1103534"></a>vectors is unambiguous; you can keep stacking arrows tip-to-tail as long as you want. If a vector named <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> has coordinates (2, 1), then the fivefold sum <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> would look like that shown in figure 2.16.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F16_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103484"></a>Figure 2.16 Repeated addition of the vector <i class="fm-in-times-italic">v</i> = (2, 1) with itself</p>
+
+  <p class="body"><a id="pgfId-1080070"></a>If <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> were a number, we wouldn’t bother writing <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> + <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Instead, we’d write the simpler product 5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. There’s no reason we can’t do the same for vectors. The result of</p>
+
+  <p class="body"><a id="pgfId-1085600"></a>adding <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> to itself 5 times is a vector in the same direction but with 5 times the length. We can run with this definition, which lets us multiply a vector by any whole or fractional number.</p>
+
+  <p class="body"><a id="pgfId-1080072"></a>The operation of multiplying a vector by a number is called <i class="fm-italics">scalar multiplication</i> <a id="marker-1080071"></a>. When working with vectors, ordinary numbers are often called <i class="fm-italics">scalars</i> <a id="marker-1080073"></a>. It’s also an appropriate term because the effect of this operation is <i class="fm-italics">scaling</i> <a id="marker-1080074"></a> the target vector by the given factor. It doesn’t matter if the scalar is a whole number; we can easily draw a vector that is 2.5 times the length of another (figure 2.17).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F17_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103569"></a>Figure 2.17 Scalar multi-plication of a vector <i class="fm-in-times-italic">v</i> by 2.5</p>
+
+  <p class="body"><a id="pgfId-1080080"></a>The result on the vector components is that each component is scaled by the same factor. You can picture scalar multiplication as changing the size of the right triangle defined by a vector and its components, but not affecting its aspect ratio. Figure 2.18 superimposes a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and its scalar multiple 1.5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, where the scalar multiple is 1.5 times as long. Its components are also 1.5 times the length of the original components of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F18_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080085"></a>Figure 2.18 Scalar multiplication of a vector scales both components by the same factor.</p>
+
+  <p class="body"><a id="pgfId-1080086"></a>In coordinates, the scalar multiple of 1.5 times the vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (6, 4) gives us a new vector (9, 6), where each component is 1.5 times its original value. Computationally, we execute any scalar multiplication on a vector by multiplying each coordinate of the vector by the scalar. As a second example, scaling a vector <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = (1.2, <span class="fm-in-cambria">−</span>3.1) by a factor 6.5 can be accomplished like this:</p>
+
+  <p class="fm-equation"><a id="pgfId-1080087"></a>6.5 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">w</i> = 6.5 <span class="fm-in-cambria">·</span> (1.2, <span class="fm-in-cambria">−</span>3.1) = (6.5 <span class="fm-in-cambria">·</span> 1.2, 6.5 <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">−</span>3.1) = (7.8, −20.15)</p>
+
+  <p class="body"><a id="pgfId-1080088"></a>We tested this method for a fractional number as the scalar, but we should also test a negative number. If our original vector is (6, 4), what is −<span class="fm-in-cambria">½</span> times that vector? Multiplying the coordinates, we expect the answer to be (−3, −2). Figure 2.19 shows that this<a id="marker-1101950"></a> vector <a id="marker-1101955"></a>is half the length<a id="marker-1101960"></a> of the original and points in the opposite direction.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F19_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103652"></a>Figure 2.19 Scalar multiplication of a vector by a negative number, −<span class="fm-in-cambria">½</span></p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1080095"></a><a id="id_1e1xyv5uutwb"></a>2.2.3 Subtraction, displacement, and distance</h3>
+
+  <p class="body"><a id="pgfId-1080096"></a>Scalar <a id="marker-1103635"></a>multiplication <a id="marker-1103636"></a>agrees <a id="marker-1103637"></a>with <a id="marker-1103638"></a>our intuition <a id="marker-1103639"></a>for <a id="marker-1103640"></a>multiplying numbers. A whole number multiple of a number is the same as a repeated sum, and the same holds for vectors. We can make a similar argument for negative vectors and vector subtraction.</p>
+
+  <p class="body"><a id="pgfId-1080097"></a>Given a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, the <i class="fm-italics">opposite</i> vector, -<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, is the same as the scalar multiple −1 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. If <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is (−4, 3), its opposite, -<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, is (4, <span class="fm-in-cambria">−</span>3) as shown in figure 2.20. We get this by multiplying each coordinate by −1, or in other words, changing the sign of each.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F20_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103699"></a>Figure 2.20 The vector <i class="fm-in-times-italic">v</i> = (−4, 3) and its opposite −<i class="fm-in-times-italic">v</i> = (4, <span class="fm-in-cambria">−</span>3).</p>
+
+  <p class="body"><a id="pgfId-1080103"></a>On the number line, there are only two directions from zero: positive and negative. In the plane, there are many directions (infinitely many, in fact), so we can’t say that one of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and -<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is positive while the other is negative. What we can say is that for any vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, the opposite vector -<i class="fm-in-times-italic"><b class="fm-bold">v</b></i> will have the same length, but it will point in the opposite direction.</p>
+
+  <p class="body"><a id="pgfId-1080105"></a>Having a notion of negating a vector, we can define <i class="fm-italics">vector subtraction</i> <a id="marker-1103763"></a>. For numbers, <i class="fm-in-times-italic">x</i> − <i class="fm-in-times-italic">y</i> is the same as <i class="fm-in-times-italic">x</i> + (−<i class="fm-in-times-italic">y</i>). We set the same convention for vectors. To subtract a vector <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> from a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, you add the vector -<i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Thinking of vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> as points, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> is the position of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> relative to <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. Thinking instead of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> as arrows beginning at the origin, figure 2.21 shows that <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> is the arrow from the tip of <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to the tip of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F21_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103741"></a>Figure 2.21 The result of subtracting <i class="fm-in-times-italic">v</i> − <i class="fm-in-times-italic">w</i> is an arrow from the tip of <i class="fm-in-times-italic">w</i> to the tip of v.</p>
+
+  <p class="body"><a id="pgfId-1080111"></a>The coordinates of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> are the differences of the coordinates <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. In figure 2.21, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>  = (−1, 3) and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = (2, 2). The difference for <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> has the coordinates (−1 − 2, 3 − 2) = (−3, 1).</p>
+
+  <p class="body"><a id="pgfId-1080112"></a>Let’s look at the difference of the vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (−1, 3) and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = (2, 2) again. You can use the <code class="fm-code-in-text">draw</code> function I gave you to plot the points <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> and to draw a segment between them. The code looks like this:</p>
+  <pre class="programlisting">draw(
+    Points((2,2), (−1,3)),
+    Segment((2,2), (−1,3), color=red)
+)</pre>
+
+  <p class="body"><a id="pgfId-1080117"></a>The difference for the vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = (−3, 1) tells us that if we start at point <i class="fm-in-times-italic">w</i>, we need to go three units left and one unit up to get to point <i class="fm-in-times-italic">v</i>. This vector is sometimes called the <i class="fm-italics">displacement</i> <a id="marker-1080118"></a> from <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. The straight, red line segment from <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> in figure 2.22, drawn by this Python code, shows the <i class="fm-italics">distance</i> between the two points.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F22_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103808"></a>Figure 2.22 The distance between two points in the plane</p>
+
+  <p class="body"><a id="pgfId-1080124"></a>The length of the line segment is computed with the Pythagorean theorem as follows:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F22_Orland_EQ02.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1080129"></a>While the displacement is a vector, the distance is a scalar (a single number). The distance on its own is not enough to specify <a id="marker-1102020"></a>how to get from <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> ; there are <a id="marker-1101995"></a>plenty of <a id="marker-1102000"></a>points <a id="marker-1102005"></a>that have the same <a id="marker-1102010"></a>distance <a id="marker-1102015"></a>from <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. Figure 2.23 shows a few others with whole number coordinates.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F23_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1103850"></a>Figure 2.23 Several points equidistant from <i class="fm-in-times-italic">w</i> = (2, 2)</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1085861"></a><a id="id_rkl7eassdtwb"></a>2.2.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1085878"></a><b class="fm-exercise-head">Exercise 2.6</b>: If the <a id="marker-1102025"></a>vector <i class="fm-in-times-italic2">u</i> = (−2, 0), the vector <i class="fm-in-times-italic2">v</i> = (1.5, 1.5), and the vector <i class="fm-in-times-italic2">w</i> = (4, 1), what are the results of <i class="fm-in-times-italic2">u</i> + <i class="fm-in-times-italic2">v</i>, <i class="fm-in-times-italic2">v</i> + <i class="fm-in-times-italic2">w</i>, and u <i class="fm-italics">+</i> <i class="fm-in-times-italic2">w</i>? What is the result of <i class="fm-in-times-italic2">u</i> + v <i class="fm-italics">+</i> <i class="fm-in-times-italic2">w</i>?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085879"></a><b class="fm-exercise-head">Solution</b>: With the vector <i class="fm-in-times-italic2">z</i> = (−2, 0), the vector <i class="fm-in-times-italic2">v</i> = (1.5, 1.5), and the vector <i class="fm-in-times-italic2">w</i> = (4, 1), the results are as follows:</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085880"></a><i class="fm-in-times-italic2">u + v</i> = (−0.5, 1.5)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085881"></a><i class="fm-in-times-italic2">v + w</i> = (5.5, 2.5)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085882"></a><i class="fm-in-times-italic2">u + w</i> = (2, 1)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1085883"></a><i class="fm-in-times-italic2">u</i> + <i class="fm-in-times-italic2">v</i> + <i class="fm-in-times-italic2">w</i> = (3.5, 2.5)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1086220"></a><b class="fm-exercise-head">Exercise 2.7-Mini Project</b>: You can add any number of vectors together by summing all of their <i class="fm-in-times-italic2">x</i>-coordinates and <i class="fm-italics">all</i> of their <i class="fm-in-times-italic2">y</i>-coordinates. For instance, the fourfold sum (1, 2) + (2, 4) + (3, 6) + (4, 8) has <i class="fm-in-times-italic2">x</i> component 1 + 2 + 3 + 4 = 10 and <i class="fm-in-times-italic2">y</i> component 2 + 4 + 6 + 8 = 20, making the result (10, 20). Implement a revised <code class="fm-code-in-text2">add</code> function that takes any number of vectors as arguments.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1086221"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def add(*vectors):
+    return (sum([v[0] for <i class="fm-in-times-italic1">v</i>  in vectors]), sum([v[1] for <i class="fm-in-times-italic1">v</i>  in vectors]))</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1086241"></a><b class="fm-exercise-head">Exercise 2.8</b>: Write a function <code class="fm-code-in-text2">translate(translation,</code> <code class="fm-code-in-text2">vectors)</code> that takes a translation vector and a list of input vectors, and returns a list of the input vectors all translated by the translation vector. For instance, <code class="fm-code-in-text2">translate ((1,1),</code> <code class="fm-code-in-text2">[(0,0),</code> <code class="fm-code-in-text2">(0,1,),</code> <code class="fm-code-in-text2">(−3,<span class="fm-in-cambria1">−</span>3)])</code> should return <code class="fm-code-in-text2">[(1,1),(1,2),(−2, −2)]</code>.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1086242"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def translate(translation, vectors):
+    return [add(translation, v) for <i class="fm-in-times-italic1">v</i>  in vectors]</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1086948"></a><b class="fm-exercise-head">Exercise 2.9−Mini Project</b>: Any sum of vectors <i class="fm-in-times-italic2">v</i> + <i class="fm-in-times-italic2">w</i> gives the same result as <i class="fm-in-times-italic2">w</i> + v. Explain why this is true using the definition of the vector sum on coordinates. Also, draw a picture to show why it is true geometrically.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1086949"></a><b class="fm-exercise-head">Solution</b>: If you add two vectors <i class="fm-in-times-italic2">z</i> = (<i class="fm-in-times-italic2">a, b</i>) and <i class="fm-in-times-italic2">v</i> = (<i class="fm-in-times-italic2">c</i>, <i class="fm-in-times-italic2">d</i>), the coordinates <i class="fm-in-times-italic2">a</i>, b, c, and d are all real numbers. The result of the vector addition is <i class="fm-in-times-italic2">z</i> + <i class="fm-in-times-italic2">v</i> = (a + c, b + d). The</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1086953"></a>result of <i class="fm-in-times-italic2">v</i> + <i class="fm-in-times-italic2">z</i> is (c + a, d + b), which is the same pair of coordinates because order doesn’t matter when adding real numbers. Tip-to-tail<a id="marker-1086954"></a> addition in either order yields the same sum vector. Visually, we can see this by adding an example pair of vectors tip-to-tail:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN04.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1103921"></a>Tip-to-tail addition in either order yields the same sum vector.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1086961"></a>It doesn’t matter whether you add <i class="fm-in-times-italic2">z</i> + <i class="fm-in-times-italic2">v</i> or <i class="fm-in-times-italic2">v</i> + <i class="fm-in-times-italic2">z</i>(dashed lines), you get the same result vector (solid line). In geometric terms, <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> define a parallelogram, and the vector sum is the length of the diagonal.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091950"></a><b class="fm-exercise-head">Exercise 2.10</b>: Among the following three arrow vectors (labeled <i class="fm-in-times-italic2">u</i>, <i class="fm-in-times-italic2">v</i>, and w), which pair has the sum that gives the longest arrow? Which pair sums to give the shortest arrow?</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN05.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1103960"></a>Which pair sums to the longest or shortest arrow?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091960"></a><b class="fm-exercise-head">Solution</b>: We can measure each of the vector sums by placing the vectors tip-to-tail:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN06.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1091961"></a>Tip-to-tail addition of the vectors in question</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1086977"></a>Inspecting the results, we can see that <i class="fm-in-times-italic2">v</i> + <i class="fm-in-times-italic2">z</i> is the shortest vector (u and <i class="fm-in-times-italic2">v</i> are in nearly opposite directions and come close to canceling each other out). The longest vector is <i class="fm-in-times-italic2">v</i> + w.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1086980"></a><b class="fm-exercise-head">Exercise 2.11-Mini Project</b>: Write a Python function using vector addition to show 100 simultaneous and non-overlapping copies of the dinosaur. This shows the power of computer graphics; imagine how tedious it would be to specify all 2,100 coordinate pairs by hand!</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1086981"></a><b class="fm-exercise-head">Solution</b>: With some trial and error, you can translate the dinosaurs in the vertical and horizontal direction so that they don’t overlap, and set the boundaries appropriately. I decided to leave out the grid lines, axes, origin, and points to make the drawing clearer. My code looks like this:</p>
+        <pre class="programlisting">def hundred_dinos():
+    translations = [(12*x,10*y) 
+                    for <i class="fm-in-times-italic1">x</i> in range(−5,5) 
+                    for y in range(−5,5)]
+    dinos = [Polygon(*translate(t, dino_vectors),color=blue)
+                for t in translations]
+    draw(*dinos, grid=None, axes=None, origin=None)
+ 
+hundred_dinos()</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1086994"></a>The result is as follows:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN07.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1103992"></a>100 dinosaurs. Run for your life!</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087012"></a><b class="fm-exercise-head">Exercise 2.12</b>: Which is longer, the <i class="fm-in-times-italic2">x</i> or y component of (3, −2) + (1, 1) + (−2, −2)?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087013"></a><b class="fm-exercise-head">Solution</b>: The result of the vector sum (3, −2) + (1, 1) + (−2, −2) is (2, <span class="fm-in-cambria">−</span>3). The <i class="fm-in-times-italic2">x</i> component is (2, 0) and the <i class="fm-in-times-italic2">y</i> component is (0, <span class="fm-in-cambria">−</span>3). The <i class="fm-in-times-italic2">x</i> component has a length of 2 units (to the right), while the y component has a length of 3 units (downward because it is negative). This makes the <i class="fm-in-times-italic2">y</i> component longer.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087136"></a><b class="fm-exercise-head">Exercise 2.13</b>: What are the components and lengths of the vectors (−6, <span class="fm-in-cambria">−</span>6) and (5, −12)?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087137"></a><b class="fm-exercise-head">Solution</b>: The components of (−6, <span class="fm-in-cambria">−</span>6) are (−6, 0) and (0, <span class="fm-in-cambria">−</span>6), both having length 6. The length of (−6, <span class="fm-in-cambria">−</span>6) is the square root of 6<sup class="fm-superscript1">2</sup> + 6<sup class="fm-superscript1">2</sup>, which is approximately 8.485.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087138"></a>The components of (5, −12) are (5, 0) and (0, −12), having lengths of 5 and 12, respectively. The length of (5, −12) is given by the square root of 5<sup class="fm-superscript1">2</sup> + 12<sup class="fm-superscript1">2</sup> = 25 + 144 = 169. The result of the square root is exactly 13.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087154"></a><b class="fm-exercise-head">Exercise 2.14</b>: Suppose I have a vector <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> that has a length of 6 and an <i class="fm-in-times-italic2">x</i> component (1, 0). What are the possible coordinates of <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> ?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087155"></a><b class="fm-exercise-head">Solution</b>: The <i class="fm-in-times-italic2">x</i> component of (1, 0) has length 1 and the total length is 6, so the length b of the <i class="fm-in-times-italic2">y</i> component must satisfy the equation 1<sup class="fm-superscript1">2</sup> + b<sup class="fm-superscript1">2</sup> = 6<sup class="fm-superscript1">2</sup>, or 1 + b<sup class="fm-superscript1">2</sup> = 36. Then b<sup class="fm-superscript1">2</sup> = 35 and the length of the <i class="fm-in-times-italic2">y</i> component is approximately 5.916. This doesn’t tell us the direction of the <i class="fm-in-times-italic2">y</i> component, however. The vector <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> could either be (1, 5.916) or (1, <span class="fm-in-cambria">−</span>5.916).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087187"></a><b class="fm-exercise-head">Exercise 2.15</b>: What vector in the <code class="fm-code-in-text2">dino_vectors</code> list has the longest length? Use the <code class="fm-code-in-text2">length</code> function we wrote to compute the answer quickly.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1087188"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">&gt;&gt;&gt; max(dino_vectors, key=length)
+(6, 4)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087256"></a><b class="fm-exercise-head">Exercise 2.16</b>: Suppose a vector <i class="fm-in-times-italic2">w</i> has the coordinates (√2, √3). What are the approximate coordinates of the scalar multiple <i class="fm-in-cambria2">π</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">w</i>? Draw an approximation of the original vector and the new vector.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087257"></a><b class="fm-exercise-head">Solution</b>: The value of (√2, √3) is approximately</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087258"></a>(1.4142135623730951, 1.7320508075688772)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087259"></a>Scaling each coordinate by a factor of <i class="fm-in-cambria2">π</i>(pi), we get</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087273"></a>(4.442882938158366, 5.441398092702653)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087378"></a>The scaled vector is longer than the original as shown here:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN08.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1104068"></a>The original vector (shorter) and its scaled version (longer)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1104064"></a> </p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087794"></a><b class="fm-exercise-head">Exercise 2.17</b>: Write a Python function <code class="fm-code-in-text2">scale(s,v)</code> that multiplies the input vector <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> by the input scalar <i class="fm-in-times-italic2">s</i>.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087795"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def scale(scalar,v):
+    return (scalar * v[0], scalar * v[1])</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087800"></a><b class="fm-exercise-head">Exercise 2.18−Mini Project</b>: Convince yourself algebraically that scaling the coordinates by a factor also scales the length of the vector by the same factor. Suppose a vector of length <i class="fm-in-times-italic2">c</i> has the coordinates (<i class="fm-in-times-italic2">a, b</i>). Show that for any non-negative real number <i class="fm-in-times-italic2">s</i>, the length of (<i class="fm-in-times-italic2">s </i><span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">a, s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">b</i>) is <i class="fm-in-times-italic2">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">c</i>. (This can’t work for a negative value of <i class="fm-in-times-italic2">s</i> because a vector can’t have a negative length.)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087801"></a><b class="fm-exercise-head">Solution</b>: We use the notation |(<i class="fm-in-times-italic2">a, b</i>)| to denote the length of a vector (<i class="fm-in-times-italic2">a, b</i>). So, the premise of the exercise tells us:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN08_EQ03.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087808"></a>From that, we can compute the length of (<i class="fm-in-times-italic2">sa</i>, <i class="fm-in-times-italic2">sb</i>):</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN08_EQ04.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087809"></a>As long as s isn’t negative, it’s the same as its absolute value: <i class="fm-in-times-italic2">s</i> = |<i class="fm-in-times-italic2">s</i>|. Then the length of the scaled vector is sc as we hoped to show.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1087827"></a><b class="fm-exercise-head">Exercise 2.19−Mini Project</b>: Suppose <i class="fm-in-times-italic2">z</i> = (−1, 1) and <i class="fm-in-times-italic2">v</i> = (1, 1), and suppose <i class="fm-in-times-italic2">r</i> and <i class="fm-in-times-italic2">s</i> are real numbers. Specifically, let’s assume <span class="fm-in-cambria">−</span>3 &lt; r &lt; 3 and −1 &lt; s &lt; 1. Where are the possible points on the plane where the vector r <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">z</i> + <i class="fm-in-times-italic2">s</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">v</i> could end up?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087828"></a>Note that the order of operations is the same for vectors as it is for numbers. We assume scalar multiplication is carried out first and then vector addition (unless parentheses specify otherwise).</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087829"></a><b class="fm-exercise-head">Solution</b>: If <i class="fm-in-times-italic2">r</i> = 0, the possibilities lie on the line segment from (−1, −1) to (1, 1). If r is not zero, the possibilities can leave that line segment in the direction of (−1, 1) or −(−1, 1) by up to three units. The region of possible results is the parallelogram with vertices at (2, 4), (4, 2), (2, <span class="fm-in-cambria">−</span>4), and (4, −2). We can test many random, allowable values of <b class="fm-bold1">r</b> and <b class="fm-bold1">s</b> to validate this:</p>
+        <pre class="programlisting">from random import uniform
+u = (−1,1)
+v = (1,1)
+def random_r():
+    return uniform(−3,3)
+def random_s(): 
+    return uniform(−1,1)
+
+possibilities = [add(scale(random_r(), u), scale(random_s(), v))
+                 for i in range(0,500)]
+draw(
+    Points(*possibilities)
+)</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1087985"></a>If you run this code, you get a picture like the following, showing the possible points where r • <i class="fm-in-times-italic2">z</i> + s • <i class="fm-in-times-italic2">v</i> could end up given the constraints:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN09.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1087989"></a>Location of possible points for <i class="fm-in-times-italic">r</i> ∙ <i class="fm-in-times-italic">u</i> + s ∙ <i class="fm-in-times-italic">v</i> given the constraints.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1088188"></a><b class="fm-exercise-head">Exercise 2.20</b>: Show algebraically why a vector and its opposite have the same length.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100206"></a><b class="fm-exercise-head">Hint</b>: Plug the coordinates and their opposites into the Pythagorean theorem.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088192"></a><b class="fm-exercise-head">Solution</b>: The opposite vector of (<i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i>) has coordinates (− <i class="fm-in-times-italic2">a</i>, <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">b</i>), but this doesn’t affect the length:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN09_EQ05.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1088193"></a>The vector (−<i class="fm-in-times-italic">a</i>, −b) has the same length as (<i class="fm-in-times-italic">a, b</i>).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1088270"></a><b class="fm-exercise-head">Exercise 2.21</b>: Of the following seven vectors, represented as arrows, which two are a pair of opposite vectors?</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F23_Orland_UN10.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088271"></a><b class="fm-exercise-head">Solution</b>: Vectors v3 and v7 are the pair of opposite vectors.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1088303"></a><b class="fm-exercise-head">Exercise 2.22</b>: Suppose <i class="fm-in-times-italic2">z</i> is any 2D vector. What are the coordinates of <i class="fm-in-times-italic2">z</i> + -u?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088304"></a><b class="fm-exercise-head">Solution</b>: A 2D vector <i class="fm-in-times-italic2">z</i> has some coordinates (<i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i>). Its opposite has coordinates (− <i class="fm-in-times-italic2">a</i>, <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">b</i>), so:</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088305"></a><i class="fm-in-times-italic2">u</i> + (−<i class="fm-in-times-italic2">u</i>) = (<i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i>) + (− <i class="fm-in-times-italic2">a</i>, <span class="fm-in-cambria">−</span> <i class="fm-in-times-italic2">b</i>) = (<i class="fm-in-times-italic2">a</i> − <i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i> − <i class="fm-in-times-italic2">b</i>) = (0, 0)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088306"></a>The answer is (0, 0). Geometrically, this means that if you follow a vector and then its opposite, you end up back at the origin, (0, 0).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1088410"></a><b class="fm-exercise-head">Exercise 2.23</b>: For vectors <i class="fm-in-times-italic2">u</i> = (−2, 0), <i class="fm-in-times-italic2">v</i> = (1.5, 1.5), and <i class="fm-in-times-italic2">w</i> = (4, 1), what are the results of the vector subtractions <i class="fm-in-times-italic2">v</i> − <i class="fm-in-times-italic2">w</i>, <i class="fm-in-times-italic2">z</i> − <i class="fm-in-times-italic2">v</i>, and <i class="fm-in-times-italic2">w</i> − v?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088411"></a><b class="fm-exercise-head">Solution</b>: With <i class="fm-in-times-italic2">z</i> = (−2, 0), <i class="fm-in-times-italic2">v</i> = (1.5, 1.5), and <i class="fm-in-times-italic2">w</i> = (4, 1), we have</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088412"></a><i class="fm-in-times-italic2">v</i> − <i class="fm-in-times-italic2">w</i> = (−2.5, 0.5)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088413"></a><i class="fm-in-times-italic2">u</i> − <i class="fm-in-times-italic2">v</i> = (−3.5, −1.5)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088414"></a><i class="fm-in-times-italic2">w</i> − <i class="fm-in-times-italic2">v</i> = (2.5, -0.5)</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1088796"></a><b class="fm-exercise-head">Exercise 2.24</b>: Write a Python function <code class="fm-code-in-text2">subtract(v1,v2)</code> that returns the result of <code class="fm-code-in-text2">v1</code>  - <code class="fm-code-in-text2">v2</code>, taking two 2D vectors as inputs and returning a 2D vector as an output.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1088797"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">def subtract(v1,v2):
+    return (v1[0] − v2[0], v1[1] − v2[1])</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1088816"></a><b class="fm-exercise-head">Exercise 2.25</b>: Write a Python function <code class="fm-code-in-text2">distance(v1,v2)</code> that returns the distance between two input vectors. (Note that the <code class="fm-code-in-text2">subtract</code> function from the previous exercise already gives the displacement.)</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088817"></a>Write another Python function <code class="fm-code-in-text2">perimeter(vectors)</code> that takes a list of vectors as an argument and returns the sum of distances from each vector to the next, including the distance from the last vector to the first. What is the perimeter of the dinosaur defined by <code class="fm-code-in-text2">dino_vectors</code> ?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088818"></a><b class="fm-exercise-head">Solution</b>: The distance is just the length of the difference of the two input vectors:</p>
+        <pre class="programlisting">def distance(v1,v2):
+    return length(subtract(v1,v2))</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088820"></a>For the perimeter, we sum the distances of every pair of subsequent vectors in the list, as well as the pair of the first and the last vectors:</p>
+        <pre class="programlisting">def perimeter(vectors):
+    distances = [distance(vectors[i], vectors[(i+1)%len(vectors)])
+                 for i in range(0,len(vectors))]
+    return sum(distances)</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088822"></a>We can use a square with side length of one as a sanity check:</p>
+        <pre class="programlisting">&gt;&gt;&gt; perimeter([(1,0),(1,1),(0,1),(0,0)])
+4.0</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088824"></a>Then we can calculate the perimeter of the dinosaur:</p>
+        <pre class="programlisting">&gt;&gt;&gt; perimeter(dino_vectors)
+44.77115093694563</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1088890"></a><b class="fm-exercise-head">Exercise 2.26−Mini Project</b>: Let <i class="fm-in-times-italic2">z</i> be the vector (1, −1). Suppose there is another vector <i class="fm-in-times-italic2">v</i> with positive integer coordinates (<i class="fm-in-times-italic2">n</i>, <i class="fm-in-times-italic2">m</i>) such that <i class="fm-in-times-italic2">n</i> &gt; xm and has a distance of 13 from u. What is the displacement from <i class="fm-in-times-italic2">z</i> to v?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100346"></a><b class="fm-exercise-head">Hint</b>: You can use Python to search for the vector v.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088891"></a><b class="fm-exercise-head">Solution</b>: We only need to search possible integer pairs (<i class="fm-in-times-italic2">n</i>, <i class="fm-in-times-italic2">m</i>) where <i class="fm-in-times-italic2">n</i> is within 13 units of 1 and <i class="fm-in-times-italic2">m</i> is within 13 units of −1:</p>
+        <pre class="programlisting">for n in range(−12,15):
+    for m in range(−14, 13):
+        if distance((n,m), (1,−1)) == 13 and n &gt; m &gt; 0:
+            print((n,m))</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1088893"></a>There is one result: (13, 4). It is 12 units to the right and 5 units up from (1, −1), so the displacement is (12, 5).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="body"><a id="pgfId-1080325"></a>The length of a vector is not enough to describe it, nor is the distance between two vectors enough information to get from one to the other. In both cases, the missing ingredient is <i class="fm-italics">direction</i>. If you know how long a vector is and you know what direction it is pointing, you can identify it and find its coordinates. To a large <a id="marker-1102035"></a>extent, <a id="marker-1102040"></a>this is what <i class="fm-italics">trigonometry</i> <a id="marker-1080326"></a> is about, and we’ll review that subject in the next section.</p>
+
+  <h2 class="fm-head" id="heading_id_12"><a id="pgfId-1080328"></a><a id="id_rc87bcuq9101"></a>2.3 Angles and trigonometry in the plane</h2>
+
+  <p class="body"><a id="pgfId-1080329"></a>So far, we’ve used <a id="marker-1102050"></a>two “rulers” (called the x-axis and the y-axis) to measure vectors in the plane. An arrow from the origin covers some measurable displacement in the horizontal and vertical directions, and these values uniquely specify the vector. Instead of using two rulers, we could just as well use a ruler and a protractor. Starting with the vector (4, 3), we can measure or calculate its length to be 5 units, and then use our protractor to identify the direction as shown in figure 2.24.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F24_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080334"></a>Figure 2.24 Using a protractor to measure the angle at which a vector points</p>
+
+  <p class="body"><a id="pgfId-1080335"></a>This vector has a length of 5 units, and it points in a direction approximately 37° counterclockwise from the positive half of the x-axis. This gives us a new pair of numbers (5, 37°) that, like our original coordinates, uniquely specify the vector. These numbers are called <i class="fm-italics">polar</i> <i class="fm-italics">coordinates</i> <a id="marker-1080336"></a> and are just as good at describing points in the plane as the ones we’ve worked with so far, called <i class="fm-italics">Cartesian coordinates</i> <a id="marker-1080337"></a>.</p>
+
+  <p class="body"><a id="pgfId-1080338"></a>Sometimes, like when we’re adding vectors, it’s easier to use Cartesian coordinates. Other times, polar coordinates are more useful; for instance, when we want to look at vectors rotated by some angle. In code, we don’t have literal rulers or protractors available, so we use trigonometric functions to convert back and forth instead.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1080340"></a><a id="id_svzp6i1wgpn8"></a>2.3.1 From angles to components</h3>
+
+  <p class="body"><a id="pgfId-1080341"></a>Let’s look at <a id="marker-1102060"></a>the reverse <a id="marker-1102065"></a>problem: <a id="marker-1102070"></a>imagine we already have an angle and a distance, say, 116.57° and 3. These define a pair of polar<a id="marker-1080342"></a> coordinates (3, 116.57°). How can we find the Cartesian<a id="marker-1080343"></a> coordinates for this vector geometrically?</p>
+
+  <p class="body"><a id="pgfId-1080344"></a>First, we can position our protractor at the origin to find the right direction. We measure 116.57° counterclockwise from the positive x-axis and draw a line in that direction (figure 2.25). Our vector (3, 116.57°) lies somewhere on this line.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F25_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104176"></a>Figure 2.25 Measuring 116.57° from the positive x-axis using a protractor</p>
+
+  <p class="body"><a id="pgfId-1094295"></a>The next step is to take a ruler and measure a point that is three units from the origin in this direction. Once we’ve found it, as in figure 2.26, we can measure the components and get our approximate coordinates (−1.34, 2.68).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F26_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104250"></a>Figure 2.26 Using a ruler to measure the coordinates of the point that is three units from the origin</p>
+
+  <p class="body"><a id="pgfId-1080356"></a>It may look like the angle 116.57° was a random choice, but it has a useful property. Starting from the origin and moving in that direction, you go up two units every time you go one unit to the left. Vectors that approximately lie along that line include (−1, 2), (−3, 6) and, of course, (−1.34, 2.68); the <i class="fm-in-times-italic">y</i>-coordinates are −2 times their <i class="fm-in-times-italic">x</i>-coordinates (figure 2.27).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F27_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104309"></a>Figure 2.27 Traveling in the direction of 116.57°, you travel two units up for every unit you travel to the left.</p>
+
+  <p class="body"><a id="pgfId-1101011"></a>The strange angle 116.57° happens to give us a nice round ratio of −2. We won’t always be lucky enough to get a whole number ratio, but every angle does give us a <i class="fm-italics">constant</i> ratio. The angle <span class="fm-in-cambria">45°</span> gives us one vertical unit for every one horizontal unit or a ratio of 1. Figure 2.28 shows another angle, 200°. This gives us a constant ratio of -0.36 vertical units for every −1 horizontal unit covered or a ratio of 0.36.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F28_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104358"></a>Figure 2.28 How much vertical distance is covered per unit of horizontal distance at different angles?</p>
+
+  <p class="body"><a id="pgfId-1080369"></a>Given an angle, the coordinates of vectors along that angle will have a constant ratio. This ratio is called the <i class="fm-italics">tangent</i> of the angle<a id="marker-1080370"></a>, and the tangent function is written as <i class="fm-italics">tan</i>. You’ve seen a few of its approximate values so far:</p>
+
+  <p class="fm-equation"><a id="pgfId-1080371"></a>tan(37°) ≈ ¾</p>
+
+  <p class="fm-equation"><a id="pgfId-1080372"></a>tan(116.57°) ≈ −2</p>
+
+  <p class="fm-equation"><a id="pgfId-1080373"></a>tan(<span class="fm-in-cambria">45°</span>) = 1</p>
+
+  <p class="fm-equation"><a id="pgfId-1102500"></a>tan(200°) ≈ 0.36</p>
+
+  <p class="body"><a id="pgfId-1102503"></a>Here, to denote <i class="fm-italics">approximate</i> equality<a id="marker-1102501"></a><a id="marker-1102502"></a>, I use the symbol ≈ as opposed to the symbol =. The tangent function is a <i class="fm-italics">trigonometric</i> function<a id="marker-1102504"></a> because it helps us measure triangles. (The “trigon” in “trigonometry” means triangle and “metric” means measurement.) Note that I haven’t told you <i class="fm-italics">how</i> to calculate the tangent yet, only what a few of its values are. Python has a built-in tangent function that I’ll show you how to use shortly. You almost never have to worry about calculating (or measuring) the tangent of an angle yourself.</p>
+
+  <p class="body"><a id="pgfId-1080380"></a>The tangent function is clearly related to our original problem of finding Cartesian<a id="marker-1080379"></a> coordinates for a vector given an angle and a distance. But it doesn’t actually provide the coordinates, only their ratio. For that, two other trigonometric functions are helpful: <i class="fm-italics">sine</i> and <i class="fm-italics">cosine</i>. If we measure some distance at some angle (figure 2.29), the tangent of the angle gives us the vertical distance covered divided by the horizontal distance.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F29_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104407"></a>Figure 2.29 Schematic of distances and angles for a given vector</p>
+
+  <p class="body"><a id="pgfId-1080386"></a>By comparison, the sine and cosine give us the vertical and horizontal distance covered relative to the overall distance. These are written <i class="fm-italics">sin</i> and <i class="fm-italics">cos</i> for short, and this equation shows the definitions for both:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F29_Orland_UN11b.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1080391"></a>Let’s look at the angle 37° for a concrete example (figure 2.30). We saw that the point (4, 3) lies at a distance of 5 units from the origin at this angle.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F30_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080396"></a>Figure 2.30 Measuring the angle to the point (4, 3) with a protractor</p>
+
+  <p class="body"><a id="pgfId-1080397"></a>For every 5 units you travel at 37°, you cover approximately 3 vertical units. Therefore, we can write:</p>
+
+  <p class="body"><a id="pgfId-1080398"></a><span class="fm-in-times">sin</span>(37°) ≈ 3/5</p>
+
+  <p class="body"><a id="pgfId-1080399"></a>Similarly, for every 5 units you travel at 37°, you cover approximately 4 horizontal units, so we can write:</p>
+
+  <p class="body"><a id="pgfId-1080400"></a><span class="fm-in-times">cos</span>(37°) ≈ 4/5</p>
+
+  <p class="body"><a id="pgfId-1092118"></a>This is a general strategy for converting a vector in polar coordinates to corresponding Cartesian coordinates. <a id="marker-1102075"></a>If you know <a id="marker-1102085"></a>the <a id="marker-1102090"></a>sine and cosine of an angle <span class="fm-in-cambria">θ</span> (the Greek letter theta, commonly used for angles) and a distance <i class="fm-in-times-italic">r</i> traveled in that direction, the Cartesian<a id="marker-1092119"></a> coordinates are given by (<i class="fm-in-times-italic">r</i> <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>), <i class="fm-in-times-italic">r</i> <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>)) and shown in figure 2.31.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F31_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104463"></a>Figure 2.31 Picturing the conversion from polar coordinates to Cartesian coordinates for a right triangle</p>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1092127"></a>2.3.2 <a id="id_u7rgq2rx31lc"></a>Radians and trigonometry in Python</h3>
+
+  <p class="body"><a id="pgfId-1080410"></a>Let’s turn <a id="marker-1102100"></a>what <a id="marker-1102105"></a>we’ve <a id="marker-1102110"></a>reviewed about trigonometry into Python code. Specifically, let’s build a function that takes a pair of polar coordinates (a length and an angle) and outputs a pair of Cartesian coordinates (lengths of <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> components).</p>
+
+  <p class="body"><a id="pgfId-1080411"></a>The main hurdle is that Python’s built-in trigonometric functions use different units than the ones we’ve used. We expect tan(<span class="fm-in-cambria">45°</span>) = 1, for instance, but Python gives us a much different result:</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import tan
+&gt;&gt;&gt; tan(45)
+1.6197751905438615</pre>
+
+  <p class="body"><a id="pgfId-1080413"></a>Python doesn’t use degrees, and neither do most mathematicians. Instead, they use units called <i class="fm-italics">radians</i> to measure angles. The conversion factor is</p>
+
+  <p class="body"><a id="pgfId-1080414"></a>1 radian ≈ 57.296°</p>
+
+  <p class="body"><a id="pgfId-1089800"></a>This may seem like an arbitrary conversion factor. Some more suggestive relationships between degrees and radians are given in terms of the special number <i class="fm-in-cambria2">π</i>(pi<a id="marker-1089801"></a>), whose value is approximately 3.14159. Here are a few examples:</p>
+
+  <p class="body"><a id="pgfId-1089809"></a><i class="fm-in-cambria2">π</i> radians = <span class="fm-in-cambria">180°</span></p>
+
+  <p class="body"><a id="pgfId-1089810"></a>2<i class="fm-in-cambria2">π</i> radians = <span class="fm-in-cambria">3<span class="fm-in-cambria">60°</span></span></p>
+
+  <p class="body"><a id="pgfId-1089796"></a>In radians, half a trip around a circle is an angle of <i class="fm-in-cambria2">π</i> and a whole revolution is 2<i class="fm-in-cambria2">π</i>. These respectively agree with the half and whole circumference of a circle of radius 1 (figure 2.32).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F32_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104513"></a>Figure 2.32 A half revolution is <i class="fm-in-cambria2">π</i> radians, while a whole revolution is 2<i class="fm-in-cambria2">π</i> radians.</p>
+
+  <p class="body"><a id="pgfId-1089797"></a>You can think of radians as another kind of ratio: for a given angle, its measurement in radians tells you how many radiuses you’ve gone around the circle. Because of this special property, angle measurements without units are assumed to be radians. Noting that <span class="fm-in-cambria">45°</span> = <i class="fm-in-cambria2">π</i>/4 (radians), we can get the correct result for the tangent of this angle:</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import tan, pi
+&gt;&gt;&gt; tan(pi/4)
+0.9999999999999999</pre>
+
+  <p class="body"><a id="pgfId-1080428"></a>We can now make use of Python’s trigonometric functions to write a <code class="fm-code-in-text">to_cartesian</code> function, taking a pair of polar coordinates and returning corresponding Cartesian<a id="marker-1080429"></a> coordinates:</p>
+  <pre class="programlisting">from math import sin, cos
+def to_cartesian(polar_vector):
+    length, angle = polar_vector[0], polar_vector[1]
+    return (length*<span class="fm-in-times1">cos</span>(angle), length*<span class="fm-in-times1">sin</span>(angle))</pre>
+
+  <p class="body"><a id="pgfId-1080431"></a>Using this, we can verify that 5 units at an angle of 37° gets us close to the point (4, 3):</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import pi
+&gt;&gt;&gt; angle = 37*pi/180
+&gt;&gt;&gt; to_cartesian((5,angle))
+(3.993177550236464, 3.0090751157602416)</pre>
+
+  <p class="body"><a id="pgfId-1080434"></a><a id="id_mewbg6erb43u"></a>Now that we can convert from polar <a id="marker-1102120"></a>coordinates <a id="marker-1102125"></a>to Cartesian <a id="marker-1102130"></a>coordinates, let’s see how to convert in the other direction.</p>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1080436"></a><a id="id_d6gm82lkdn4f"></a>2.3.3  From components back to angles</h3>
+
+  <p class="body"><a id="pgfId-1080437"></a><a id="marker-1102150"></a>Given a pair of <a id="marker-1102140"></a>Cartesian <a id="marker-1102145"></a>coordinates like (−2, 3), we know how to find the length with the Pythagorean theorem<a id="marker-1080438"></a>. In this case, it is<img alt="" class="calibre14" src="../Images/w_gifs_99.gif"/>, which is the first of the two polar coordinates we are looking for. The second is the angle, which we can call <span class="fm-in-cambria">θ</span> (theta), indicating the direction of this vector (figure 2.33).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F33_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104559"></a>Figure 2.33 In what angle does the vector (−2, 3) point?</p>
+
+  <p class="body"><a id="pgfId-1080444"></a>We can say some facts about the angle <span class="fm-in-cambria">θ</span> that we’re looking for. Its tangent, tan(<span class="fm-in-cambria">θ</span>), is 3/2, while <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>) = 3/<span class="fm-in-cambria">√</span>13 and <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>) = −2/<span class="fm-in-cambria">√</span>13. All that’s left is finding a value of <span class="fm-in-cambria">θ</span> that satisfies these. If you like, you can pause and try to approximate this angle yourself by guessing and checking.</p>
+
+  <p class="body"><a id="pgfId-1080445"></a>Ideally, we’d like a more efficient method than this. It would be great if there were a function that took the value of <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>), for instance, and gave you back <span class="fm-in-cambria">θ</span>. This turns out to be easier said than done, but Python’s <code class="fm-code-in-text">math.asin</code> function makes a good attempt. This is an implementation of the <i class="fm-italics">inverse trigonometric function</i> <a id="marker-1080446"></a> called the <i class="fm-italics">arcsine</i>, and it returns a satisfactory value of <span class="fm-in-cambria">θ</span>:</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import asin
+&gt;&gt;&gt; <span class="fm-in-times1">sin</span>(1)
+0.8414709848078965
+&gt;&gt;&gt; a<span class="fm-in-times1">sin</span>(0.8414709848078965)
+1.0</pre>
+
+  <p class="body"><a id="pgfId-1090056"></a>So far, so good. But what about the sine of our angle 3/<span class="fm-in-cambria">√</span>13?</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import sqrt
+&gt;&gt;&gt; a<span class="fm-in-times1">sin</span>(3/sqrt(13))
+0.9827937232473292</pre>
+
+  <p class="body"><a id="pgfId-1080450"></a>This angle is roughly 56.3°, and as figure 2.34 shows, that’s the wrong direction!</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F34_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1080455"></a>Figure 2.34 Python’s <code class="fm-code-in-text">math.asin</code> function appears to give us the wrong angle.</p>
+
+  <p class="body"><a id="pgfId-1080456"></a>It’s not wrong that <code class="fm-code-in-text">math.asin</code> gives us this answer; another point (2, 3) <i class="fm-italics">does</i> lie in this direction. It is at length<img alt="" class="calibre14" src="../Images/w_gifs_105.gif"/>from the origin, so the sine of this angle is also 3<img alt="" class="calibre14" src="../Images/w_gifs_106.gif"/>. This is why <code class="fm-code-in-text">math.asin</code> is not a full solution for us. There are multiple angles that can have the same sine.</p>
+
+  <p class="body"><a id="pgfId-1080457"></a>The inverse trigonometric function, called <i class="fm-italics">arccosine</i> and implemented in Python as <code class="fm-code-in-text">math.acos</code>, happens to give us the right value:</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import acos
+&gt;&gt;&gt; a<span class="fm-in-times1">cos</span>(−2/sqrt(13))
+2.1587989303424644</pre>
+
+  <p class="body"><a id="pgfId-1080459"></a>This many radians is about the same as 123.7°, which we can confirm to be correct using a protractor. But this is only by happenstance; there are other angles that could have given us the same cosine. For instance, (−2, <span class="fm-in-cambria">−</span>3) also has distance<img alt="" class="calibre14" src="../Images/w_gifs_108.gif"/>from the origin, so it lies at an angle with the same cosine as <span class="fm-in-cambria">θ</span>: −2<img alt="" class="calibre14" src="../Images/w_gifs_109.gif"/>. To find the value of <span class="fm-in-cambria">θ</span> that we actually want, we’ll have to make sure the sine <i class="fm-italics">and</i> cosine agree with our expectation. The angle returned by Python, which is approximately 2.159, satisfies this:</p>
+  <pre class="programlisting">&gt;&gt; <span class="fm-in-times1">cos</span>(2.1587989303424644)
+-0.5547001962252293
+&gt;&gt;&gt; −2/sqrt(13)
+-0.5547001962252291
+&gt;&gt;&gt; <span class="fm-in-times1">sin</span>(2.1587989303424644)
+0.8320502943378435
+&gt;&gt;&gt; 3/sqrt(13)
+0.8320502943378437</pre>
+
+  <p class="body"><a id="pgfId-1080461"></a>None of the arcsine, arccosine, or arctangent functions are sufficient to find the angle to a point in the plane. It <i class="fm-italics">is</i> possible to find the correct angle by a tricky geometric argument you probably learned in high school trigonometry class. I’ll leave that as an exercise and cut to the chase−Python can do the work for you! The <code class="fm-code-in-text">math.atan2</code> function takes the Cartesian coordinates of a point in the plane (in reverse order!) and gives you back the angle at which it lies. For example,</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import atan2
+&gt;&gt;&gt; atan2(3,−2)
+2.158798930342464</pre>
+
+  <p class="body"><a id="pgfId-1080463"></a>I apologize for burying the lede, but I did so because it’s worth knowing the potential pitfalls of using inverse trigonometric functions. In summary, trigonometric functions are tricky to do in reverse; multiple different inputs can produce the same output, so an output can’t be traced back to a unique input. This lets us complete the function we set out to write: a converter from Cartesian to polar coordinates:</p>
+  <pre class="programlisting">def to_polar(vector):
+    x, y = vector[0], vector[1]
+    angle = atan2(y,x)
+    return (length(vector), angle)</pre>
+
+  <p class="body"><a id="pgfId-1080465"></a>We can verify some simple examples: <code class="fm-code-in-text">to_polar((1,0))</code> should be one unit in the positive <i class="fm-in-times-italic">x</i> direction or an angle of zero degrees. Indeed, the function gives us an angle of zero and a length of one:</p>
+  <pre class="programlisting">&gt;&gt;&gt; to_polar((1,0))
+(1.0, 0.0)</pre>
+
+  <p class="body"><a id="pgfId-1080467"></a>(The fact that the input and the output are the same is coincidental; they have different geometric meanings.) Likewise, we <a id="marker-1102160"></a>get the <a id="marker-1102165"></a>expected <a id="marker-1102170"></a>answer for (−2, 3):</p>
+  <pre class="programlisting">&gt;&gt;&gt; to_polar((−2,3))
+(3.605551275463989, 2.158798930342464)</pre>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1080470"></a><a id="id_tt5jd6ddn70y"></a>2.3.4  Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1090298"></a><b class="fm-exercise-head">Exercise 2.27</b>: Confirm that the <a id="marker-1102180"></a>vector given by Cartesian coordinates (−1.34, 2.68) has a length of approximately 3 as expected.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1090299"></a><b class="fm-exercise-head">Solution</b>:</p>
+        <pre class="programlisting">&gt;&gt;&gt; length((−1.34,2.68))
+2.9963310898497184</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090301"></a>Close enough!</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1090365"></a><b class="fm-exercise-head">Exercise 2.28</b>: The figure shows a line that makes a 22° angle in the counterclockwise direction from the positive x-axis. Based on the following picture, what is the approximate value of tan(22°)?</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN12.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090369"></a><b class="fm-exercise-head">Solution</b>: The line passes close to the point (10, 4), so 4 / 10 = 0.4 is a reasonable approximation of tan(22°) as shown here:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN13.png"/></span></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1098552"></a><b class="fm-exercise-head">Exercise 2.29</b>: Turning the question around, suppose we know the length and direction of a vector and want to find its components. What are the <i class="fm-in-times-italic2">x</i> and <i class="fm-in-times-italic2">y</i> components of a vector with length 15 pointing at a 37° angle?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1100388"></a>Solution</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098553"></a>The sine of 37° is roughly 3/5,which tells us that every 5 units of distance covered at this angle takes us 3 units upward. So, 15 units of distance give us a vertical component of 3/5<span class="fm-in-cambria">·</span> 15, or 9.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098554"></a>The cosine of 37° is roughly 4/5,which tells us that each 5 units of distance in this direction take us 4 units to the right, so the horizontal component is 4/5<span class="fm-in-cambria">·</span> 15 or 12. In summary, the polar coordinates (15, 37°) correspond approximately to the Cartesian coordinates (12, 9).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1090433"></a><b class="fm-exercise-head">Exercise 2.30</b>: Suppose I travel 8.5 units from the origin at an angle of 125°, measured counterclockwise from the positive x-axis. Given that <span class="fm-in-times2">sin</span>(125°) = 0.819 and <span class="fm-in-times2">cos</span>(125°) = -0.574, what are my final coordinates? Draw a picture to show the angle and path traveled.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1090434"></a>Solution</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090435"></a><i class="fm-in-times-italic2">x</i> = <i class="fm-in-times-italic2">r</i> <span class="fm-in-cambria">·</span> <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">θ</span>) = 8.5 <span class="fm-in-cambria">·</span> -0.574 = <span class="fm-in-cambria">−</span>4.879</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090436"></a><i class="fm-in-times-italic2">y</i> = <i class="fm-in-times-italic2">r</i> <span class="fm-in-cambria">·</span> <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">θ</span>) = 8.5 <span class="fm-in-cambria">·</span> 0.819 = 6.962</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090440"></a>The following figure shows the final position, (−4.879, 6.962):</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN14.png"/></span></p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097444"></a><b class="fm-exercise-head">Exercise 2.31</b>: What are the sine and cosine of 0°? Of <span class="fm-in-cambria">90°</span>? Of <span class="fm-in-cambria">180°</span>? In other words, how many vertical and horizontal units are covered per unit distance in any of these directions?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090464"></a><b class="fm-exercise-head">Solution</b>: At 0°, no vertical distance is covered, so <span class="fm-in-times2">sin</span>(0°) = 0; rather, every unit of distance traveled is a unit of horizontal distance, so <span class="fm-in-times2">cos</span>(0°) = 1.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090465"></a>For <span class="fm-in-cambria">90°</span> (a quarter turn counterclockwise), every unit traveled is a positive vertical unit, so <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">90°</span>) = 1, while <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">90°</span>) = 0.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090466"></a>Finally, at <span class="fm-in-cambria">180°</span>, every unit of distance traveled is a negative unit in the <i class="fm-in-times-italic2">x</i> direction, so <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">180°</span>) = −1 and <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">180°</span>) = 0.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1090593"></a><b class="fm-exercise-head">Exercise 2.32</b>: The following diagram gives some exact measurements for a right triangle:</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090594"></a>First, confirm that these lengths are valid for a right triangle because they satisfy the Pythagorean theorem. Then, calculate the values of <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">30°</span>), <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">30°</span>), and tan(<span class="fm-in-cambria">30°</span>) to three decimal places using the measurements in the diagram.</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN15.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090598"></a><b class="fm-exercise-head">Solution</b>: These side lengths indeed satisfy the Pythagorean theorem:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN15_EQ06.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1090599"></a>Plugging the side lengths into the Pythagorean theorem</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098648"></a>The trigonometric function values are given by the appropriate ratios of side lengths:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN15_EQ07.png"/></span></p>
+
+        <p class="fm-figure-caption">Calculating the sine, cosine, and tangent by their definitions</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097277"></a><b class="fm-exercise-head">Exercise 2.33</b>: Looking at the triangle from the previous exercise from a different perspective, use it to calculate the values of <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">60°</span>), <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">60°</span>), and tan(<span class="fm-in-cambria">60°</span>) to three decimal places.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1099352"></a><b class="fm-exercise-head">Solution</b>: Rotating and reflecting the triangle from the previous exercise has no effect on its side lengths or angles.</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN16.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1104894"></a>A rotated copy of the triangle from the previous exercise</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1099373"></a>The ratios of the side lengths give the trigonometric function values for <span class="fm-in-cambria">60°</span>:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN16_EQ08.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1104939"></a>Calculating the defining ratios when horizontal and vertical components have switched</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1104935"></a> </p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097290"></a><b class="fm-exercise-head">Exercise 2.34</b>: The cosine of 50° is 0.643. What is <span class="fm-in-times2">sin</span>(50°) and what is tan(50°)? Draw a picture to help you calculate the answer.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097294"></a><b class="fm-exercise-head">Solution</b>: Given that the cosine of 50° is 0.643, the following triangle is valid:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN17.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098729"></a>That is, it has the right ratio of the two known side lengths: 0.643 / 1 = 0.643. To find the unknown side length, we can use the Pythagorean theorem:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN17_EQ09.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098711"></a>With the known side lengths, <span class="fm-in-times2">sin</span>(50°) = 0.766/1 = 0.766. Also, tan(50°) = 0.766/0.643 = 1.192.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1090830"></a><b class="fm-exercise-head">Exercise 2.35</b>: What is 116.57° in radians? Use Python to compute the tangent of this angle and confirm that it is close to −2 as we saw previously.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1090831"></a><b class="fm-exercise-head">Solution</b>: 116.57° <span class="fm-in-cambria">·</span> (1 radian/57.296°) = 2.035 radians:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from math import tan
+&gt;&gt;&gt; tan(2.035)
+−1.9972227673316139</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1098759"></a><b class="fm-exercise-head">Exercise 2.36</b>: Locate the angle 10<i class="fm-in-cambria2">π</i>/6. Do you expect the values of <span class="fm-in-times2">cos</span>(10<i class="fm-in-cambria2">π</i>/6) and <span class="fm-in-times2">sin</span>(10<i class="fm-in-cambria2">π</i>/6) to be positive or negative? Use Python to calculate their values and confirm.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098760"></a><b class="fm-exercise-head">Solution</b>: A whole circle is 2<i class="fm-in-cambria2">π</i> radians, so the angle <i class="fm-in-cambria2">π</i>/6 is one twelfth of a circle. You can picture cutting a pizza in 12 slices, and counting counterclockwise from the positive x-axis; the angle 10<i class="fm-in-cambria2">π</i>/6 is two slices short of a full rotation. This means that it points down and to the right. The cosine should be positive, and the sine should be negative because the distance in this direction corresponds with a positive horizontal displacement and a negative vertical displacement:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from math import pi, cos, sin
+&gt;&gt;&gt; <span class="fm-in-times1">sin</span>(10*pi/6)
+-0.8660254037844386
+&gt;&gt;&gt; <span class="fm-in-times1">cos</span>(10*pi/6)
+0.5000000000000001</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091100"></a><b class="fm-exercise-head">Exercise 2.37</b>: The following list comprehension creates 1,000 points in polar coordinates:</p>
+        <pre class="programlisting">[(<span class="fm-in-times1">cos</span>(5*x*pi/500.0), 2*pi*x/1000.0) for <i class="fm-in-times-italic1">x</i> in range(0,1000)]</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091102"></a>In Python code, convert these to Cartesian coordinates and connect them in a closed loop with line segments to draw a picture.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091103"></a><b class="fm-exercise-head">Solution</b>: Including the setup and the original list of data, the code is as follows:</p>
+        <pre class="programlisting">polar_coords = [(<span class="fm-in-times1">cos</span>(x*pi/100.0), 2*pi*x/1000.0) for <i class="fm-in-times-italic1">x</i> in range(0,1000)]
+vectors = [to_cartesian(p) for p in polar_coords]
+draw(Polygon(*vectors, color=green))</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091110"></a>And the result is a five-leafed flower:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN18.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1091111"></a>The plot of the 1,000 connected points is a flower shape.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091132"></a><b class="fm-exercise-head">Exercise 2.38</b>: Find the angle to get to the point (−2, 3) by “guess-and-check.”</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN19.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1105016"></a>What is the angle to get to the point (−2, 3)?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1105010"></a> </p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098883"></a><b class="fm-exercise-head">Hint</b>: We can tell visually that the answer is between <i class="fm-in-cambria2">π</i>/2 and <i class="fm-in-cambria2">π</i>. On that interval, the values of sine and cosine always decrease as the angle increases.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098844"></a><b class="fm-exercise-head">Solution</b>: Here’s an example of guessing and checking between <i class="fm-in-cambria2">π</i>/2 and <i class="fm-in-cambria2">π</i>, looking for an angle with tangent close to <span class="fm-in-cambria">−</span>3/2 = −1.5:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from math import tan, pi
+&gt;&gt;&gt; pi, pi/2
+(3.141592653589793, 1.5707963267948966)
+&gt;&gt;&gt; tan(1.8)
+<span class="fm-in-cambria">−</span>4.286261674628062
+&gt;&gt;&gt; tan(2.5)
+-0.7470222972386603
+&gt;&gt;&gt; tan(2.2)
+−1.3738230567687946
+&gt;&gt;&gt; tan(2.1)
+−1.7098465429045073
+&gt;&gt;&gt; tan(2.15)
+−1.5289797578045665
+&gt;&gt;&gt; tan(2.16)
+−1.496103541616277
+&gt;&gt;&gt; tan(2.155)
+−1.5124173422757465
+&gt;&gt;&gt; tan(2.156)
+−1.5091348993879299
+&gt;&gt;&gt; tan(2.157)
+−1.5058623488727219
+&gt;&gt;&gt; tan(2.158)
+−1.5025996395625054
+&gt;&gt;&gt; tan(2.159)
+−1.4993467206361923</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1098870"></a>The value must be between 2.158 and 2.159.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091249"></a><b class="fm-exercise-head">Exercise 2.39</b>: Find another point in the plane with the same tangent as <span class="fm-in-cambria">θ</span>, namely <span class="fm-in-cambria">−</span>3/2. Use Python’s implementation of the arctangent function<a id="marker-1091250"></a>, <code class="fm-code-in-text2">math.atan</code>, to find the value of this angle.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091251"></a><b class="fm-exercise-head">Solution</b>: Another point with tangent <span class="fm-in-cambria">−</span>3/2 is (3, −2). Python’s <code class="fm-code-in-text2">math.atan</code> finds the angle to this point:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from math import atan
+&gt;&gt;&gt; atan(−3/2)
+-0.982793723247329</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091253"></a>This is slightly less than a quarter turn in the clockwise direction.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091276"></a><b class="fm-exercise-head">Exercise 2.40</b>: Without using Python, what are the polar coordinates corresponding to the Cartesian coordinates (1, 1) and (1, −1)? Once you’ve found the answers, use <code class="fm-code-in-text2">to_polar</code> to check your work.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091277"></a><b class="fm-exercise-head">Solution</b>: In polar coordinates, (1, 1) becomes (<span class="fm-in-cambria">√2</span>, <i class="fm-in-cambria2">π</i>/4) and (1, −1) becomes (<span class="fm-in-cambria">√2</span>, -<i class="fm-in-cambria2">π</i>/4).</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091278"></a>With some care, you can find any angle on a shape made up of known vectors. The angle between two vectors is either a sum or difference of angles these make with the x-axis. You measure some trickier angles in the next mini-project.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091301"></a><b class="fm-exercise-head">Exercise 2.41-Mini Project</b>: What is the <a id="marker-1102190"></a>angle of the Dinosaur’s <a id="marker-1102200"></a>mouth? What is the angle of the dinosaur’s toe? Of the point of its tail?</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F34_Orland_UN20.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1091305"></a>Some angles we can measure or calculate on our dinosaur.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_17"><a id="pgfId-1080616"></a><a id="id_ftfuxrrn0khx"></a><a id="id_74thl42nt5iq"></a>2.4 Transforming collections of vectors</h2>
+
+  <p class="body"><a id="pgfId-1080617"></a>Collections of <a id="marker-1102205"></a>vectors <a id="marker-1102210"></a>store spatial data like drawings of dinosaurs regardless of what coordinate system we use: polar or Cartesian. It turns out that when we want to manipulate vectors, one coordinate system can be better than another. We already saw that moving (or translating) a collection of vectors is easy with Cartesian coordinates. It turns out to be much less natural in polar coordinates. Because polar coordinates have angles built in, these make it simple to carry out rotations.</p>
+
+  <p class="body"><a id="pgfId-1097985"></a>In polar coordinates, adding to the angle rotates a vector further counterclockwise, while subtracting from it rotates the vector clockwise. The polar<a id="marker-1104691"></a> coordinate (1, 2) is at distance 1 and at an angle of 2 radians. (Remember that we are working in radians if there is no degree symbol!) Starting with the angle 2 and adding or subtracting 1 takes the vector either 1 radian counterclockwise or clockwise, respectively (figure 2.35).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F35_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1104752"></a>Figure 2.35 Adding or subtracting from the angle rotates the vector about the origin.</p>
+
+  <p class="body"><a id="pgfId-1097994"></a>Rotating a number of vectors simultaneously has the effect of rotating the figure these represent about the origin. The <code class="fm-code-in-text">draw</code> function only understands Cartesian<a id="marker-1104720"></a> coordinates, so we need to convert from polar to Cartesian before using it. Likewise, we have only seen how to rotate vectors in polar coordinates, so we need to convert Cartesian coordinates to polar coordinates before executing a rotation. Using this approach, we can rotate the dinosaur like this:</p>
+  <pre class="programlisting">rotation_angle = pi/4
+dino_polar = [to_polar(<i class="fm-in-times-italic1">v</i>) for <i class="fm-in-times-italic1">v</i>  in dino_vectors]
+dino_rotated_polar = [(l,angle + rotation_angle) for l,angle in dino_polar]
+dino_rotated = [to_cartesian(p) for p in dino_rotated_polar]
+draw(
+    Polygon(*dino_vectors, color=gray),
+    Polygon(*dino_rotated, color=red)
+)</pre>
+
+  <p class="body"><a id="pgfId-1098970"></a>The result of this code is a gray copy of the original dinosaur, plus a superimposed red copy that’s rotated by <i class="fm-in-cambria2">π</i>/4, or an eighth of a full revolution counterclockwise (figure 2.36).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F36_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1105070"></a>Figure 2.36 The original dinosaur in gray and a rotated copy in red</p>
+
+  <p class="body"><a id="pgfId-1080634"></a>As an exercise at the end of this section, you can write a general-purpose <code class="fm-code-in-text">rotate</code> function that rotates a list of vectors by the same specified angle. I’m going to use such a function in the next few examples, and you can either use the implementation I provide in the source code or one you come up with yourself.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1080636"></a><a id="id_dm5lf4nk1du5"></a>2.4.1  Combining vector transformations</h3>
+
+  <p class="body"><a id="pgfId-1080637"></a>So far, we’ve <a id="marker-1102215"></a>seen <a id="marker-1102220"></a>how to translate, rescale, and rotate vectors. Applying any of these transformations to a collection of vectors achieves the same effect on the shape that these define in the plane. The full power of these vector transformations comes when we apply them in sequence.</p>
+
+  <p class="body"><a id="pgfId-1080638"></a>For instance, we could first rotate and <i class="fm-italics">then</i> translate the dinosaur. Using the <code class="fm-code-in-text">translate</code> function from the exercise in section 2.2.4 and the <code class="fm-code-in-text">rotate</code> function, we can write such a transformation concisely (see the result in figure 2.37):</p>
+  <pre class="programlisting">new_dino = translate((8,8), rotate(5 * pi/3, dino_vectors))</pre>
+
+  <p class="body"><a id="pgfId-1080645"></a>The rotation comes first, turning the dinosaur counterclockwise by 5<i class="fm-in-cambria2">π</i>/3, which is most of a full counterclockwise revolution. Then the dinosaur is translated up and to the right by 8 units each. As you can imagine, combining rotations and translations appropriately can move the dinosaur (or any shape) to any desired location and orientation in the plane. Whether we’re animating our dinosaur in a movie or in a game, the flexibility to move it around with vector transformations lets us give it life programmatically.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH02_F37_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1105121"></a>Figure 2.37 The original dinosaur in gray and a red copy that’s rotated and then translated</p>
+
+  <p class="body"><a id="pgfId-1091554"></a>Our applications will soon take us past cartoon dinosaurs; there are plenty of other operations on vectors and many generalize to higher dimensions. Real-world data sets often live in dozens or hundreds of dimensions, so we’ll apply the same kinds of transformations to these as well. It’s often useful to both translate and rotate data sets to make their important features clearer. We won’t be able to picture rotations in 100 dimensions, but we can always think of two dimensions <a id="marker-1102230"></a>as a <a id="marker-1102225"></a>trusty metaphor.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1091556"></a><a id="id_ifeh7u2ep7x3"></a>2.4.2 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091573"></a><b class="fm-exercise-head">Exercise 2.42</b>: Create a <code class="fm-code-in-text2">rotate(angle,</code> <code class="fm-code-in-text2">vectors)</code> function that takes an array of input vectors in Cartesian coordinates and rotates those by the specified angle (counterclockwise or clockwise, according to whether the angle is positive or negative).</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1091574"></a>Solution</p>
+        <pre class="programlisting">def rotate(angle, vectors):
+    polars = [to_polar(<i class="fm-in-times-italic1">v</i>) for <i class="fm-in-times-italic1">v</i>  in vectors]
+    return [to_cartesian((l, a+angle)) for l,a in polars]</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091602"></a><b class="fm-exercise-head">Exercise 2.43</b>: <a id="marker-1102240"></a>Create a <a id="marker-1102235"></a>function <code class="fm-code-in-text2">regular_polygon(n)</code> that returns Cartesian coordinates for the vertices of a regular <i class="fm-in-times-italic2">n</i> -sided polygon (that is, having all angles and side lengths equal). For instance, <code class="fm-code-in-text2">polygon(7)</code> produces vectors defining the following heptagon:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F37_Orland_UN21.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1091606"></a>A regular heptagon with points at seven evenly-spaced angles around the origin</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1091620"></a><b class="fm-exercise-head">Hint</b>: In this picture, I used the vector (1, 0) and copies that are rotated by seven evenly-spaced angles about the origin.</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1091711"></a>Solution</p>
+        <pre class="programlisting">def regular_polygon(n):
+    return [to_cartesian((1, 2*pi*k/n)) for k in range(0,n)]</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1091739"></a><b class="fm-exercise-head">Exercise 2.44</b>: What is the result of first translating the dinosaur by the vector (8, 8) and then rotating it by 5<i class="fm-in-cambria2">π</i>/3? Is the result the same as rotating and then translating?</p>
+
+        <p class="fm-sidebar"><a id="pgfId-1099137"></a>Solution</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH02_F37_Orland_UN22.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1099138"></a>First translating and then rotating the dinosaur</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1099139"></a>The result is not the same. In <a id="marker-1102245"></a>general, applying <a id="marker-1102250"></a>rotations <a id="marker-1102255"></a>and <a id="marker-1102260"></a>translations in different orders yields different results.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_20"><a id="pgfId-1080676"></a><a id="id_nwna4xkj5hgh"></a>2.5 Drawing with Matplotlib</h2>
+
+  <p class="body"><a id="pgfId-1080677"></a>As promised, I’ll conclude <a id="marker-1102270"></a>by showing you how to build “from scratch” the drawing functions used in this chapter from the Matplotlib library. After installing Matplotlib with pip, you can import it (and some of its submodules); for example,</p>
+  <pre class="programlisting">import matplotlib
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection</pre>
+
+  <p class="body"><a id="pgfId-1080683"></a>The <code class="fm-code-in-text">Polygon</code> <a id="marker-1080679"></a>, <code class="fm-code-in-text">Points</code> <a id="marker-1080680"></a>, <code class="fm-code-in-text">Arrow</code> <a id="marker-1080681"></a>, and <code class="fm-code-in-text">Segment</code> <a id="marker-1080682"></a> classes are not that interesting; they simply hold the data passed to them in their constructors. For instance, the <code class="fm-code-in-text">Points</code> class contains only a constructor that receives and stores a list of vectors and a color keyword argument:</p>
+  <pre class="programlisting">class Points():
+    def __init__(self, *vectors, color=black):
+        self.vectors = list(vectors)
+        self.color = color</pre>
+
+  <p class="body"><a id="pgfId-1080685"></a>The <code class="fm-code-in-text">draw</code> function starts by figuring out how big the plot should be and then draws each of the objects it is passed one-by-one. For instance, to draw dots on the plane represented by a <code class="fm-code-in-text">Points</code> object, <code class="fm-code-in-text">draw</code> uses Matplotlib’s scatter-plotting functionality:</p>
+  <pre class="programlisting">def draw(*objects, ...
+    # ...                                         <span class="fm-combinumeral">❶</span>
+    for object in objects:                        <span class="fm-combinumeral">❷</span>
+    # ... 
+        elif type(object) == Points:              <span class="fm-combinumeral">❸</span>
+            xs = [v[0] for <i class="fm-in-times-italic1">v</i>  in object.vectors]
+            ys = [v[1] for <i class="fm-in-times-italic1">v</i>  in object.vectors]
+            plt.scatter(xs, ys, color=object.color)
+        # ...</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1102644"></a><span class="fm-combinumeral">❶</span> Some setup happens here, which is not shown.</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1102661"></a><span class="fm-combinumeral">❷</span> Iterates over the objects passed in</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1102678"></a><span class="fm-combinumeral">❸</span> If the current object is an instance of the Points class, draws dots for all of its vectors using Matplotlib’s scatter function</p>
+
+  <p class="body"><a id="pgfId-1080692"></a>Arrows, segments, and polygons are handled in much the same way using different pre-built Matplotlib functions to make the geometric objects appear on the plot. You can find all of these implemented in the source code file vector_drawing.py. We’ll use Matplotlib throughout this book to plot data and mathematical functions, and I’ll provide periodic refreshers on its functionality as we use it.</p>
+
+  <p class="body"><a id="pgfId-1080695"></a><a id="id_51v7l98x4scv"></a>Now that you’ve mastered two dimensions, you’re ready to add another one. With the third dimension, we can fully describe the world we live in. In the next <a id="marker-1102280"></a>chapter, you’ll see how to model three-dimensional objects in code.</p>
+
+  <h2 class="fm-head" id="heading_id_21"><a id="pgfId-1080697"></a><a id="id_nlng7vp1ljjg"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080698"></a>Vectors are mathematical objects that live in multi-dimensional spaces. These can be geometric spaces like the two-dimensional (2D) plane of a computer screen or the three-dimensional (3D) world we inhabit.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080699"></a>You can think of vectors equivalently as arrows having a specified length and direction, or as points in the plane relative to a reference point called the <i class="fm-italics">origin</i>. Given a point, there is a corresponding arrow that shows how to get to that point from the origin.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080700"></a>You can connect collections of points in the plane to form interesting shapes like a dinosaur.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080701"></a>In 2D, coordinates are pairs of numbers that help us measure the location of points in the plane. Written as a tuple (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> values tell us how far horizontally and vertically to travel to get to the point.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080702"></a>We can store points as coordinate tuples in Python and choose from a number of libraries to draw the points on the screen.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080703"></a>Vector addition has the effect of translating (or moving) a first vector in the direction of a second added vector. Thinking of a collection of vectors as paths to travel, their vector sum gives the overall direction and distance traveled.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080704"></a>Scalar multiplication of a vector by a numeric factor yields a vector that is longer by that factor and points in the same direction as the original.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080705"></a>Subtracting one vector from a second gives the relative position of the second vector from the first.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080706"></a>Vectors can be specified by their length and direction (as an angle). These two numbers define the polar coordinates of a given 2D vector.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080707"></a>The trigonometric functions sine, cosine, and tangent are used to convert between ordinary (Cartesian) coordinates and polar coordinates.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1080708"></a>It’s easy to rotate shapes defined by collections of vectors in polar coordinates. You only need to add or subtract the given rotation angle from the angle of each vector. Rotating and translating shapes in the plane lets us <a id="marker-1102285"></a>place them anywhere and in any orientation.</p>
+    </li>
+  </ul>
+</body>
+</html>

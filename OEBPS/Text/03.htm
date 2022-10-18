@@ -1,0 +1,1236 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>3</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1075261"></a><a id="pgfId-1094083"></a><a id="id_2gyyzxqg9ck9"></a>3 Ascending to the 3D world</h1>
+  </div>
+
+  <p class="co-summary-head"><a id="pgfId-1094107"></a>This chapter covers</p>
+
+  <ul class="calibre8">
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1094108"></a>Building a mental model for 3D vectors</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1094109"></a>Doing 3D vector arithmetic</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1094110"></a>Using the dot product and cross product to measure lengths and directions</li>
+
+    <li class="co-summary-bullet"><a class="calibre10" id="pgfId-1094111"></a>Rendering a 3D object in 2D</li>
+  </ul>
+
+  <p class="body"><a id="pgfId-1092714"></a>The 2D world is <a id="marker-1110010"></a>easy to visualize, but the real world has three dimensions. Whether we are using software to design a building, animate a movie, or run an action game, our programs need to be aware of the three spatial dimensions in which we live.</p>
+
+  <p class="body"><a id="pgfId-1092715"></a>In a 2D space, like a page of this book, we have a vertical and a horizontal direction. Adding a third dimension, we could also talk about points outside of the page or arrows perpendicular to the page. But even when programs simulate three dimensions, most computer displays are two-dimensional. Our mission in this chapter is to build the tools we need to take 3D objects measured by 3D vectors and convert them to 2D so our objects can show up on the screen.</p>
+
+  <p class="body"><a id="pgfId-1094444"></a>A sphere is one example of a 3D shape. A successfully drawn 3D sphere could look like the one shown in figure 3.1. Without the shading, it would just look like a circle.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F01_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111725"></a>Figure 3.1 Shading on a 2D circle makes it look like a 3D sphere.</p>
+
+  <p class="body"><a id="pgfId-1094438"></a>The shading shows that light hits our sphere at a certain angle in 3D and gives it an illusion of depth. Our general strategy is not to draw a perfectly round sphere, but an approximation made up of polygons. Each polygon can be shaded according to the precise angle it makes with a light source. Believe it or not, figure 3.1 is not a picture of a round ball, but of 8,000 triangles in varying shades. Figure 3.2 shows another example with fewer triangles.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH03_F02a_Orland.png"/> <span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F02b_Orland.png"/></span><br class="calibre15"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1092727"></a>Figure 3.2 Drawing a shaded sphere using many small, solid-colored triangles</p>
+
+  <p class="body"><a id="pgfId-1092728"></a>We have the mathematical machinery to define a triangle on a 2D screen: we only need the three 2D vectors defining the corners. But we can’t decide how to shade them unless we also think of them as having a life in three dimensions. For this, we need to learn to work with 3D vectors.</p>
+
+  <p class="body"><a id="pgfId-1092729"></a>Of course, this is already a solved problem, and we start by using a pre-built library to draw our 3D shapes. Once we have the feel for the world of 3D vectors, we can build our own renderer and show how to draw the sphere.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1092731"></a><a id="id_epgkzv71nrsi"></a>3.1 Picturing vectors in 3D space<a id="marker-1111013"></a></h2>
+
+  <p class="body"><a id="pgfId-1092732"></a>In the 2D plane, we worked with three interchangeable mental models of a vector: coordinate pairs, arrows of fixed length and direction, and points positioned relative to the origin. Because the pages of this book have a finite size, we limited our view to a small portion of the plane−a rectangle of fixed height and width like the one shown in figure 3.3.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F03_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111793"></a>Figure 3.3 The height and width of a small segment of the 2D plane</p>
+
+  <p class="body"><a id="pgfId-1094602"></a>We can interpret a 3D vector in similar ways. Instead of viewing a rectangular portion of the plane, we start with a finite box of 3D space. Such a 3D box, pictured in figure 3.4, has a finite height, width, and depth. <i class="fm-italics">In 3D, we</i> keep the notions of <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> directions, and we add a <i class="fm-in-times-italic">z</i> direction with which to measure the depth.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F04_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111837"></a>Fogure 3.4 A small finite box of 3D space has a width (<i class="fm-in-times-italic">x</i>), a height (<i class="fm-in-times-italic">y</i>), and a depth (<i class="fm-in-times-italic">z</i>).</p>
+
+  <p class="body"><a id="pgfId-1094610"></a>We can think of any 2D vectors as living in 3D space, having the same size and orientation but fixed to a plane where the depth <i class="fm-in-times-italic">z</i> is zero. Figure 3.5 shows the 2D drawing of the vector (4, 3) embedded in 3D space with all the same features it had before. The second drawing (on the bottom) annotates all of the features that are still included.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F05_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111878"></a>Figure 3.5 The 2D world and inhabitant vector (4, 3) contained in the 3D world</p>
+
+  <p class="body"><a id="pgfId-1092750"></a>The dashed lines form a rectangle in the 2D plane where depth is zero. It’s helpful to draw dashed lines meeting at right angles to help us locate points in 3D. Otherwise, our perspective might deceive us and a point may not be where we think it is.</p>
+
+  <p class="body"><a id="pgfId-1092751"></a>Our vector still lives in a plane, but now we can also see it lives in a bigger 3D space. We can draw another 3D vector (a new arrow and a new point) that lives off of the original plane, extending to a higher depth value (figure 3.6).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F06_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1106735"></a>Figure 3.6 A vector extending into the third dimension as compared to the 2D world and its inhabitant vector (4, 3) of figure 3.5</p>
+
+  <p class="body"><a id="pgfId-1092757"></a>To make the location of this second vector clear, I drew a dashed box instead of a dashed rectangle as in figure 3.5. In figure 3.6, this box shows the length, width, and depth the vector covers in 3D space. Arrows and points work as mental models for vectors in 3D just like in 2D, and we can measure them similarly with coordinates.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1092759"></a><a id="id_us20ebuu8ahy"></a>3.1.1 Representing 3D vectors with coordinates</h3>
+
+  <p class="body"><a id="pgfId-1092760"></a>The pair of numbers (4, 3) is enough to specify a single point or arrow in 2D, but in 3D, there are numerous points with an <i class="fm-in-times-italic">x</i>-coordinate of 4 and a <i class="fm-in-times-italic">y</i>-coordinate of 3. In fact, as figure 3.7 shows, there is a whole line of points in 3D with these coordinates, each having different positions in the <i class="fm-in-times-italic">z</i>(or depth) direction.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F07_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111956"></a>Figure 3.7 Several vectors with the same x- and y-coordinates but with different z-coordinates</p>
+
+  <p class="body"><a id="pgfId-1092766"></a>To specify a unique point in 3D, we need three numbers in total. A triple of numbers like (4, 3, 5) are called the <i class="fm-in-times-italic">x</i> -, <i class="fm-in-times-italic">y</i> -, and <i class="fm-in-times-italic">z</i>-coordinates for a vector in 3D. As before, we can read these as instructions to find the desired point. As shown in figure 3.8, to get to the point (4, 3, 5), we first go +4 units in the <i class="fm-in-times-italic">x</i> direction, then go +3 units in the <i class="fm-in-times-italic">y</i> direction, and then finally, go +5 units in the <i class="fm-in-times-italic">z</i> direction.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F08_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112004"></a>Figure 3.8 The three coordinates (4, 3, 5) give us directions to a point in 3D.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1092773"></a><a id="id_ozsbkv1kksd2"></a>3.1.2 3D drawing with Python</h3>
+
+  <p class="body"><a id="pgfId-1092774"></a>As in the previous chapter, I <a id="marker-1110052"></a>use a wrapper around Python’s Matplotlib library to make vector drawings in 3D. You can find the implementation in the source code for this book, but I’ll stick with the wrapper to focus on the conceptual process of drawing rather than the details of Matplotlib.</p>
+
+  <p class="body"><a id="pgfId-1092777"></a> My wrapper uses new classes like <code class="fm-code-in-text">Points3D</code> <a id="marker-1092775"></a> and <code class="fm-code-in-text">Arrow3D</code> <a id="marker-1092776"></a> to distinguish 3D objects from their 2D counterparts. A new function, <code class="fm-code-in-text">draw3d</code>, knows how to interpret and render these objects so as to make these look three-dimensional. By default, <code class="fm-code-in-text">draw3d()</code> shows the axes and the origin as well as a small box of 3D space (figure 3.9), even if no objects are specified for drawing.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F09_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112047"></a>Figure 3.9 Drawing an empty 3D region with Matplotlib’s <code class="fm-code-in-text">draw3d()</code></p>
+
+  <p class="body"><a id="pgfId-1092783"></a> The x-, y-, and z-axes that are drawn are perpendicular in the space, despite being skewed by our perspective. For visual clarity, Matplotlib shows the units outside the box, but the origin and the axes themselves are displayed within the box. The origin is the coordinate (0, 0, 0), and the axes emanate from it in the positive and negative <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i> directions.</p>
+
+  <p class="body"><a id="pgfId-1092785"></a>The <code class="fm-code-in-text">Points3D</code> class<a id="marker-1092784"></a> stores a collection of vectors we want to think of as points and, therefore, draw as dots in 3D space. For instance, we could plot the vectors (2, 2, 2) and (1, −2, −2) with the following code that produces figure 3.10:</p>
+  <pre class="programlisting">draw3d(
+    Points3D((2,2,2),(1,−2,−2))
+)</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F10_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124541"></a>Figure 3.10 Drawing the points (2, 2, 2) and (1, −2, −2)</p>
+
+  <p class="body"><a id="pgfId-1092793"></a>To visualize these vectors instead as arrows, we can represent the vectors as <code class="fm-code-in-text">Arrow3D</code> <a id="marker-1112166"></a> objects. We can also connect the tips of arrows with a <code class="fm-code-in-text">Segment3D</code> object as follows, producing figure 3.11:</p>
+  <pre class="programlisting">draw3d(
+    Points3D((2,2,2),(1,−2,−2)),
+    Arrow3D((2,2,2)),
+    Arrow3D((1,−2,−2)),
+    Segment3D((2,2,2), (1,−2,−2))
+)</pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F11_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112228"></a>Figure 3.11 Drawing 3D arrows</p>
+
+  <p class="body"><a id="pgfId-1106876"></a>It’s a bit hard to see which direction the arrows are pointing in figure 3.11. To make it clearer, we can draw dashed boxes around the arrows to make them look more three-dimensional. Because we’ll draw these boxes so frequently, I created a <code class="fm-code-in-text">Box3D</code> class<a id="marker-1112206"></a> to represent a box with one corner at the origin and the opposite one at a given point. Figure 3.12 illustrates the 3D box, but first, here’s the code:</p>
+  <pre class="programlisting">draw3d(
+    Points3D((2,2,2),(1,−2,−2)),
+    Arrow3D((2,2,2)),
+    Arrow3D((1,−2,−2)),
+    Segment3D((2,2,2), (1,−2,−2)),
+    Box3D(2,2,2),
+    Box3D(1,−2,−2)
+)</pre>
+
+  <p class="body"><a id="pgfId-1124679"></a>  </p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1124685"></a>Fogire 3.12 Drawing boxes to make our arrows look 3D</p>
+
+  <p class="body"><a id="pgfId-1092808"></a> <i class="fm-italics">In this chapter</i>, I use a number of (hopefully self-explanatory) keyword arguments without introducing them explicitly. For instance, a <code class="fm-code-in-text">color</code> keyword argument can be passed to most of these constructors, controlling the color of the object that shows <a id="marker-1110062"></a>up in the drawing.</p>
+
+  <h3 class="fm-head1" id="heading_id_6"><a id="pgfId-1092810"></a><a id="id_h3zt1sdpwwx0"></a>3.1.3 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1095537"></a><b class="fm-exercise-head">Exercise 3.1</b>: Draw the 3D arrow and point representing the coordinates (−1, −2, 2) as well as the dashed box that makes the arrow look 3D. Do this drawing by hand for practice, but from now on, we’ll use Python to draw for us.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1106965"></a><b class="fm-exercise-head">Solution</b>:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F12_Orland_UN01.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1106966"></a>The vector (−1, −2, 2) and the box that makes it look 3D</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1106988"></a><b class="fm-exercise-head">Exercise 3.2-Mini Project</b>: There are exactly eight 3D vectors whose coordinates are all either +1 or −1. For instance, (1, −1, 1) is one of these. Plot all of these eight vectors as points. Then figure out how to connect them with line segments using <code class="fm-code-in-text2">Segment3D</code> objects to form the outline of a cube.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1106989"></a><b class="fm-exercise-head">Hint</b>: You’ll need 12 segments in total.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1106990"></a><b class="fm-exercise-head">Solution</b>: Because there are only 8 vertices and 12 edges, it’s not too tedious to list them all, but I decided to enumerate them with a list comprehension. For the vertices, I let <i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>, and <i class="fm-in-times-italic2">z</i> range over the list of two possible values <code class="fm-code-in-text2">[1,−1]</code> and collected the eight results. For the edges, I grouped them into three sets of four that point in each coordinate direction. For instance, there are four edges that go from <i class="fm-in-times-italic2">x</i> = −1 to <i class="fm-in-times-italic2">x</i> = 1, while their <i class="fm-in-times-italic2">y</i> − and <i class="fm-in-times-italic2">z</i>-coordinates are the same at both endpoints:</p>
+        <pre class="programlisting">pm1 = [1,−1]
+vertices = [(x,y,z) for <i class="fm-in-times-italic1">x</i> in pm1 for y in pm1 for z in pm1]
+edges = [((−1,y,z),(1,y,z)) for y in pm1 for z in pm1] +\
+            [((x,−1,z),(x,1,z)) for <i class="fm-in-times-italic1">x</i> in pm1 for z in pm1] +\
+            [((x,y,−1),(x,y,1)) for <i class="fm-in-times-italic1">x</i> in pm1 for y in pm1]
+draw3d(
+    Points3D(*vertices,color=blue),
+    *[Segment3D(*edge) for edge in edges]
+)</pre>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F12_Orland_UN02.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1095844"></a>The cube with all vertex coordinates equal to +1 or −1</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_7"><a id="pgfId-1092832"></a><a id="id_qd5rxsvjvaik"></a>3.2 Vector arithmetic in 3D</h2>
+
+  <p class="body"><a id="pgfId-1092833"></a>With these <a id="marker-1110104"></a>Python <a id="marker-1110109"></a>functions in hand, it’s easy to visualize the results of vector arithmetic in three dimensions. All of the arithmetic operations we saw in 2D have analogies in 3D, and the geometric effects of each are similar.</p>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1092835"></a>3.2.1 <a id="id_iu5fwztq7skf"></a>Adding 3D vectors</h3>
+
+  <p class="body"><a id="pgfId-1095929"></a>In 3D, vector <a id="marker-1110114"></a>addition can <a id="marker-1110119"></a>still be <a id="marker-1110124"></a>accomplished by adding coordinates. The vectors (2, 1, 1) and (1, 2, 2) sum to (2 + 1, 1 + 2, 1 + 2) = (3, 3, 3). We can start at the origin and place the two input vectors tip-to-tail in either order to get to the sum point (3, 3, 3) (figure 3.13).</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH03_F13a_Orland.png"/> <span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F13b_Orland.png"/></span><br class="calibre15"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1092841"></a>Figure 3.13 Two visual examples of vector addition in 3D</p>
+
+  <p class="body"><a id="pgfId-1092842"></a>As in 2D, we can add any number of 3D vectors together by summing all of their <i class="fm-in-times-italic">x</i>-coordinates, all of their <i class="fm-in-times-italic">y</i>-coordinates, and all of their <i class="fm-in-times-italic">z</i>-coordinates. These three sums give us the coordinates of the new vector. For instance, in the sum (1, 1, 3) + (2, 4, <span class="fm-in-cambria">−</span>4) + (4, 2, −2), the respective <i class="fm-in-times-italic">x</i>-coordinates are 1, 2, and 4, which sum to 7. The <i class="fm-in-times-italic">y</i>-coordinates sum to 7 as well, and the <i class="fm-in-times-italic">z</i>-coordinates sum to <span class="fm-in-cambria">−</span>3; therefore, the vector sum is (7, 7, <span class="fm-in-cambria">−</span>3). Tip-to-tail, the three vectors look like those in figure 3.14.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F14_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112304"></a>Figure 3.14 Adding three vectors tip-to-tail in 3D</p>
+
+  <p class="body"><a id="pgfId-1092848"></a>In Python, we can write a concise function to sum any number of input vectors, and that works in two or three dimensions (or an even higher number of dimensions as we’ll see later). Here it is:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">add</span>(*vectors):
+    by_coordinate = zip(*vectors)
+    coordinate_sums = [sum(coords) for coords in by_coordinate]
+    return tuple(coordinate_sums)</pre>
+
+  <p class="body"><a id="pgfId-1092850"></a>Let’s break it down. Calling Python’s <code class="fm-code-in-text">zip</code> function on the input vectors extracts their x-coordinates, <i class="fm-in-times-italic">y</i>-coordinates, and <i class="fm-italics">z</i>-coordinates. For instance,</p>
+  <pre class="programlisting">&gt;&gt;&gt; list(zip(*[(1,1,3),(2,4,<span class="fm-in-cambria">−</span>4),(4,2,−2)]))
+[(1, 2, 4), (1, 4, 2), (3, <span class="fm-in-cambria">−</span>4, −2)]</pre>
+
+  <p class="body"><a id="pgfId-1096188"></a>(You need to convert the <code class="fm-code-in-text">zip</code> result to a list to display its values.) If we apply Python’s <code class="fm-code-in-text">sum</code> function to each of the grouped coordinates, we get the sums of <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i> values, respectively:</p>
+  <pre class="programlisting">[sum(coords) for coords in [(1, 2, 4), (1, 4, 2), (3, <span class="fm-in-cambria">−</span>4, −2)]]
+[7, 7, <span class="fm-in-cambria">−</span>3]</pre>
+
+  <p class="body"><a id="pgfId-1096184"></a>Finally, for consistency, we convert this from a list to a tuple because we’ve represented all of our vectors as tuples to this point. The result is the tuple (7, 7, 3). We could also have written the <code class="fm-code-in-text">add</code> function as <a id="marker-1110129"></a>the <a id="marker-1110134"></a>following <a id="marker-1110139"></a>one-liner (which is perhaps less Pythonic):</p>
+  <pre class="programlisting">def <span class="fm-codebrown">add</span>(*vectors):
+    return tuple(map(sum,zip(*vectors)))</pre>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1092857"></a>3.2.2 <a id="id_h94jdht01b2j"></a>Scalar multiplication in 3D</h3>
+
+  <p class="body"><a id="pgfId-1092858"></a>To multiply a <a id="id-startrange-vectors"></a>3D vector <a id="id-startrange-multiplication"></a>by a <a id="id-startrange-arithmetic"></a>scalar, we multiply all of its components by the scalar factor. For example, the vector (1, 2, 3) multiplied by the scalar 2 gives us (2, 4, 6). This resulting vector is twice as long but points in the same direction as in the 2D case. Figure 3.15 shows <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (1, 2, 3) <a id="marker-1110186"></a>and <a id="marker-1110191"></a>its <a id="marker-1110196"></a>scalar multiple 2 <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (2, 4, 6).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F15_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112357"></a>Figure 3.15 Scalar multiplication by 2 returns a vector pointing in the same direction, which is twice as long as the original vector.</p>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1092865"></a>3.2.3 <a id="id_1ky4kybfxcfd"></a>Subtracting 3D vectors</h3>
+
+  <p class="body"><a id="pgfId-1096256"></a>In 2D, the <a id="marker-1110201"></a>difference <a id="marker-1110206"></a>of the <a id="marker-1110211"></a>two vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> is the vector “from <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>,” which is called the <i class="fm-italics">displacement</i> <a id="marker-1096257"></a>. In 3D, the story is the same; in other words, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> is the displacement from <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, which is the vector you can add to <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to get <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. Thinking of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> as arrows from the origin, the difference <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> is an arrow that can be positioned to have its tip at the tip of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and its tail at the tip of <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. Figure 3.16 shows the difference of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (−1, −3, 3) and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> = (3, 2, 4), both as an arrow from <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> to <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and as a point in its own right.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH03_F16a_Orland.png"/> <span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F16b_Orland.png"/></span><br class="calibre15"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1092872"></a>Figure 3.16 Subtracting the vector <i class="fm-in-times-italic">w</i> from the vector <i class="fm-in-times-italic">v</i> gives the displacement from <i class="fm-in-times-italic">w</i> to v.</p>
+
+  <p class="body"><a id="pgfId-1092873"></a>Subtracting a vector <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> from a vector <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is accomplished in coordinates by taking the difference of the coordinates of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">w</b></i>. For instance, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> gives us (−1 <span class="fm-in-cambria">−</span>3, <span class="fm-in-cambria">−</span>3 − 2, 3 − 4) = (−4, <span class="fm-in-cambria">−</span>5, −1) as a result. These coordinates agree with the picture of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic"><b class="fm-bold">w</b></i> in figure 3.16, which shows it’s a vector pointing in the negative <i class="fm-in-times-italic">x</i>, negative <i class="fm-in-times-italic">y</i>, and negative <i class="fm-in-times-italic">z</i> directions.</p>
+
+  <p class="body"><a id="pgfId-1092874"></a>When I claim scalar multiplication by two makes a vector “twice as long,” I’m thinking in terms of geometric similarity. If each of the three components of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> are doubled, corresponding to doubling the length, width, and depth of the box, the diagonal distance from one corner to the other should also double. To <a id="marker-1110216"></a>actually <a id="marker-1110221"></a>measure <a id="marker-1110226"></a>and confirm this, we need to know how to calculate distances in 3D.</p>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1092876"></a><a id="id_ffu8cmlawfgx"></a>3.2.4 Computing lengths and distances</h3>
+
+  <p class="body"><a id="pgfId-1092878"></a>In 2D, we <a id="marker-1110231"></a>calculated the <a id="marker-1110236"></a>length<a id="marker-1110241"></a> of a <a id="marker-1110246"></a>vector with the Pythagorean theorem<a id="marker-1092877"></a>, using the fact that an arrow vector and its components make a right triangle. Likewise, the distance between two points in the plane was just the length of their difference as a vector.</p>
+
+  <p class="body"><a id="pgfId-1092879"></a>We have to look a bit closer, but we can still find a suitable right triangle in 3D to help us calculate the length of a vector. Let’s try to find the length of the vector (4, 3, 12). The <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> components still give us a right triangle lying in the plane where <i class="fm-in-times-italic">z</i> = 0. This triangle’s hypotenuse, or diagonal side, has length <span class="calibre16"><img alt="" class="calibre1" src="../Images/CH03_F17_a_Orland.png"/></span>. If this were a 2D vector, we’d be done, but the <i class="fm-in-times-italic">z</i> component of 12 makes this vector quite a bit longer (figure 3.17).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F17_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112449"></a>Figure 3.17 Applying the Pythagorean theorem to find the length of a hypotenuse in the x,y plane</p>
+
+  <p class="body"><a id="pgfId-1092885"></a>So far all of the vectors we’ve considered lie in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane where <i class="fm-in-times-italic">z</i> = 0. The <i class="fm-in-times-italic">x</i> component is (4, 0, 0), the <i class="fm-in-times-italic">y</i> component is (0, 3, 0), and their vector sum is (4, 3, 0). The <i class="fm-in-times-italic">z</i> component of (0, 0, 12) is perpendicular to all three of these. That’s useful because it gives us a second right triangle in the diagram: the one formed by (4, 3, 0) and (0, 0, 12) and placed tip-to-tail. The hypotenuse of this triangle is our original vector (4, 3, 12), whose length we want to find. Let’s focus on this second right triangle and invoke the Pythagorean theorem again to find the hypotenuse length (shown in figure 3.18).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F18_Orland.png"/></span><img alt="" class="calibre14" src="../Images/w_gifs_143.gif"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112492"></a>Figure 3.18 A second application of the Pythagorean theorem gives us the length of the 3D vector.</p>
+
+  <p class="body"><a id="pgfId-1096470"></a>Squaring both known sides and taking the square root should give us the length. Here, the lengths are 5 and 12 so the result is  <span class="calibre16"><img alt="" class="calibre1" src="../Images/CH03_F18_Orland_EQ01a.png"/></span>. In general, the following equation shows the formula for the length of a vector in 3D:</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F18_Orland_EQ01.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1092896"></a>This is conveniently similar to the 2D length formula. In either 2D or 3D, the length of a vector is the square root of the sum of squares of its components. Because we don’t explicitly reference the length of the input tuple anywhere in the following <code class="fm-code-in-text">length</code> function, it will work on either 2D or 3D vectors:</p>
+  <pre class="programlisting">from math import sqrt
+def <span class="fm-codebrown">length</span>(<i class="fm-in-times-italic1">v</i>):
+    return sqrt(sum([coord ** <span class="fm-codered">2</span> for coord in v]))</pre>
+
+  <p class="body"><a id="pgfId-1092898"></a><a id="marker-1110946"></a>So,<a id="marker-1110251"></a> for <a id="marker-1110256"></a>instance, <code class="fm-code-in-text">length((3,4,12))</code> <a id="marker-1110261"></a>returns 13.</p>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1092900"></a><a id="id_ng6a5sp0i48r"></a>3.2.5 Computing angles and directions</h3>
+
+  <p class="body"><a id="pgfId-1092901"></a>As in 2D, <a id="marker-1110266"></a>you <a id="marker-1110271"></a>can <a id="marker-1110276"></a>think <a id="marker-1110281"></a>of a 3D vector as an arrow or a displacement of a certain length in a certain direction. In 2D, this means that two numbers−a length and an angle making a pair of polar coordinates−are sufficient to specify any 2D vector. In 3D, one angle is not sufficient to specify a direction but two angles are.</p>
+
+  <p class="body"><a id="pgfId-1092902"></a></p>
+
+  <p class="body"><a id="pgfId-1096740"></a> For the first angle, we again think of the vector without its <i class="fm-in-times-italic">z</i>-coordinate, as if it still lived in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane. Another way of thinking of this is as the shadow cast by the vector from a light at a very high <i class="fm-in-times-italic">z</i> position. This shadow makes some angle with the positive x-axis, which is analogous to the angle we used in polar coordinates, and we label it with the Greek letter <span class="fm-in-cambria">φ</span> (phi). The second angle is the one that the vector makes with the z-axis, which is labeled with the Greek letter <span class="fm-in-cambria">θ</span> (theta). Figure 3.19 shows these angles.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F19_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112544"></a>Figure 3.19 Two angles that together measure the direction of a 3D vector</p>
+
+  <p class="body"><a id="pgfId-1107180"></a> The length of the vector, labeled <b class="fm-bold1">r</b>, along with the angles <span class="fm-in-cambria">φ</span> and <span class="fm-in-cambria">θ</span> can describe any vector in three dimensions. Together, the three numbers <i class="fm-in-times-italic">r</i> , <span class="fm-in-cambria">φ</span>, and <span class="fm-in-cambria">θ</span> are called <i class="fm-italics">spherical coordinates</i> <a id="marker-1107181"></a> as opposed to the Cartesian<a id="marker-1107182"></a> coordinates <i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>, and <i class="fm-in-times-italic">z</i>. Calculating spherical coordinates from Cartesian coordinates is a doable exercise with only the trigonometry we’ve covered, but we won’t go into it here. <i class="fm-italics">In fact, w</i> e won’t use spherical coordinates again in this book, but I want to briefly compare them with polar coordinates.</p>
+
+  <p class="body"><a id="pgfId-1107183"></a>Polar coordinates were useful beca-use they allowed us to perform any rotation of a collection of plane vectors by simply adding or subtracting from the angle. We were also able to read the angle between two vectors by taking the difference of their angles in polar coordinates. In three dimensions, neither of the angles <span class="fm-in-cambria">φ</span> and <span class="fm-in-cambria">θ</span> lets us immediately decide the angle between two vectors. And while we could rotate vectors easily around the z-axis by adding or subtracting from the angle <span class="fm-in-cambria">φ</span>, it’s not convenient to rotate about any other axis in spherical coordinates.</p>
+
+  <p class="body"><a id="pgfId-1092912"></a>We need some more general tools to handle angles and trigonometry in 3D. We’ll cover two <a id="marker-1110286"></a>such <a id="marker-1110291"></a>tools, called <i class="fm-italics">vector products</i> <a id="marker-1092913"></a>, in the <a id="marker-1110296"></a>next <a id="marker-1110301"></a>section.</p>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1097424"></a><a id="id_c4kzitwxosp1"></a>3.2.6 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097410"></a><b class="fm-exercise-head">Exercise 3.3</b>: <a id="marker-1110306"></a>Draw <a id="marker-1110311"></a>(4, 0, 3) and (−1, 0, 1) as <code class="fm-code-in-text2">Arrow3D</code> objects, such that they are placed tip-to-tail in both orders in 3D. What is their vector sum?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097411"></a><b class="fm-exercise-head">Solution</b>: We can find the vector sum using the <code class="fm-code-in-text2">add</code> function we built:</p>
+        <pre class="programlisting">&gt;&gt;&gt; add((4,0,3),(−1,0,1))
+(3, 0, 4)</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097414"></a>Then to draw these tip-to-tail, we draw arrows from the origin to each point and from each point to the vector sum (3, 0, 4). Like the 2D <code class="fm-code-in-text2">Arrow</code> object, <code class="fm-code-in-text2">Arrow3D</code> <a id="marker-1097415"></a> takes the tip vector of the arrow first and then, optionally, the tail vector if it is not the origin:</p>
+        <pre class="programlisting">draw3d(
+    Arrow3D((4,0,3),color=red),
+    Arrow3D((−1,0,1),color=blue),
+    Arrow3D((3,0,4),(4,0,3),color=blue),
+    Arrow3D((−1,0,1),(3,0,4),color=red),
+    Arrow3D((3,0,4),color=purple)
+)</pre>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F19_Orland_UN03.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1097423"></a>Tip-to-tail addition shows (4, 0, 3) + (−1, 0, 1) = (−1, 0, 1) + (4, 0, 3) = (3, 0, 4).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097427"></a><b class="fm-exercise-head">Exercise 3.4</b>: Suppose we set <code class="fm-code-in-text2">vectors1=[(1,2,3,4,5),(6,7,8,9,10)]</code> and <code class="fm-code-in-text2">vectors2=[(1,2),(3,4),(5,6)]</code>. Without evaluating in Python, what are the lengths of <code class="fm-code-in-text2">zip(*vectors1)</code> and <code class="fm-code-in-text2">zip(*vectors2)</code> ?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097428"></a><b class="fm-exercise-head">Solution</b>: The first <code class="fm-code-in-text2">zip</code> has length 5. Because there are five coordinates in each of the two input vectors, <code class="fm-code-in-text2">zip(*vectors1)</code> contains five tuples, having two <a id="pgfId-1107209"></a>elements each. Likewise, <code class="fm-code-in-text2">zip(*vectors2)</code> has length 2; the two entries of <code class="fm-code-in-text2">zip(*vectors2)</code> are tuples containing all of the <i class="fm-in-times-italic2">x</i> components and all of the <i class="fm-in-times-italic2">y</i> components, respectively.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097431"></a><b class="fm-exercise-head">Exercise 3.5−Mini Project</b>: The following comprehension creates a list of 24 Python vectors:</p>
+        <pre class="programlisting">from math import sin, cos, pi
+vs = [(<span class="fm-in-times1">sin</span>(pi*t/<span class="fm-codered">6</span>), <span class="fm-in-times1">cos</span>(pi*t/<span class="fm-codered">6</span>), <span class="fm-codered">1.0</span>/<span class="fm-codered">3</span>) for t in range(<span class="fm-codered">0</span>,<span class="fm-codered">24</span>)]</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097434"></a>What is the sum of the 24 vectors? Draw all 24 of them tip-to-tail as <code class="fm-code-in-text2">Arrow3D</code> <a id="marker-1097433"></a> objects.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097435"></a><b class="fm-exercise-head">Solution</b>: Drawing these vectors tip-to-tail ends up producing a helix shape:</p>
+        <pre class="programlisting">from math import sin, cos, pi
+vs = [(<span class="fm-in-times1">sin</span>(pi*t/<span class="fm-codelightblue">6</span>), <span class="fm-in-times1">cos</span>(pi*t/<span class="fm-codelightblue">6</span>), <span class="fm-codelightblue">1.0</span>/<span class="fm-codelightblue">3</span>) for t in range(<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">24</span>)]
+
+running_sum = (<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">0</span>)                            <span class="fm-combinumeral">❶</span>
+arrows = []
+for <i class="fm-in-times-italic1">v</i>  in vs:
+    next_sum = add(running_sum, v)               <span class="fm-combinumeral">❷</span>
+    arrows.append(Arrow3D(next_sum, running_sum)) 
+    running_sum = next_sum
+print(running_sum)
+draw3d(*arrows)</pre>
+
+        <p class="fm-code-annotation"><a id="pgfId-1111144"></a><span class="fm-combinumeral">❶</span> Begins a running sum at (0, 0, 0), where the tip-to-tail addition starts</p>
+
+        <p class="fm-code-annotation"><a id="pgfId-1111161"></a><span class="fm-combinumeral">❷</span> To draw each subsequent vector tip-to-tail, we add it to the running sum. The latest arrow connects the previous running sum to the next.</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F19_Orland_UN04.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1097440"></a>Finding the vector sum of 24 vectors in 3D</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097441"></a>The sum is</p>
+        <pre class="programlisting">(−4.440892098500626e−16, <span class="fm-in-cambria">−</span>7.771561172376096e−16, 7.9999999999999964)</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097443"></a>which is approximately (0, 0, 8).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097719"></a><b class="fm-exercise-head">Exercise 3.6</b>: Write a function <code class="fm-code-in-text2">scale(scalar,vector)</code> that returns the input scalar times the input vector. Specifically, write it so it works on 2D or 3D vectors, or vectors of any number of coordinates.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097720"></a><b class="fm-exercise-head">Solution</b>: With a comprehension, we multiply each coordinate in the vector by the scalar. This is a generator comprehension that is converted to a tuple:</p>
+        <pre class="programlisting">def <span class="fm-codebrown">scale</span>(scalar,v):
+    return tuple(scalar * coord for coord in v)</pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097744"></a><b class="fm-exercise-head">Exercise 3.7</b>: Let <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> = (1, −1, −1) and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = (0, 0, 2). What is the result of <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> + <span class="fm-in-cambria">½</span> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>)?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097745"></a><b class="fm-exercise-head">Solution</b>: With <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> = (1, −1, −1) and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = (0, 0, 2), we can first compute (<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>) = (0 − 1, 0 − (−1), 2 − (−1)) = (−1, 1, 3). Then <span class="fm-in-cambria">½</span> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>) is (−<span class="fm-in-cambria">½</span>, <span class="fm-in-cambria">½</span>, 3/2). The final desired result of <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> + <span class="fm-in-cambria">½</span> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> − <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>) is then (<span class="fm-in-cambria">½</span>, −<span class="fm-in-cambria">½</span>, <span class="fm-in-cambria">½</span>). Incidentally, this is the point exactly halfway between the point <i class="fm-in-times-italic2">u</i> and the point <i class="fm-in-times-italic2">v</i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097770"></a><b class="fm-exercise-head">Exercise 3.8</b>: Try to find the answers for this exercise without using code and then check your work. What is the length of the 2D vector (1, 1)? What is the length of the 3D vector (1, 1, 1)? We haven’t yet talked about 4D vectors, but these have four coordinates instead of two or three. If you had to guess, what is the length of the 4D vector with coordinates (1, 1, 1, 1)?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097771"></a><b class="fm-exercise-head">Solution</b>: The length of (1, 1) is   <img alt="" class="calibre14" src="../Images/CH03_F19_Orland_UN04_EQa.png"/>. The length of (1, 1, 1) is <img alt="" class="calibre14" src="../Images/CH03_F19_Orland_UN04_EQb.png"/>. As you might guess, we use the same distance formula for higher dimensional vectors as well. The length of (1, 1, 1, 1) follows the same pattern: it is <img alt="" class="calibre14" src="../Images/CH03_F19_Orland_UN04_EQc.png"/>, which is 2.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097883"></a><b class="fm-exercise-head">Exercise 3.9−Mini Project</b>: The coordinates 3, 4, 12 in any order create a vector of length 13, a whole number. This is unusual because most numbers are not perfect squares, so the square root in the length formula typically returns an irrational number. Find a different triple of whole numbers that define coordinates of a vector with a whole number length.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097884"></a><b class="fm-exercise-head">Solution</b>: The following code searches for triples of descending whole numbers less than 100 (an arbitrary choice):</p>
+        <pre class="programlisting">def vectors_with_whole_number_length(max_coord=<span class="fm-codelightblue">100</span>):
+    for <i class="fm-in-times-italic1">x</i> in range(<span class="fm-codelightblue">1</span>,max_coord):
+        for y in range(<span class="fm-codelightblue">1</span>,x+<span class="fm-codelightblue">1</span>):
+          for z in range(<span class="fm-codelightblue">1</span>,y+<span class="fm-codelightblue">1</span>):
+                if length((x,y,z)).is_integer():
+                    yield (x,y,z)</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097940"></a>It finds 869 vectors with whole number coordinates and whole number lengths. The shortest of these is (2, 2, 1) with length exactly 3, and the longest is (99, 90, 70) with length exactly 150.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1097963"></a><b class="fm-exercise-head">Exercise 3.10</b>: Find a vector in the same direction as (−1, −1, 2) but which has length 1.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1109412"></a><b class="fm-exercise-head">Hint</b>: Find the appropriate scalar to multiply the original vector to change its length appropriately.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097964"></a><b class="fm-exercise-head">Solution</b>: The length of (−1, −1, 2) is about 2.45, so we’ll have to take a scalar multiple of this vector by (1/2.45) to make its length 1:</p>
+        <pre class="programlisting">&gt;&gt;&gt; length((−1,−1,2))
+2.449489742783178
+&gt;&gt;&gt; s = 1/length((−1,−1,2))
+&gt;&gt;&gt; scale(s,(−1,−1,2))
+(−0.4082482904638631, -0.4082482904638631, 0.8164965809277261)
+&gt;&gt;&gt; length(scale(s,(−1,−1,2)))
+1.0</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1097966"></a>Rounding<a id="marker-1110316"></a> to the <a id="marker-1110321"></a>nearest <a id="marker-1110326"></a>hundredth <a id="marker-1110331"></a>in each coordinate, the vector is (−0.41, -0.41, 0.82).</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_14"><a id="pgfId-1092977"></a><a id="id_lplrqo1lvg07"></a>3.3 The dot product: Measuring vector alignment</h2>
+
+  <p class="body"><a id="pgfId-1092978"></a>One kind of multiplication <a id="marker-1110341"></a>we’ve already seen for vectors is scalar multiplication, combining a scalar (a real number) and a vector to get a new vector. We haven’t yet talked about any ways to multiply one vector with another. It turns out there are two important ways to do this, and these both give important geometric insights. One is called the <i class="fm-italics">dot product</i> and we write it with a dot operator (for example, <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>), while the other is called the <i class="fm-italics">cross product</i> <a id="marker-1092979"></a> (for example, <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>). For numbers, these symbols mean the same thing, so for instance 3 <span class="fm-in-cambria">·</span> 4 = 3 <span class="fm-in-cambria">×</span> 4. For two vectors, the operations <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> aren’t just different notations, <a id="id_Hlk42802365"></a>these mean completely different things.</p>
+
+  <p class="body"><a id="pgfId-1092981"></a>The dot product takes two vectors and returns a scalar (a number), while the cross product takes two vectors and returns another vector. Both, however, are operations that help us reason about lengths and directions of vectors in 3D. Let’s start by focusing on the dot product.</p>
+
+  <h3 class="fm-head1" id="heading_id_15"><a id="pgfId-1092983"></a><a id="id_a4mwycjxzaww"></a>3.3.1 Picturing the dot product</h3>
+
+  <p class="body"><a id="pgfId-1092984"></a>The dot product <a id="marker-1110351"></a>(also called the <i class="fm-italics">inner product</i>) is an operation on two vectors that returns a scalar. In other words, given two vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, the result of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is a real number. The dot product works on vectors in 2D, 3D, or any number of dimensions. You can think of it as measuring “how aligned” the pair of input vectors are. Let’s first look at some vectors in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane and show their dot products to give you some intuition for how this operation works.</p>
+
+  <p class="body"><a id="pgfId-1092985"></a>The vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> have lengths 4 and 5, respectively, and they point in nearly the same direction. Their dot product is positive, meaning they are aligned (figure 3.20).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F20_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112604"></a>Figure 3.20 Two vectors that are relatively aligned give a large positive dot product.</p>
+
+  <p class="body"><a id="pgfId-1092991"></a>Two vectors that are pointing in similar directions have a positive dot product, and the larger the vectors, the larger the product. Smaller vectors that are similarly aligned have a smaller but still positive dot product. The new vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> both have a length of 2 (figure 3.21).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F21_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112648"></a>Figure 3.21 Two shorter vectors pointing in similar directions give a smaller but still positive dot product.</p>
+
+  <p class="body"><a id="pgfId-1092997"></a>By contrast, if two vectors point in opposite or near opposite directions, their dot product is negative (figures 3.22 and 3.23). The bigger the magnitude of the vectors, the more negative their dot product.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F22_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112705"></a>Figure 3.22 Vectors pointing in opposing directions have a negative dot product.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F23_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112733"></a>Figure 3.23 Shorter vectors pointing in opposing directions have a smaller but still negative dot product.</p>
+
+  <p class="body"><a id="pgfId-1093008"></a>Not all pairs of vectors clearly point in similar or opposite directions, and the dot product detects this. As figure 3.24 shows, if two vectors point in exactly perpendicular directions, their dot product is zero regardless of their lengths.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F24_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112775"></a>Figure 3.24 Perpendicular vectors always have a dot product of zero.</p>
+
+  <p class="body"><a id="pgfId-1093014"></a>This turns out to be one of the most important applications of the dot product: it lets us compute whether two vectors are perpendicular without doing any trigonometry. This perpendicular case also serves to separate the other cases: if the angle between two vectors is less than <span class="fm-in-cambria">90°</span>, the vectors then have a positive dot product. If the angle is greater than <span class="fm-in-cambria">90°</span>, they have a negative dot product. While I haven’t yet told you how to compute a dot product, you now know how to interpret the value. We move <a id="marker-1110361"></a>on to computing it next.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1093016"></a><a id="id_e900o9ot54cs"></a>3.3.2 Computing the dot product</h3>
+
+  <p class="body"><a id="pgfId-1093017"></a>Given the coordinates <a id="marker-1110418"></a>for two vectors, there’s a simple formula to compute the dot product: multiply the corresponding coordinates and then add the products. For instance in the dot product (1, 2, −1) <span class="fm-in-cambria">·</span> (3, 0, 3), the product of the <i class="fm-in-times-italic">x</i>-coordinate is 3, the product of the <i class="fm-in-times-italic">y</i>-coordinate is 0, and the product of the <i class="fm-in-times-italic">z</i>-coordinate is <span class="fm-in-cambria">−</span>3. The sum is 3 + 0 + (−3) = 0, so the dot product is zero. If my claim is correct, these two vectors should be perpendicular. Drawing them (figure 3.25) demonstrates this, if you look at them from the right perspective!</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F25_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112825"></a>Figure 3.25 Two vectors with a dot product of zero are indeed perpendicular in 3D.</p>
+
+  <p class="body"><a id="pgfId-1093023"></a>Our perspective can be misleading in 3D, making it all the more valuable to be able to <i class="fm-italics">compute</i> relative directions rather than eyeballing them. As another example, figure 3.26 shows that the 2D vectors (2, 3) and (4, 5) lie in similar directions in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane. The product of the <i class="fm-in-times-italic">x</i>-coordinates is 2 <span class="fm-in-cambria">·</span> 4 = 8, while the product of the <i class="fm-in-times-italic">y</i>-coordinates is 3 <span class="fm-in-cambria">·</span> 5 = 15. The sum 8 + 15 = 23 is the dot product. As a positive number, this result confirms that the vectors are separated by less than <span class="fm-in-cambria">90°</span>. These vectors have the same relative geometry whether we consider them in 2D or in 3D as the vectors (2, 3, 0) and (4, 5, 0) that happen to lie in the plane where <i class="fm-in-times-italic">z</i> = 0.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F26_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112965"></a>Figure 3.26 Another example of computing a dot product</p>
+
+  <p class="body"><a id="pgfId-1093029"></a>In Python, we can write a dot product function that handles any pair of input vectors as long as they all have the same number of coordinates. For example,</p>
+  <pre class="programlisting">def <span class="fm-codebrown">dot</span>(u,v):
+    return sum([coord1 * coord2 for coord1,coord2 in zip(u,v)])</pre>
+
+  <p class="body"><a id="pgfId-1093031"></a>This code uses Python’s <code class="fm-code-in-text">zip</code> function to pair the appropriate coordinates, then multiplies each pair in a comprehension, and adds the resulting list. Let’s use this to further <a id="marker-1110428"></a>explore how the dot product behaves.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1093033"></a><a id="id_cbuefoc0kxrl"></a>3.3.3 Dot products by example</h3>
+
+  <p class="body"><a id="pgfId-1093034"></a>It’s not surprising <a id="marker-1110438"></a>that two vectors lying on different axes have zero dot product. We know they are perpendicular:</p>
+  <pre class="programlisting">&gt;&gt;&gt; dot((<span class="fm-codered">1</span>,<span class="fm-codered">0</span>),(<span class="fm-codered">0</span>,<span class="fm-codered">2</span>))
+<span class="fm-codered">0</span> 
+&gt;&gt;&gt; dot((<span class="fm-codered">0</span>,<span class="fm-codered">3</span>,<span class="fm-codered">0</span>),(<span class="fm-codered">0</span>,<span class="fm-codered">0</span>,<span class="fm-codered"><span class="fm-in-cambria">−</span>5</span>))
+<span class="fm-codered">0</span> </pre>
+
+  <p class="body"><a id="pgfId-1093036"></a>We can also confirm that longer vectors give longer dot products. For instance, scaling either input vector by a factor of 2 doubles the output of the dot product:</p>
+  <pre class="programlisting">&gt;&gt;&gt; dot((<span class="fm-codered">3</span>,<span class="fm-codered">4</span>),(<span class="fm-codered">2</span>,<span class="fm-codered">3</span>))
+<span class="fm-codered">18</span> 
+&gt;&gt;&gt; dot(scale(<span class="fm-codered">2</span>,(<span class="fm-codered">3</span>,<span class="fm-codered">4</span>)),(<span class="fm-codered">2</span>,<span class="fm-codered">3</span>))
+<span class="fm-codered">36</span> 
+&gt;&gt;&gt; dot((<span class="fm-codered">3</span>,<span class="fm-codered">4</span>),scale(<span class="fm-codered">2</span>,(<span class="fm-codered">2</span>,<span class="fm-codered">3</span>)))
+<span class="fm-codered">36</span> </pre>
+
+  <p class="body"><a id="pgfId-1093038"></a>It turns out the dot product is proportional to each of the lengths of its input vectors. If you take the dot product of two vectors in the same direction, the dot product is precisely equal to the product of the lengths. For instance, (4, 3) has a length of 5 and (8, 6) has a length of 10. The dot product is equal to 5 <span class="fm-in-cambria">·</span> 10:</p>
+  <pre class="programlisting">&gt;&gt;&gt; dot((<span class="fm-codered">4</span>,<span class="fm-codered">3</span>),(<span class="fm-codered">8</span>,<span class="fm-codered">6</span>))
+<span class="fm-codered">50</span> </pre>
+
+  <p class="body"><a id="pgfId-1093040"></a>Of course, the dot product is not always equal to the product of the lengths of its inputs. The vectors (5, 0), (−3, 4), (0, <span class="fm-in-cambria">−</span>5), and (−4, <span class="fm-in-cambria">−</span>3) all have the same length of 5 but different dot products with the original vector (4, 3) as shown in figure 3.27.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F27_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112881"></a>Figure 3.27 Vectors of the same length have different dot products with the vector (4, 3), depending on their direction.</p>
+
+  <p class="body"><a id="pgfId-1098493"></a><a id="id_Hlk42802929"></a>The dot product of two vectors of length 5 ranges from 5 <span class="fm-in-cambria">·</span> 5 = 25 when they are aligned to −25, when they point in opposite directions. In the next set of exercises, I invite you to convince yourself that the dot product of two vectors can range from the product of the lengths down to the opposite of that <a id="marker-1110448"></a>value.</p>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1093049"></a><a id="id_i5pc8p4onh0f"></a>3.3.4 Measuring angles with the dot product</h3>
+
+  <p class="body"><a id="pgfId-1093050"></a>We’ve seen that<a id="marker-1110458"></a> the <a id="marker-1110951"></a>dot product varies based on the angle between two vectors. Specifically, the dot product <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> ranges from 1 to −1 times the product of the lengths of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> as the angle ranges from 0 to <span class="fm-in-cambria">180°</span>. We already saw a function that behaves that way, namely the cosine function. It turns out that the dot product has an alternate formula. If |<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>| and |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| denote the lengths of vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, the dot product is given by</p>
+
+  <p class="fm-equation"><a id="pgfId-1093051"></a><i class="fm-in-times-italic2">u</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">v</i> = |<i class="fm-in-times-italic2">u</i>| <span class="fm-in-cambria">·</span> |<i class="fm-in-times-italic2">v</i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">θ</span>)</p>
+
+  <p class="body"><a id="pgfId-1093052"></a>where <span class="fm-in-cambria">θ</span> is the angle between the vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. In principle this gives us a new way to compute a dot product. We could measure the lengths of two vectors and then measure the angle between them to get the result. Suppose, as in figure 3.28, we have two vectors of known lengths 3 and 2, respectively, and using our protractor, discovered that they are <span class="fm-in-cambria">75°</span> apart.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F28_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1112923"></a>Figure 3.28 Two vectors of lengths 3 and 2, respectively, at <span class="fm-in-cambria">75°</span> apart</p>
+
+  <p class="body"><a id="pgfId-1093058"></a>The dot product for the two vectors in figure 3.28 is 3 <span class="fm-in-cambria">·</span> 2 <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">75°</span>). With the appropriate conversion to radians, we can compute this in Python to be about 1.55:</p>
+  <pre class="programlisting">&gt;&gt;&gt; from math import cos,pi
+&gt;&gt;&gt; <span class="fm-codered">3</span> * <span class="fm-codered">2</span> * <span class="fm-in-times1">cos</span>(<span class="fm-codered">75</span> * pi / <span class="fm-codered">180</span>)
+<span class="fm-codered">1.5529142706151244</span> </pre>
+
+  <p class="body"><a id="pgfId-1093060"></a>When doing computations with vectors, it’s more common to start with coordinates and to compute angles from them. We can combine both of our formulas to recover an angle: first we compute the dot product and lengths using coordinates, then we solve for the angle.</p>
+
+  <p class="body"><a id="pgfId-1104434"></a>Let’s find the angle between the vectors (3, 4) and (4, 3). Their dot product is 24, and each of their lengths is 5. Our new dot product formula tells us that:</p>
+
+  <p class="fm-equation"><a id="pgfId-1104435"></a>(3, 4) <span class="fm-in-cambria">·</span> (4, 3) = 24 = 5 <span class="fm-in-cambria">·</span> 5 <span class="fm-in-cambria">·</span> <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">θ</span>) = 25 <span class="fm-in-cambria">·</span> <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">θ</span>)</p>
+
+  <p class="body"><a id="pgfId-1104436"></a>From 24 = 25 <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>), we can simplify it to <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>) = 24/25. Using Python’s <code class="fm-code-in-text">math.acos</code>, we find that a <span class="fm-in-cambria">θ</span> value of 0.284 radians or 16.3° gives us a cosine of 24/25.</p>
+
+  <p class="body"><a id="pgfId-1093064"></a>This exercise reminds us why we don’t need the dot product in 2D. In chapter 2, we showed how to get the angle of a vector from the positive x-axis. Using that formula creatively, we could find any angle we want in the plane. The dot product really starts to shine in 3D, where a change of coordinates can’t help us as much.</p>
+
+  <p class="body"><a id="pgfId-1093065"></a>For instance, we can use the same formula to find the angle between (1, 2, 2) and (2, 2, 1). The dot product is 1 <span class="fm-in-cambria">·</span> 2 + 2 <span class="fm-in-cambria">·</span> 2 + 2 <span class="fm-in-cambria">·</span> 1 = 8 and the lengths are both 3. This means 8 = 3 <span class="fm-in-cambria">·</span> 3 <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>), so <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>) = 8/9 and <span class="fm-in-cambria">θ</span> = 0.476 radians or 27.3°.</p>
+
+  <p class="body"><a id="pgfId-1093066"></a>This process is the same in 2D or 3D, and it’s one we’ll use over and over. We can save some effort by implementing a Python function to find the angle between two vectors. Because neither our dot function nor our length function has a hard-coded number of dimensions, this new function won’t either. We can make use of the fact that <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = |<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>| <span class="fm-in-cambria">·</span> |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">cos</span>(<span class="fm-in-cambria">θ</span>) and, therefore,</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F28_Orland_EQ02.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1093071"></a>and</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F28_Orland_EQ03.png"/></span></p>
+
+  <p class="body"><a id="pgfId-1093076"></a>This formula translates neatly to Python code as follows:</p>
+  <pre class="programlisting">def angle_between(v1,v2):
+    return a<span class="fm-in-times1">cos</span>(
+                dot(v1,v2) /
+                (length(v1) * length(v2))
+            )</pre>
+
+  <p class="body"><a id="pgfId-1093078"></a>Nothing in this Python code depends on the number of dimensions of the vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">1</sub> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">2</sub>. These could both be tuples of 2 coordinates or tuples of 3 coordinates (or, in fact, tuples of 4 or more coordinates, which we discuss in the coming chapters). By contrast, the next vector product we meet (the cross product) only works<a id="marker-1110468"></a> in three <a id="marker-1110473"></a>dimensions.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1093080"></a><a id="id_u6sj6pp2xtb"></a>3.3.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1107788"></a><b class="fm-exercise-head">Exercise 3.11</b>: Based on the<a id="marker-1110483"></a> following picture, rank <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>, <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">w</b></i>, and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">w</b></i> from largest to smallest:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F28_Orland_UN05.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100064"></a><b class="fm-exercise-head">Solution</b>: The product <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> is the only positive dot product because <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> are the only pair with less than a right angle between them. Further, <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">w</b></i> is smaller (more negative) than <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">w</b></i> because <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> is both bigger and further from <i class="fm-in-times-italic2"><b class="fm-bold">w</b></i>, so <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> &gt; x<b class="fm-bold1">v</b> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">w</b></i> &gt; x<b class="fm-bold1">u</b> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">w</b></i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100154"></a><b class="fm-exercise-head">Exercise 3.12</b>: What is the dot product of (−1, −1, 1) and (1, 2, 1)? Are these two 3D vectors separated by more than <span class="fm-in-cambria">90°</span>, less than <span class="fm-in-cambria">90°</span>, or exactly <span class="fm-in-cambria">90°</span>?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100155"></a><b class="fm-exercise-head">Solution</b>: (−1, −1, 1) and (1, 2, 1) have the dot product −1 <span class="fm-in-cambria">·</span> 1 + −1 <span class="fm-in-cambria">·</span> 2 + 1 <span class="fm-in-cambria">·</span> 1 = −2. Because this is a negative number, the two vectors are more than <span class="fm-in-cambria">90°</span> apart.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100445"></a><b class="fm-exercise-head">Exercise 3.13-Mini Project</b>: For two 3D vectors <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>, the values of (2<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> (2<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) are both equal to 2(<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>). In this case, <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = 18 and both (2<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> (2<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) are 36, twice the original result. Show that this works for any real number <i class="fm-in-times-italic2">s</i>, not just 2. In other words, show that for any <i class="fm-in-times-italic2">s</i> the values of (<i class="fm-in-times-italic2">s</i> <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> (<i class="fm-in-times-italic2">s</i> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) are both equal to <i class="fm-in-times-italic2">s</i>(<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="fm-exercise-text"><a id="pgfId-1093093"></a> </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100495"></a><b class="fm-exercise-head">Solution</b>: Let’s name the coordinates of <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>, say <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> = (<i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i>, <i class="fm-in-times-italic2">c</i>) and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic2">d</i>, <i class="fm-in-times-italic2">e</i>, <i class="fm-in-times-italic2">f</i> ). Then <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = <i class="fm-italics">ad</i> + <i class="fm-italics">be</i> + <i class="fm-italics">cf</i>. Because <i class="fm-in-times-italic2">s</i> <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> = (<i class="fm-italics">sa</i>, <i class="fm-italics">sb</i>, <i class="fm-in-times-italic2">sc</i>) and <i class="fm-in-times-italic2">s</i> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = (<i class="fm-italics">sd</i>, <i class="fm-italics">se</i>, <i class="fm-italics">sf</i>), we can show both of the results by expanding the dot products:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F28_Orland_UN06.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1100500"></a>Proving that scalar multiplication scales the result of the dot product accordingly</p>
+
+        <p class="fm-equation"><a id="pgfId-1100501"></a>And the other product works the same way:</p>
+
+        <p class="fm-equation"><span class="calibre17"><span class="calibre18"><b class="calibre19"><i class="calibre20"><img alt="" class="calibre14" src="../Images/CH03_F28_Orland_UN06_EQ05.png"/><br class="calibre15"/></i></b></span></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1100506"></a>Proving the same fact holds for the second vector input to the dot product.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100691"></a><b class="fm-exercise-head">Exercise 3.14-Mini Project</b>: Explain algebraically why the dot product of a vector with itself is the square of its length.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100692"></a><b class="fm-exercise-head">Solution</b>: If a vector has coordinates (<i class="fm-in-times-italic2">a</i>, <i class="fm-in-times-italic2">b</i>, <i class="fm-in-times-italic2">c</i>), then the dot product with itself is <i class="fm-in-times-italic2">a</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">a</i> + <i class="fm-in-times-italic2">b</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">b</i> + <i class="fm-in-times-italic2">c</i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2">c</i>. Its length is  <span class="calibre21"><img alt="" class="calibre14" src="../Images/CH03_F28_Orland_UN06_EQ05b.png"/></span>, so this is indeed the square.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100728"></a><b class="fm-exercise-head">Exercise 3.15-Mini Project</b>: Find a vector <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> of length 3 and a vector <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> of length 7 such that <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = 21. Find another pair of vectors <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> such that <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = −21. Finally, find three more pairs of vectors of respective lengths 3 and 7 and show that all of their lengths lie between −21 and 21.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100729"></a><b class="fm-exercise-head">Solution</b>: Two vectors in the same direction (for instance, along the positive x-axis) will have the highest possible dot product:</p>
+        <pre class="programlisting">&gt;&gt;&gt; dot((<span class="fm-codered">3</span>,<span class="fm-codered">0</span>),(<span class="fm-codered">7</span>,<span class="fm-codered">0</span>))
+21</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100775"></a>Two vectors in the opposite direction (for instance, the positive and negative <i class="fm-in-times-italic2">y</i> directions) will have the lowest possible dot product:</p>
+        <pre class="programlisting">&gt;&gt;&gt; dot((<span class="fm-codered">0</span>,<span class="fm-codered">3</span>),(<span class="fm-codered">0</span>,<span class="fm-codered"><span class="fm-in-cambria">−</span>7</span>))
+−21</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100777"></a>Using polar coordinates, we can easily generate some more vectors of length 3 and 7 with random angles:</p>
+        <pre class="programlisting">from vectors import to_cartesian
+from random import random
+from math import pi
+
+def <span class="fm-codebrown">random_vector_of_length</span>(l):
+    return to_cartesian((l, <span class="fm-codedarkred">2</span> *pi*random()))
+
+pairs = [(random_vector_of_length(<span class="fm-codedarkred">3</span>), random_vector_of_length(<span class="fm-codedarkred">7</span>))
+            for i in range(<span class="fm-codedarkred">0</span>,<span class="fm-codedarkred">3</span>)]
+for u,v in pairs:
+    print(<span class="fm-codegreen">"u = %s, v  = %s" % (u,v))</span>
+    print(<span class="fm-codegreen">"length of u: %f, length of v: %f, dot product :%f"</span> %
+                <span class="fm-codegreen">(length(u), length(v), dot(u,v)))</span></pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100828"></a><b class="fm-exercise-head">Exercise 3.16</b>: Let <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> be vectors, with |<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>| = 3.61 and |<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>| = 1.44. If the angle between <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> is 101.3°, what is <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> ?</p>
+
+        <ul class="calibre22">
+          <li class="fm-exercise-list-num"><a id="pgfId-1100829"></a>5.198</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100830"></a>5.098</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100831"></a>−1.019</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100832"></a>1.019</li>
+        </ul>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100833"></a><b class="fm-exercise-head">Solution</b>: Again, we can plug these values into the new dot product formula and, with the appropriate conversion to radians, evaluate the result in Python:</p>
+        <pre class="programlisting">&gt;&gt;&gt; 3.61 * 1.44 * <span class="fm-in-times1">cos</span>(101.3 * pi / 180)
+−1.0186064362303022</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100835"></a>Rounding to three decimal places, the answer agrees with <i class="fm-in-times-italic2">c</i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100867"></a><b class="fm-exercise-head">Exercise 3.17-Mini Project</b>: Find the angle between (3, 4) and (4, 3) by converting them to polar coordinates and taking the difference of the angles. The answer is</p>
+
+        <ul class="calibre22">
+          <li class="fm-exercise-list-num"><a id="pgfId-1100868"></a>1.569</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100869"></a>0.927</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100951"></a>0.643</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100936"></a>0.284</li>
+        </ul>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100937"></a><b class="fm-exercise-head">Hint</b>: The result should agree with the value from the dot product formula.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100938"></a><b class="fm-exercise-head">Solution</b>: The vector (3, 4) is further from the positive x-axis counterclockwise, so we subtract the angle of (4, 3) from the angle of (3, 4) to get our answer. It matches answer <i class="fm-in-times-italic2">d</i> exactly:</p>
+        <pre class="programlisting">&gt;&gt;&gt; from vectors import to_polar
+&gt;&gt;&gt; r1,t1 = to_polar((<span class="fm-codelightblue">4</span>,<span class="fm-codelightblue">3</span>))
+&gt;&gt;&gt; r2,t2 = to_polar((<span class="fm-codelightblue">3</span>,<span class="fm-codelightblue">4</span>))
+&gt;&gt;&gt; t1-t2
+<span class="fm-codelightblue">-0.2837941092083278</span> 
+&gt;&gt;&gt; t2-t1
+<span class="fm-codelightblue">0.2837941092083278</span> </pre>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1100993"></a><b class="fm-exercise-head">Exercise 3.18</b>: What is the angle between (1, 1, 1) and (−1, −1, 1) in degrees?</p>
+
+        <ul class="calibre22">
+          <li class="fm-exercise-list-num"><a id="pgfId-1100994"></a><span class="fm-in-cambria">180°</span></li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100995"></a><span class="fm-in-cambria">120°</span></li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100996"></a><span class="fm-in-cambria">109.5°</span></li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1100997"></a><span class="fm-in-cambria">90°</span></li>
+        </ul>
+
+        <p class="fm-exercise-text"><a id="pgfId-1100998"></a><b class="fm-exercise-head">Solution</b>: The lengths <a id="marker-1110605"></a>of both vectors <a id="marker-1110607"></a>are <span class="fm-in-cambria">√3</span> or approximately 1.732. Their dot product is 1 <span class="fm-in-cambria">·</span> (−1) + 1 <span class="fm-in-cambria">·</span> (−1) + 1 <span class="fm-in-cambria">·</span> 1 = −1, so −1 = <span class="fm-in-cambria">√3</span> <span class="fm-in-cambria">·</span> <span class="fm-in-cambria">√3</span> <span class="fm-in-cambria">·</span> <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">θ</span>). Therefore, <span class="fm-in-times2">cos</span>(<span class="fm-in-cambria">θ</span>) = −1/3. This makes the angle approximately 1.911 radians or <span class="fm-in-cambria">109.5°</span> (answer <i class="fm-in-times-italic2">c</i>).</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_20"><a id="pgfId-1093150"></a><a id="id_rztjxt97hfrm"></a>3.4 The cross product: Measuring oriented area</h2>
+
+  <p class="body"><a id="pgfId-1093151"></a>As previously <a id="marker-1110644"></a>introduced, the cross product takes two 3D vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> as inputs, and its output <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is another 3D vector. It is similar to the dot product in that the lengths and relative directions of the input vectors determine the output, but is different in that the output has not only a magnitude but also a direction. We need to think carefully about the concept of direction in 3D to understand the power of the cross product.</p>
+
+  <h3 class="fm-head1" id="heading_id_21"><a id="pgfId-1093153"></a><a id="id_pxiruz3dz7sp"></a>3.4.1 Orienting ourselves in 3D</h3>
+
+  <p class="body"><a id="pgfId-1093154"></a>When I introduced <a id="marker-1110961"></a>the x-, y-, and z-axes at the beginning of this chapter, I made two clear assertions. First, I promised that the familiar <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane exists within the 3D world. Second, I set the <i class="fm-in-times-italic">z</i> direction to be perpendicular to the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane with the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane living where <i class="fm-in-times-italic">z</i> = 0. What I didn’t announce clearly was that the positive <i class="fm-in-times-italic">z</i> direction was up instead of down.</p>
+
+  <p class="body"><a id="pgfId-1093155"></a>In other words, if we look at the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane from the usual perspective, we would see the positive z-axis emerging out of the plane toward us. The other choice we could make is sending the positive z-axis away from us (figure 3.29).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F29_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1093160"></a>Figure 3.29 Positioning ourselves in 3D to see the x,y plane as we saw it in chapter 2. When looking at the x,y plane, we chose the positive z-axis to point toward us as opposed to away from us.</p>
+
+  <p class="body"><a id="pgfId-1093161"></a>The difference here is not a matter of perspective; the two choices represent different orientations of 3D space, and they are distinguishable from any perspective. Suppose we are floating at some positive <i class="fm-in-times-italic">z</i>-coordinate like the stick figure on the left in figure 3.29. We should see the positive y-axis positioned a quarter-turn counterclockwise from the positive x-axis; otherwise, the axes are arranged in the wrong orientation.</p>
+
+  <p class="body"><a id="pgfId-1093162"></a>Plenty of things in the real world have orientations and don’t look identical to their mirror images. For instance, left and right shoes have identical size and shape but different orientations. A plain coffee mug does not have an orientation; we cannot look at two pictures of an unmarked coffee mug and decide if they are different. But as figure 3.30 shows, two coffee mugs with graphics on opposite sides are distinguishable.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F30_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113074"></a>Figure 3.30 A mug with no image is the same object as its mirror image. A mug with an image on one side is not the same as its mirror image.</p>
+
+  <p class="body"><a id="pgfId-1093168"></a>The readily available object most mathematicians use to detect orientation is a hand. Our hands are oriented objects, so we can tell right hands from left hands even if they were unluckily detached from our bodies. Can you tell if the hand in figure 3.31 is a right or left hand?</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F31_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113116"></a>Figure 3.31 Is this a right or left hand?</p>
+
+  <p class="body"><a id="pgfId-1093174"></a> Clearly, it’s a right hand: we don’t have fingernails on our left-hand fingertips! Mathematicians can use their hands to distinguish the two possible orientations of coordinate axes, and they call the two possibilities right-handed and left-handed orientations. Here’s the rule as illustrated in figure 3.32: if you point your right index finger along the positive x-axis and curl your remaining fingers toward the positive y-axis, your thumb tells you the direction of the positive z-axis.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F32_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113162"></a>Figure 3.32 The right-hand rule helps us remember the orientation we’ve chosen.</p>
+
+  <p class="body"><a id="pgfId-1093181"></a>This is called the <i class="fm-italics">right-hand rule</i> <a id="marker-1093180"></a>, and if it agrees with your axes, then you are (correctly!) using the right-handed orientation. Orientation matters! If you are writing a program to steer a drone or control a laparoscopic surgery robot, you need to keep your ups, downs, lefts, rights, forwards, and backwards consistent. The cross product is an oriented machine, so it can help us keep track of orientation throughout <a id="marker-1110654"></a>all of our computations.</p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1093183"></a><a id="id_tqv1m9u7jsgf"></a>3.4.2 Finding the direction of the cross product</h3>
+
+  <p class="body"><a id="pgfId-1093184"></a>Again, before <a id="marker-1110688"></a>I tell you <a id="marker-1110693"></a>how to compute the cross product, I want to show you what it looks like. Given two input vectors, the cross product outputs a result that is perpendicular to both. For instance, if <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (1,0,0) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (0,1,0), then it happens that the cross product <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> is (0, 0, 1) as shown in figure 3.33.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F33_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113212"></a>Figure 3.33 The cross product of <i class="fm-in-times-italic">z</i> = (1, 0, 0) and <i class="fm-in-times-italic">v</i> = (0, 1, 0)</p>
+
+  <p class="body"><a id="pgfId-1093190"></a>In fact, as figure 3.34 shows, any two vectors in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane have a cross product that lies along the z-axis.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH03_F34a_Orland.png"/> <span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F34b_Orland.png"/></span><br class="calibre15"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1093195"></a>Figure 3.34 The cross product of any two vectors in the x,y plane lies on the z-axis.</p>
+
+  <p class="body"><a id="pgfId-1093196"></a>This makes it clear why the cross product doesn’t work in 2D: it returns a vector that lies outside of the plane containing the two input vectors. We can see the output of the cross product is perpendicular to both inputs even if they don’t lie in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane (figure 3.35).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F35_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113255"></a>Figure 3.35 The cross product always returns a vector that is perpendicular to both inputs.</p>
+
+  <p class="body"><a id="pgfId-1093202"></a>But there are two possible perpendicular directions, and the cross product selects only one. For instance, the result of (1, 0, 0) <span class="fm-in-cambria">×</span> (0, 1, 0) happens to be (0, 0, 1), pointing in the positive <i class="fm-in-times-italic">z</i> direction. Any vector on the z-axis, positive or negative, would be perpendicular to both of these inputs. Why does the result point in the positive direction?</p>
+
+  <p class="body"><a id="pgfId-1107506"></a>Here’s where orientation comes in: the cross product obeys the right-hand rule as well. Once you’ve found the direction perpendicular to two input vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, the cross product <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> lies in a direction that puts the three vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> in a right-handed configuration. That is, we can point our right index finger in the direction of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i>, curl our other fingers toward <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>, and our thumb points in the direction of <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>(figure 3.36).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F36_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113322"></a>Figure 3.36 The right-hand rule tells us which perpendicular direction the cross product points toward.</p>
+
+  <p class="body"><a id="pgfId-1093209"></a>When input vectors lie on two coordinate axes, it’s not too hard to find the exact direction their cross product will point: it’s one of the two directions along the remaining axis. In general, it’s hard to describe a direction perpendicular to two vectors without computing their cross product. This is one of the features that make it so useful once we see how to compute it. But a vector doesn’t just specify a direction; it also <a id="marker-1110703"></a>specifies <a id="marker-1110708"></a><i class="fm-in-times-italic">a</i> length. The length of the cross product encodes useful information as well.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1093211"></a><a id="id_44pyhv2cipx7"></a>3.4.3 Finding the length of the cross product</h3>
+
+  <p class="body"><a id="pgfId-1101293"></a>Like the dot <a id="marker-1110718"></a>product, <a id="marker-1110723"></a>the length of the cross product is a number that gives us information about the relative position of the input vectors. Instead of measuring how aligned two vectors are, it tells us something closer to “how perpendicular they are.” More precisely, it tells us how big of an area its two inputs span (figure 3.37).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F37_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113396"></a>Figure 3.37 The length of the cross product is equal to the area of a parallelogram.</p>
+
+  <p class="body"><a id="pgfId-1093218"></a>The parallelogram bounded by <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> as in figure 3.37 has an area that is the same as the length of the cross product <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. For two vectors of given lengths, they span the most area if they are perpendicular. On the other hand, if <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> are in the same direction, they don’t span any area; the cross product has zero length. This is convenient; we can’t choose a unique perpendicular direction if the two input vectors are parallel.</p>
+
+  <p class="body"><a id="pgfId-1099374"></a>Paired with the direction of the result, the length of the result gives us an exact vector. Two vectors in the plane are guaranteed to have a cross product pointing in the +<i class="fm-in-times-italic">z</i> or − <i class="fm-in-times-italic">z</i> direction. We can see in figure 3.38 that the bigger the parallelogram that the plane vectors span, the longer the cross product.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/CH03_F38a_Orland.png"/> <span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F38b_Orland.png"/> </span><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F38c_Orland.png"/></span><br class="calibre15"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1093224"></a>Figure 3.38 Pairs of vectors in the x,y plane have cross products of different sizes based on the area of the parallelogram these span.</p>
+
+  <p class="body"><a id="pgfId-1093225"></a>There’s a trigonometric formula for the area of this parallelogram: if <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> are separated by an angle <span class="fm-in-cambria">θ</span>, the area is |<i class="fm-in-times-italic"><b class="fm-bold">u</b></i>| <span class="fm-in-cambria">·</span> |<i class="fm-in-times-italic"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">θ</span>). We can put the length and direction together to see some simple cross products. For instance, what is the cross product of (0, 2, 0) and (0, 0, −2)? These vectors lie on the y- and z-axes, respectively, so to be perpendicular to both, the cross product must lie on the x-axis. Let’s find the direction of the result using the right-hand rule.</p>
+
+  <p class="body"><a id="pgfId-1093226"></a>Pointing in the direction of the first vector with our index finger (the positive <i class="fm-in-times-italic">y</i> direction) and bending our fingers in the direction of the second vector (the negative <i class="fm-in-times-italic">z</i> direction), we find our thumb is in the negative <i class="fm-in-times-italic">x</i> direction. The magnitude of the cross product is 2 <span class="fm-in-cambria">·</span> 2 <span class="fm-in-cambria">·</span> <span class="fm-in-times">sin</span>(<span class="fm-in-cambria">90°</span>) because the y- and z-axes meet at a <span class="fm-in-cambria">90°</span> angle. (The parallelogram happens to be a square in this case, having a side length of 2). This comes out to 4, so the result is (−4, 0, 0): a vector of length 4 in the − <i class="fm-in-times-italic">x</i> direction.</p>
+
+  <p class="body"><a id="pgfId-1093227"></a>It’s nice to convince ourselves that the cross product is a well-defined operation by computing it geometrically. But that’s not practical, in general, when vectors don’t always lie on an axis and it’s not obvious what coordinates you need to find a perpendicular result. Fortunately, there’s an explicit formula for the coordinates of the cross<a id="marker-1110733"></a> product <a id="marker-1110738"></a>in terms of the coordinates of its inputs.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1093229"></a><a id="id_am317nbb6t5v"></a>3.4.4 Computing the cross product of 3D vectors</h3>
+
+  <p class="body"><a id="pgfId-1105965"></a>The formula<a id="marker-1113489"></a> for the cross product looks hairy at first glance, but we can quickly wrap it in a Python function and compute it with no sweat. Let’s start with coordinates for two vectors <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i>. We could name the coordinates <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (<i class="fm-in-times-italic">a</i>, <i class="fm-in-times-italic">b</i>, <i class="fm-in-times-italic">c</i>) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic">d</i>, <i class="fm-in-times-italic">e</i>, <i class="fm-in-times-italic">f</i> ), but it’s clearer if we use better symbols: <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (<i class="fm-italics">ux</i>, <i class="fm-italics">uy</i>, <i class="fm-italics">uz</i>) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i>, <i class="fm-in-times-italic">v<sub class="fm-subscript1">y</sub></i>, <i class="fm-italics">vz</i>). It’s easier to remember that the number called <i class="fm-in-times-italic">v<sub class="fm-subscript1">x</sub></i> is the <i class="fm-in-times-italic">x</i>-coordinate of <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> than if we called it an arbitrary letter like <i class="fm-in-times-italic">d</i>. In terms of these coordinates, the formula for the cross product is</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F39_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113448"></a>Figure 3.39 The cross product can indicate whether a polygon is visible to an observer.</p>
+
+  <p class="fm-equation"><a id="pgfId-1105966"></a><i class="fm-in-times-italic2"><b class="calibre23">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="calibre23">v</b></i> = (<i class="fm-in-times-italic2">u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">z</sub></i> − <i class="fm-in-times-italic2">u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">y</sub></i>, <i class="fm-in-times-italic2">u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">x</sub></i> − <i class="fm-in-times-italic2">u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">z</sub></i>, <i class="fm-in-times-italic2">u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">y</sub></i> − <i class="fm-in-times-italic2">u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">x</sub></i>)</p>
+
+  <p class="body"><a id="pgfId-1105967"></a>Or, in Python:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">cross</span>(u, v):
+    ux,uy,uz = u
+    vx,vy,vz = v
+    return (uy*vz − uz*vy, uz*vx − ux*vz, ux*vy − uy*vx)</pre>
+
+  <p class="body"><a id="pgfId-1093234"></a>You can test-drive this formula in the exercises. Note that in contrast to most of the formulas we used so far, this one doesn’t appear to generalize well to other dimensions. It requires that the input vectors have exactly three components.</p>
+
+  <p class="body"><a id="pgfId-1093235"></a>This algebraic procedure agrees with the geometric description we built in this chapter. Because it tells us area and direction, the cross product helps us decide whether an occupant of 3D space would see a polygon floating in space with them. For instance, as figure 3.39 shows, an observer standing on the x-axis would <i class="fm-italics">not</i> see the parallelogram spanned by <i class="fm-in-times-italic"><b class="fm-bold">u</b></i> = (1, 1, 0) and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i> = (−2, 1, 0).</p>
+
+  <p class="body"><a id="pgfId-1093241"></a>In other words, the polygon in figure 3.39 is parallel to the observer’s line of sight. Using the cross product, we could tell this without drawing the picture. Because the cross product is perpendicular to the person’s line of sight, none of the polygon is visible.</p>
+
+  <p class="body"><a id="pgfId-1093242"></a>Now it’s time for our culminating project: building a 3D object out of polygons and drawing it on a 2D canvas. You’ll use all of the vector operations you’ve seen so far. In particular, the cross product will help you to decide which polygons <a id="marker-1110758"></a>are visible.</p>
+
+  <h3 class="fm-head1" id="heading_id_25"><a id="pgfId-1101727"></a><a id="id_61cn3nkzgb68"></a>3.4.5 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1101720"></a><b class="fm-exercise-head">Exercise 3.19</b>: Each of the <a id="marker-1110768"></a>following diagrams show three mutually perpendicular arrows indicating positive <i class="fm-in-times-italic2">x</i>, <i class="fm-in-times-italic2">y</i>, and <i class="fm-in-times-italic2">z</i> directions. A 3D box is shown for perspective with the back of the box colored gray. Which of the four diagrams is compatible with the one we chose? That is, which shows the x-, y-, and z-axes as we’ve drawn them, even if from a different perspective?</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F39_Orland_UN07.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1101724"></a>Which of these axes agrees with our orientation convention?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1101725"></a><b class="fm-exercise-head">Solution</b>: Looking down on diagram <i class="fm-in-times-italic2">a</i> from above, we’d see the x- and y-axis as usual, with the z-axis pointing toward us. The diagram that agrees with our orientation is <i class="fm-in-times-italic2">a</i>.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1101726"></a>In diagram <i class="fm-in-times-italic2">b</i>, the z-axis is coming toward us, while the +<i class="fm-in-times-italic2">y</i> direction is <span class="fm-in-cambria">90°</span> clockwise from the +<i class="fm-in-times-italic2">x</i> direction. This does not agree with our orientation.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="fm-exercise-text"><a id="pgfId-1101733"></a> </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1101731"></a>If we looked at diagram <i class="fm-in-times-italic2">c</i> from a point in the positive <i class="fm-in-times-italic2">z</i> direction (from the left side of the box), we would see the +<i class="fm-in-times-italic2">y</i> direction <span class="fm-in-cambria">90°</span> counterclockwise from the +<i class="fm-in-times-italic2">x</i> direction. Diagram <i class="fm-in-times-italic2">c</i> also agrees with our orientation.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1101732"></a>Looking at diagram <i class="fm-in-times-italic2">d</i> from the left of the box, the +<i class="fm-in-times-italic2">z</i> direction would be toward us and the +<i class="fm-in-times-italic2">y</i> direction would again be counterclockwise from the +<i class="fm-in-times-italic2">x</i> direction. This agrees with our orientation as well.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1101749"></a><b class="fm-exercise-head">Exercise 3.20</b>: If you held up three coordinate axes in front of a mirror, would the image in the mirror have the same orientation or a different one?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1101750"></a><b class="fm-exercise-head">Solution</b>: The mirror image has reversed orientation. From this perspective, the z- and y-axes stay pointing in the same directions. The x-axis is clockwise from the y-axis in the original, but in the mirror image, it moves to counterclockwise:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F39_Orland_UN08.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1101754"></a>The x-, y-, and z-axes and their mirror image</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1101785"></a><b class="fm-exercise-head">Exercise 3.21</b>: In what direction does the result of (0, 0, 3) <span class="fm-in-cambria">×</span> (0, −2, 0) point?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1101786"></a><b class="fm-exercise-head">Solution</b>: If we point our right index finger in the direction of (0, 0, 3), the positive <i class="fm-in-times-italic2">z</i> direction, and curl our other fingers in the direction of (0, −2, 0), the negative <i class="fm-in-times-italic2">y</i> direction, our thumb points in the positive <i class="fm-in-times-italic2">x</i> direction. Therefore, (0, 0, 3) <span class="fm-in-cambria">×</span> (0, −2, 0) points in the positive <i class="fm-in-times-italic2">x</i> direction.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1101869"></a><b class="fm-exercise-head">Exercise 3.22</b>: What are the coordinates of the cross product of (1, −2, 1) and (−6, 12, <span class="fm-in-cambria">−</span>6)?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1101870"></a><b class="fm-exercise-head">Solution</b>: As negative scalar multiples of one another, these vectors point in opposite directions and don’t span any area. The length of the cross product is, therefore, zero. The only vector of length zero is (0, 0, 0), so that is the answer.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1102400"></a><b class="fm-exercise-head">Exercise 3.23-Mini Project</b>: The area of a parallelogram is equal to the length of its base times its height as shown here:</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F39_Orland_UN09.png"/></span></p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102404"></a>Given that, explain why the formula</p>
+        <pre class="programlisting">|<i class="fm-in-times-italic1"><b class="fm-bold">u</b></i>| <span class="fm-in-cambria">·</span> |<i class="fm-in-times-italic1"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times1">sin</span>(<span class="fm-in-cambria">φ</span>) makes sense.</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102405"></a><b class="fm-exercise-head">Solution</b>: In the diagram, the vector <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> defines the base, so the base length is |<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>|. From the tip of <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> to the base, we can draw a right triangle. The length of <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> is the hypotenuse<a id="marker-1102406"></a>, and the vertical leg of the triangle is the height we are looking for. By the definition of the sine function, the height is |<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">φ</span>).</p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F39_Orland_UN10.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1113573"></a>The formula for the area of a parallelogram in terms of the sine of one of its angles</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102411"></a>Because the base length is |<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>| and the height is |<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">φ</span>), the area of the parallelogram is indeed |<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i>| <span class="fm-in-cambria">·</span> |<i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>| <span class="fm-in-cambria">·</span> <span class="fm-in-times2">sin</span>(<span class="fm-in-cambria">φ</span>).</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1102486"></a><b class="fm-exercise-head">Exercise 3.24</b>: What is the result of the cross product (1, 0, 1) <span class="fm-in-cambria">×</span> (−1, 0, 0)?</p>
+
+        <ul class="calibre22">
+          <li class="fm-exercise-list-num"><a id="pgfId-1102487"></a>(0, 1, 0)</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1102488"></a>(0, −1, 0)</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1102489"></a>(0, −1, −1)</li>
+
+          <li class="fm-exercise-list-num"><a id="pgfId-1102490"></a>(0, 1, −1)</li>
+        </ul>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102491"></a><b class="fm-exercise-head">Solution</b>: These vectors lie in the <i class="fm-in-times-italic2">x</i>,<i class="fm-in-times-italic2">z</i> plane, so their cross product lies on the y-axis. Pointing our right index finger in the direction of (1, 0, 1) and curling our fingers toward (−1, 0, 0) requires our thumb to point in the − <i class="fm-in-times-italic2">y</i> direction.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1113618"></a> </p>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F39_Orland_UN11.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1113607"></a>Computing the cross product of (1, 0, 1) and (−1, 0, 0) geometrically</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102670"></a>We could find the lengths of the vectors and the angle between them to get the size of the cross product, but we already have the base and height from the coordinates. These are both 1, so the length is 1. The cross product is, therefore, (0, −1, 0), a vector of length 1 in the − <i class="fm-in-times-italic2">y</i> direction; the answer is <i class="fm-in-times-italic2">b</i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1102740"></a><b class="fm-exercise-head">Exercise 3.25</b>: Use the Python <code class="fm-code-in-text2">cross</code> function to compute (0, 0, 1) <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> for a few different values of a second vector <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>. What is the <i class="fm-in-times-italic2">z</i>-coordinate of each result, and why?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102741"></a><b class="fm-exercise-head">Solution</b>: No matter what vector <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> is chosen, the <i class="fm-in-times-italic2">z</i>-coordinate is zero:</p>
+        <pre class="programlisting">&gt;&gt;&gt; cross((<span class="fm-codered">0</span>,<span class="fm-codered">0</span>,<span class="fm-codered">1</span>),(<span class="fm-codered">1</span>,<span class="fm-codered">2</span>,<span class="fm-codered">3</span>))
+(<span class="fm-codered">−2</span>, <span class="fm-codered">1</span>, <span class="fm-codered">0</span>)
+&gt;&gt;&gt; cross((<span class="fm-codered">0</span>,<span class="fm-codered">0</span>,<span class="fm-codered">1</span>),(<span class="fm-codered">−1</span>,<span class="fm-codered">−1</span>,<span class="fm-codered">0</span>))
+(<span class="fm-codered">1</span>, <span class="fm-codered">−1</span>, <span class="fm-codered">0</span>)
+&gt;&gt;&gt; cross((<span class="fm-codered">0</span>,<span class="fm-codered">0</span>,<span class="fm-codered">1</span>),(<span class="fm-codered">1</span>,<span class="fm-codered">−1</span>,<span class="fm-codered">5</span>))
+(<span class="fm-codered">1</span>, <span class="fm-codered">1</span>, <span class="fm-codered">0</span>)</pre>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102743"></a>Because <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> = (0,0,1), both <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <i class="fm-in-times-italic2">x</i> and <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <i class="fm-in-times-italic2">y</i> are zero. This means the term <i class="fm-in-times-italic2">u</i> <i class="fm-in-times-italic2">x</i> <i class="fm-in-times-italic2">v<sub class="fm-subscript2">y</sub></i> − <i class="fm-italics">uyvx</i> in the cross product formula is zero, regardless of the values <i class="fm-in-times-italic2">v</i> <i class="fm-in-times-italic2">x</i> and <i class="fm-in-times-italic2">v<sub class="fm-subscript2">y</sub></i>. Geometrically this makes sense: the cross product should be perpendicular to both inputs, and to be perpendicular to (0, 0, 1), the <i class="fm-italics">z</i> component must be zero.</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1102813"></a><b class="fm-exercise-head">Exercise 3.26−Mini Project</b>: Show algebraically that <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> is perpendicular to both <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> regardless of the coordinates of <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1109612"></a><b class="fm-exercise-head">Hint</b>: Show (<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> and (<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> by expanding these into coordinates.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102814"></a><b class="fm-exercise-head">Solution</b>: Let <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> = (<i class="fm-in-times-italic2">u</i><sub class="fm-subscript2">x</sub>, <i class="fm-in-times-italic2">u</i><sub class="fm-subscript2">y</sub>, <i class="fm-in-times-italic2">u</i><sub class="fm-subscript2">z</sub>) and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i> = (<i class="fm-in-times-italic2">v<sub class="fm-subscript2">x</sub></i>, <i class="fm-in-times-italic2">v<sub class="fm-subscript2">y</sub></i>, <i class="fm-in-times-italic2">v</i><sub class="fm-subscript2">z</sub>) in the following equations. We can write (<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> in terms of coordinates as follows:</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">u<span class="fm-in-cambria1">×</span> v = (u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">z</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">y</sub>, u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">x</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">z</sub>, u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">y</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">x</sub>) <span class="fm-in-cambria1">·</span> (u<sub class="fm-subscript">x</sub>, u<sub class="fm-subscript">y</sub>, u<sub class="fm-subscript">z</sub>)</i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-03-63.gif" ALT=""></P>-->
+
+        <p class="fm-figure-caption"><a id="pgfId-1102818"></a>Expanding the dot product of a cross product</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102819"></a>After we expand the dot product, we see that there are 6 terms. Each of these cancels out with one of the others.</p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">= (u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">z</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">y</sub>)u<sub class="fm-subscript">x</sub> + (u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">x</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">z</sub>)u<sub class="fm-subscript">y</sub> + (u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">y</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">x</sub>)u<sub class="fm-subscript">z</sub></i></p>
+
+        <p class="fm-equation"><i class="fm-in-times-italic2">= u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">z</sub>u<sub class="fm-subscript">x</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">y</sub>u<sub class="fm-subscript">x</sub> + u<sub class="fm-subscript">z</sub>v<sub class="fm-subscript">x</sub>u<sub class="fm-subscript">y</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">z</sub>u<sub class="fm-subscript">y</sub> + u<sub class="fm-subscript">x</sub>v<sub class="fm-subscript">y</sub>u<sub class="fm-subscript">z</sub> <span class="fm-in-cambria1">−</span> u<sub class="fm-subscript">y</sub>v<sub class="fm-subscript">x</sub>u<sub class="fm-subscript">z</sub></i></p><!--<P CLASS="FM-Figure"><IMG SRC="Ch-03-64.gif" ALT=""></P>
+<P CLASS="FM-Figure"><IMG SRC="Ch-03-65.gif" ALT=""></P>-->
+
+        <p class="fm-figure-caption"><a id="pgfId-1102823"></a>After fully expanding, all the terms cancel out.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1102824"></a>Because all of the terms cancel out, the result is zero. To save “ink,” I won’t show the result of (<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) <span class="fm-in-cambria">·</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>, but the same thing happens: six terms appear and cancel each other out, resulting in zero. This means that (<i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <span class="fm-in-cambria">×</span> <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>) is perpendicular <a id="marker-1110778"></a>to both <i class="fm-in-times-italic2"><b class="fm-bold">u</b></i> <a id="marker-1110795"></a>and <i class="fm-in-times-italic2"><b class="fm-bold">v</b></i>.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_26"><a id="pgfId-1093327"></a><a id="id_1m96pd36hhcw"></a>3.5 Rendering a 3D object in 2D</h2>
+
+  <p class="body"><a id="pgfId-1093329"></a>Let’s try using <a id="marker-1110805"></a>what we’ve learned to render a simple 3D shape called an octahedron<a id="marker-1093328"></a>. Whereas a cube has six faces, all of which are squares, an octahedron has eight faces, all of which are triangles. You can think of an octahedron as two, four-sided pyramids stacked on top of each other. Figure 3.40 shows the skeleton of an octahedron.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F40_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113663"></a>Figure 3.40 The skeleton of an octahedron, a shape with eight faces and six vertices. The dotted lines show the edges of the octahedron on the opposite side from us.</p>
+
+  <p class="body"><a id="pgfId-1093335"></a>If this were a solid, we wouldn’t be able to see the opposite sides. Instead, we’d see four of the eight triangular faces as shown in figure 3.41.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F41_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113709"></a>Figure 3.41 Four numbered faces of the octahedron that are visible to us in its current position</p>
+
+  <p class="body"><a id="pgfId-1093341"></a>Rendering the octahedron comes down to identifying the four triangles we need to show and shading them appropriately. Let’s see how to do that.</p>
+
+  <h3 class="fm-head1" id="heading_id_27"><a id="pgfId-1093343"></a><a id="id_llg7wenfdpcf"></a>3.5.1 Defining a 3D object with vectors</h3>
+
+  <p class="body"><a id="pgfId-1093345"></a>An octahedron<a id="marker-1093344"></a> is an easy <a id="marker-1110815"></a>example <a id="marker-1110820"></a>because it has only six corners or vertices. We can give them simple coordinates: (1, 0, 0), (0, 1, 0), (0, 0, 1) and their three opposite vectors as shown in figure 3.42.</p>
+
+  <p class="body"><a id="pgfId-1102987"></a><a id="id_Hlk42804514"></a>These six vectors define the boundaries of the shape but don’t provide all the information we need to draw it. We also need to decide which of these verti-</p>
+
+  <p class="body"><a id="pgfId-1103045"></a>ces connect to form edges of the shape. For instance, the top point in figure 3.42 is (0, 0, 1) and it connects by an edge to all four points in the <i class="fm-in-times-italic">x</i>,<i class="fm-in-times-italic">y</i> plane (figure 3.43).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F42_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113773"></a>Figure 3.42 Vertices of an octahedron</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F43_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113798"></a>Figure 3.43 Four edges of the octahedron indicated by arrows</p>
+
+  <p class="body"><a id="pgfId-1093359"></a>These edges outline the top pyramid of the octahedron<a id="marker-1093358"></a>. Note that there is no edge from (0, 0, 1) to (0, 0, −1) because that segment would lie within the octahedron, not on its outside. Each edge is defined by a pair of vectors: the start and end points of the edge as a line segment. For instance, (0, 0, 1) and (1, 0, 0) define one of the edges.</p>
+
+  <p class="body"><a id="pgfId-1093360"></a>Edges still aren’t enough data to complete the drawing. We also need to know which triples of vertices and edges define the triangular faces we want to fill with a solid, shaded color. Here’s where orientation comes in: we want to know not only which segments define faces of the octahedron, but also whether they face toward us or away from us.</p>
+
+  <p class="body"><a id="pgfId-1107614"></a>Here’s the strategy: we’ll model a triangular face as three vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">2</sub>, and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">3</sub>, defining its edges. (Note that here I use subscripts 1, 2, and 3 to distinguish three different vectors, not components of the same vector.) Specifically, we’ll order <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">2</sub>, and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">3</sub> such that (<i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">2</sub> <a id="id_Hlk42773156"></a>- <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">1</sub>) <span class="fm-in-cambria">×</span> (<i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">3</sub> − <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">1</sub>) points outside the octahedron<a id="marker-1107616"></a> (figure 3.44). If an outward-pointing vector is aimed toward us, it means the face is visible from our perspective. Otherwise, the face is obscured and we won’t need to draw it.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F44_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1107620"></a>Figure 3.44 A face of the octahedron. The three points defining the face are ordered so that (v2 − v1) <span class="fm-in-cambria">×</span> (v3 − v1) points outside of the octahedron.</p>
+
+  <p class="body"><a id="pgfId-1093369"></a>We can define the eight triangular faces as triples of three vectors <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">1</sub>, <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">2</sub>, and <i class="fm-in-times-italic"><b class="fm-bold">v</b></i><sub class="fm-subscript">3</sub> as follows:</p>
+  <pre class="programlisting">octahedron = [
+    [(1,0,0), (0,1,0), (0,0,1)],
+    [(1,0,0), (0,0,−1), (0,1,0)],
+    [(1,0,0), (0,0,1), (0,−1,0)],
+    [(1,0,0), (0,−1,0), (0,0,−1)],
+    [(−1,0,0), (0,0,1), (0,1,0)],
+    [(−1,0,0), (0,1,0), (0,0,−1)],
+    [(−1,0,0), (0,−1,0), (0,0,1)],
+    [(−1,0,0), (0,0,−1), (0,−1,0)],
+]</pre>
+
+  <p class="body"><a id="pgfId-1093371"></a>The faces are actually the only data we need to render the shape; these contain the edges and vertices implicitly. For instance, we can <a id="marker-1110830"></a>get the <a id="marker-1110968"></a>vertices from the faces with the following function:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">vertices</span>(faces):
+    return list(set([vertex for face in faces for vertex in face]))</pre>
+
+  <h3 class="fm-head1" id="heading_id_28"><a id="pgfId-1093374"></a><a id="id_2x737fbmlt5j"></a>3.5.2 Projecting to 2D</h3>
+
+  <p class="body"><a id="pgfId-1093375"></a>To turn 3D points<a id="marker-1110845"></a> into 2D points, we must choose what 3D direction we are observing from. Once we have two 3D vectors defining “up” and “right” from our perspective, we can <i class="fm-italics">project</i> any 3D vector onto them and get two components instead of three. The <code class="fm-code-in-text">component</code> function extracts the part of any 3D vector pointing in a given direction using the dot product:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">component</span>(v,direction):
+    return (dot(v,direction) / length(direction))</pre>
+
+  <p class="body"><a id="pgfId-1093377"></a>With two directions hard-coded (in this case, (1, 0, 0) and (0, 1, 0)), we can establish a way to project from three coordinates down to two. This function takes a 3D vector or a tuple of three numbers and returns a 2D vector or a tuple of two numbers:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">vector_to_2d</span>(<i class="fm-in-times-italic1">v</i>):
+    return (component(v,(<span class="fm-codered">1</span>,<span class="fm-codered">0</span>,<span class="fm-codered">0</span>)), component(v,(<span class="fm-codered">0</span>,<span class="fm-codered">1</span>,<span class="fm-codered">0</span>)))</pre>
+
+  <p class="body"><a id="pgfId-1093379"></a>We can picture this as “flattening” the 3D vector into the plane. Deleting the <i class="fm-in-times-italic">z</i> component takes away any depth the vector has (figure 3.45).</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F45_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113880"></a>Figure 3.45 Deleting the z component of a 3D vector flattens it into the x,y plane.</p>
+
+  <p class="body"><a id="pgfId-1093385"></a>Finally, to take a triangle from 3D to 2D, we need <a id="marker-1110855"></a>only apply this function to all of the vertices defining a face:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">face_to_2d</span>(face):
+    return [vector_to_2d(vertex) for vertex in face]</pre>
+
+  <h3 class="fm-head1" id="heading_id_29"><a id="pgfId-1093388"></a><a id="id_pea16l18hc35"></a>3.5.3 Orienting faces and shading</h3>
+
+  <p class="body"><a id="pgfId-1093389"></a>To shade our 2D <a id="marker-1110865"></a>drawing, <a id="marker-1110870"></a>we pick <a id="marker-1110875"></a><i class="fm-in-times-italic">a</i> fixed color for each triangle according to how much it faces a given light source. Let’s say our light source lies at a vector of (1, 2, 3) from the origin. Then the brightness of a triangular face is decided by how close to perpendicular it is to the light. Another way to measure this is by how aligned a perpendicular vector to the face is with the light source. We don’t have to worry about computing colors; Matplotlib has a built-in library to do that for us. For instance,</p>
+  <pre class="programlisting">blues = matplotlib.cm.get_cmap('Blues')</pre>
+
+  <p class="body"><a id="pgfId-1093391"></a>gives us a function called <code class="fm-code-in-text">blues</code> that maps numbers from 0 to 1 onto a spectrum of darker to brighter blue values. Our task is to find a number from 0 to 1 that indicates how bright a face should be.</p>
+
+  <p class="body"><a id="pgfId-1093392"></a>Given a vector perpendicular (or <i class="fm-italics">normal</i>) to each face and a vector pointing to the light source, their dot product tells us how aligned they are. Moreover, because we’re only considering directions, we can choose vectors with length 1. Then, if the face is pointing toward the light source at all, the dot product will lie between 0 and 1. If it is further than <span class="fm-in-cambria">90°</span> from the light source, it will not be illuminated at all. This helper function takes a vector and returns another in the same direction but with length 1:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">unit</span>(<i class="fm-in-times-italic1">v</i>):
+    return scale(<span class="fm-codered">1.</span>/length(<i class="fm-in-times-italic1">v</i>), v)</pre>
+
+  <p class="body"><a id="pgfId-1093394"></a>This second helper function takes a face and gives us a vector perpendicular to it:</p>
+  <pre class="programlisting">def <span class="fm-codebrown">normal</span>(face):
+    return(cross(subtract(face[<span class="fm-codered">1</span> ], face[<span class="fm-codered">0</span> ]), subtract(face[<span class="fm-codered">2</span> ], face[<span class="fm-codered">0</span> ])))</pre>
+
+  <p class="body"><a id="pgfId-1093396"></a>Putting it all together, we have a function that draws all the triangles we need to render a 3D shape using our <code class="fm-code-in-text">draw</code> function. (I’ve renamed <code class="fm-code-in-text">draw</code> to <code class="fm-code-in-text">draw2d</code> and renamed the classes accordingly to distinguish them from their 3D counterparts.)</p>
+  <pre class="programlisting">def render(faces, light=(<span class="fm-codelightblue">1</span>,<span class="fm-codelightblue">2</span>,<span class="fm-codelightblue">3</span>), color_map=blues, lines=None):
+    polygons = []
+    for face in faces:
+        unit_normal = unit(normal(face))                    <span class="fm-combinumeral">❶</span>
+        if unit_normal[<span class="fm-codelightblue">2</span> ] &gt; <span class="fm-codelightblue">0</span> :                            <span class="fm-combinumeral">❷</span>
+            c = color_map(<span class="fm-codelightblue">1</span> − dot(unit(normal(face)), 
+                          unit(light)))                     <span class="fm-combinumeral">❸</span>
+            p = Polygon2D(*face_to_2d(face), 
+                          fill=c, color=lines)              <span class="fm-combinumeral">❹</span>
+            polygons.append(p)
+    draw2d(*polygons,axes=False, origin=False, grid=None)</pre>
+
+  <p class="fm-code-annotation"><a id="pgfId-1093404"></a><span class="fm-combinumeral">❶</span> For each face, computes a vector of length 1 perpendicular to it</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1111370"></a><span class="fm-combinumeral">❷</span> Only proceeds if the z component of this vector is positive, or in other words, if it points toward the viewer</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1111387"></a><span class="fm-combinumeral">❸</span> The larger the dot product between the normal vector and the light source vector, the less shading</p>
+
+  <p class="fm-code-annotation"><a id="pgfId-1111408"></a><span class="fm-combinumeral">❹</span> Specifies an optional lines argument for the edges of each triangle, revealing the skeleton of the shape we’re drawing</p>
+
+  <p class="body"><a id="pgfId-1103349"></a>With the following <code class="fm-code-in-text">render</code> function, it only takes a few lines of code to produce an octahedron. Figure 3.46 shows the result.</p>
+  <pre class="programlisting">render(octahedron, color_map=matplotlib.cm.get_cmap('Blues'), lines=black)
+ </pre>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F46_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1093410"></a>Figure 3.46 Four visible faces of the octahedron in shades of blue</p>
+
+  <p class="body"><a id="pgfId-1093412"></a>The shaded octahedron<a id="marker-1093411"></a> doesn’t look that special from the side, but adding more faces, we can tell that the shading is working (figure 3.47). You can find <a id="marker-1110885"></a>pre-built <a id="marker-1110890"></a>shapes <a id="marker-1110895"></a>with more faces in the source code for this book.</p>
+
+  <p class="fm-figure"><span class="calibre11"><img alt="" class="calibre1" src="../Images/CH03_F47_Orland.png"/></span></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1113942"></a>Figure 3.47 A 3D shape with many triangular sides. The effect of the shading is more apparent.</p>
+
+  <h3 class="fm-head1" id="heading_id_30"><a id="pgfId-1093419"></a><a id="id_ul4hpeaioye8"></a>3.5.4 Exercises</h3>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1103398"></a><b class="fm-exercise-head">Exercise 3.27-Mini Project</b>: Find <a id="marker-1110905"></a>pairs of vectors defining each of the 12 edges of the octahedron and draw all of the edges in Python.</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1103399"></a><b class="fm-exercise-head">Solution</b>: The top of the octahedron is (0, 0, 1). It connects to all four points in the <i class="fm-in-times-italic2">x</i>,<i class="fm-in-times-italic2">y</i> plane via four edges. Likewise, the bottom of the octahedron is (0, 0, −1) and it also connects to all four points in the <i class="fm-in-times-italic2">x</i>,<i class="fm-in-times-italic2">y</i> plane. Finally, the four points in the <i class="fm-in-times-italic2">x</i>,<i class="fm-in-times-italic2">y</i> plane connect to each other in a square:</p>
+        <pre class="programlisting">top = (<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">1</span>)
+bottom = (<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">−1</span>)
+xy_plane = [(<span class="fm-codelightblue">1</span>,<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">0</span>),(<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">1</span>,<span class="fm-codelightblue">0</span>),(<span class="fm-codelightblue">−1</span>,<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">0</span>),(<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">−1</span>,<span class="fm-codelightblue">0</span>)]
+edges = [Segment3D(top,p) for p in xy_plane] +\
+            [Segment3D(bottom, p) for p in xy_plane] +\
+            [Segment3D(xy_plane[i],xy_plane[(i+<span class="fm-codelightblue">1</span>)%<span class="fm-codelightblue">4</span> ]) for i in range(<span class="fm-codelightblue">0</span>,<span class="fm-codelightblue">4</span>)] 
+draw3d(*edges)</pre>
+
+        <p class="fm-figure"><span class="calibre13"><img alt="" class="calibre14" src="../Images/CH03_F47_Orland_UN14_Orland.png"/></span></p>
+
+        <p class="fm-figure-caption"><a id="pgfId-1103404"></a>The resulting edges of the octahedron</p>
+      </td>
+    </tr>
+  </table>
+
+  <p class="bodye">  </p>
+
+  <table border="0" class="contenttable" width="100%">
+    <tr class="calibre5">
+      <td class="fm-contenttables" colspan="1" rowspan="1">
+        <p class="fm-exercise-text"><a id="pgfId-1103438"></a><b class="fm-exercise-head">Exercise 3.28</b>: The first <a id="marker-1110915"></a>face of the <a id="marker-1110925"></a>octahedron is [(1, 0, 0), (0, 1, 0), (0, 0, 1)]. Is that the only valid order to write the vertices for this face?</p>
+
+        <p class="fm-exercise-text"><a id="pgfId-1103439"></a><b class="fm-exercise-head">Solution</b>: No, for instance [(0, 1, 0), (0, 0, 1), (1, 0, 0)] is the same set of three points, and the cross product still points in the same direction in this order.</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2 class="fm-head" id="heading_id_31"><a id="pgfId-1093435"></a><a id="id_uciyoyc4r0cd"></a>Summary</h2>
+
+  <ul class="calibre8">
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1093436"></a>Whereas vectors in 2D have lengths and widths, vectors in 3D also have depths.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1093437"></a>3D vectors are defined with triples of numbers called <i class="fm-in-times-italic">x</i> -, <i class="fm-in-times-italic">y</i> -, and <i class="fm-in-times-italic">z</i>-coordinates. They tell us how far from the origin we need to travel in each direction to get to a 3D point.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1093438"></a>As with 2D vectors, 3D vectors can be added, subtracted, and multiplied by scalars. We can find their lengths using a 3D analogy of the Pythagorean theorem.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1093439"></a>The dot product is a way to multiply two vectors and get a scalar. It measures how aligned two vectors are, and we can use its value to find the angle between two vectors.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1093440"></a>The cross product is a way to multiply two vectors and get a third vector that is perpendicular to both input vectors. The magnitude of the output of the cross product is the area of the parallelogram spanned by the two input vectors.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1093441"></a>We can represent the surface of any 3D object as a collection of triangles, where each triangle is respectively defined by three vectors representing its vertices.</p>
+    </li>
+
+    <li class="fm-list-bullet1">
+      <p class="list"><a id="pgfId-1093442"></a>Using the cross product, we can decide which direction a triangle is visible from in 3D. This can tell us whether a viewer can see it or how illuminated it is by a given light source. By drawing and shading all of the triangles defining an object’s surface, we can make it look<a id="marker-1110930"></a> three-dimensional.</p>
+    </li>
+  </ul>
+</body>
+</html>

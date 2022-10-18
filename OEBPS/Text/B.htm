@@ -1,0 +1,858 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>appendix B</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link href="../../stylesheet.css" rel="stylesheet" type="text/css"/>
+<link href="../../page_styles.css" rel="stylesheet" type="text/css"/>
+</head>
+  <body class="calibre">
+  <div class="tocheadb">
+    <h1 class="tochead" id="heading_id_2"><a id="pgfId-1100377"></a><a id="marker-1110046"></a><a id="pgfId-1105689"></a>appendix B. Python tips and tricks</h1>
+  </div>
+
+  <p class="body"><a id="pgfId-1105690"></a>After following <a id="marker-1110051"></a><a id="marker-1110056"></a>the set-up instructions in appendix A, you should be able to run Python code on your computer. If you’re new to Python, the next step is to learn some of the language features. If you haven’t seen <i class="fm-italics">any</i> Python before, don’t sweat! It’s one of the simplest and easiest-to-learn programming languages out there. Plus, there are many excellent online resources and books to help you learn the basics of Python programming, and the website <span class="fm-hyperlink"><a href="https://www.python.org/">python.org</a></span> is a great starting point.</p>
+
+  <p class="body"><a id="pgfId-1105692"></a>This appendix assumes you’ve tinkered around with Python a bit and are comfortable with the basics: numbers, strings, True and False, if/else statements, and so on. To make this book as accessible as possible, I’ve avoided using advanced Python language features. This appendix covers some Python features used in this book that are either beyond the “basics” or warrant special attention because of their importance in this book. Don’t worry if this is a lot to digest; when these features appear in the book, I often include a quick review of how they work. All of the code in this appendix is covered in a “walkthrough” notebook in the source code.</p>
+
+  <h2 class="fm-head" id="heading_id_3"><a id="pgfId-1105694"></a><a id="id_z424na4axhn0"></a>B.1 Python numbers and math</h2>
+
+  <p class="body"><a id="pgfId-1105697"></a>Like <a id="marker-1110061"></a>most languages, Python has built-in support<a id="marker-1105695"></a> for basic math. I’ll assume you’re<a id="marker-1105696"></a> already familiar with the basic Python arithmetic operators<a id="marker-1105698"></a>: <code class="fm-code-in-text">+</code>, <span class="fm-in-cambria">−</span> , <code class="fm-code-in-text">*</code>, and <code class="fm-code-in-text">/</code>. Note that when you divide<a id="marker-1105699"></a> integers in Python<a id="marker-1105700"></a> 3, you can get a fractional value, for instance,</p>
+  <pre class="programlisting">&gt;&gt;&gt; 7/2
+3.5</pre>
+
+  <p class="body"><a id="pgfId-1105702"></a>By contrast, in Python 2, this would have returned <code class="fm-code-in-text">2</code>, which is the result of whole number division with the remainder of 1 discarded. But sometimes we want to get a remainder, in which case, we can use the <code class="fm-code-in-text">%</code> operator, called the <i class="fm-italics">modulus</i> operator<a id="marker-1105703"></a><a id="marker-1105704"></a>. Running <code class="fm-code-in-text">13 % 5</code> returns 3, which tells us that 13 divided by 5 has remainder 3 (as in 13 = 2 × 5 + 3). Note also that the modulus operator works for floating-point numbers. In particular, you can use it to get the fractional part of a number as the remainder when dividing by 1. Running <code class="fm-code-in-text">3.75 % 1</code> returns <code class="fm-code-in-text">0.75</code>.</p>
+
+  <p class="body"><a id="pgfId-1105706"></a>Another useful operator beyond the basic four is the <code class="fm-code-in-text">**</code> operator<a id="marker-1105705"></a>, which raises numbers to a given power. For instance, <code class="fm-code-in-text">2 ** 3</code> represents two to the third power, or two cubed, which is 8. Similarly, <code class="fm-code-in-text">4 ** 2</code> is four squared, which is 16.</p>
+
+  <p class="body"><a id="pgfId-1105707"></a>A final thing to keep in mind when doing math in Python is that floating-point arithmetic is not exact. I won’t go into why this is, but will show you what it looks like so you aren’t caught by surprise. For instance, 1000.1 − 1000.0 is obviously 0.1, but Python doesn’t compute this value exactly:</p>
+  <pre class="programlisting">&gt;&gt;&gt; 1000.1 − 1000.0
+0.10000000000002274</pre>
+
+  <p class="body"><a id="pgfId-1109482"></a>Of course, this result is within one-trillionth of the correct answer so it won’t cause us problems, but it can lead to results that look wrong at first glance. For instance, we expect (1000.1 − 1000.0) − 0.1 to be zero, but Python gives us a big, hairy-looking result instead:</p>
+  <pre class="programlisting">&gt;&gt;&gt; (1000.1 − 1000.0) − 0.1
+2.273181642920008e-14</pre>
+
+  <p class="body"><a id="pgfId-1105711"></a>This long number is written in scientific notation and is roughly 2.27 times 10<sup class="fm-superscript">−14</sup> power. The number 10<sup class="fm-superscript">−14</sup> is the same as 1/100,000,000,000,000 (1 over 1 followed by 14 zeros or 1 over 100 trillion), so this number is very close to zero after all.</p>
+
+  <h3 class="fm-head1" id="heading_id_4"><a id="pgfId-1105713"></a><a id="id_4tkter34j6yv"></a>B.1.1 The math module</h3>
+
+  <p class="body"><a id="pgfId-1105714"></a>Python <a id="marker-1110071"></a>has a <a id="marker-1110076"></a>math module with more helpful mathematical values and functions. Like any Python module, you need to import the objects you want to use from it. For instance,</p>
+  <pre class="programlisting">from math import pi</pre>
+
+  <p class="body"><a id="pgfId-1105716"></a>imports the variable <code class="fm-code-in-text">pi</code> from the <code class="fm-code-in-text">math</code> module, which represents the number <i class="fm-in-cambria2">π</i>. You may remember <i class="fm-in-cambria2">π</i> from geometry class; it’s the ratio of the circumference of a circle to its diameter. With the value <code class="fm-code-in-text">pi</code> imported, we can use it in subsequent code like any other variable:</p>
+  <pre class="programlisting">&gt;&gt;&gt; pi
+3.141592653589793
+&gt;&gt;&gt; tau = 2 * pi
+&gt;&gt;&gt; tau
+6.283185307179586</pre>
+
+  <p class="body"><a id="pgfId-1105718"></a>Another way to access values from modules in Python is to import the module itself and then access the values as needed. Here I import the math module and then use it to access the number <i class="fm-in-cambria2">π</i> and another special number <i class="fm-italics">e</i> that we’ll run into a few times.</p>
+  <pre class="programlisting">&gt;&gt;&gt; import math
+&gt;&gt;&gt; math.pi
+3.141592653589793
+&gt;&gt;&gt; math.e
+2.718281828459045</pre>
+
+  <p class="body"><a id="pgfId-1105720"></a>The math module also contains a number of important functions we’ll use in the book. Among these are the square root function <code class="fm-code-in-text">sqrt</code>, the trigonometric functions <code class="fm-code-in-text">cos</code> and <code class="fm-code-in-text">sin</code>, the exponential function <code class="fm-code-in-text">exp</code>, and the natural logarithm function <code class="fm-code-in-text">log</code>. We’ll go over each of these functions as needed, but the important thing to know for now is that you call them like ordinary Python functions, providing their input values in parentheses:</p>
+  <pre class="programlisting">&gt;&gt;&gt; math.sqrt(25)
+5.0
+&gt;&gt;&gt; math.<span class="fm-in-times1">sin</span>(pi/2)
+1.0
+&gt;&gt;&gt; math.<span class="fm-in-times1">cos</span>(pi/3)
+0.5000000000000001
+&gt;&gt;&gt; math.exp(2)
+7.38905609893065
+&gt;&gt;&gt; math.log(math.exp(2))
+2.0</pre>
+
+  <p class="body"><a id="pgfId-1109974"></a>As a quick reminder about exponential functions, <code class="fm-code-in-text">math.exp(x)</code> is the same as <code class="fm-code-in-text">math.e</code> <code class="fm-code-in-text">**</code> <code class="fm-code-in-text">x</code>, for any value of <code class="fm-code-in-text">x</code>, and the <code class="fm-code-in-text">math.log</code> function undoes the effect of <code class="fm-code-in-text">math.exp</code>. The trigonometric functions are introduced <a id="marker-1110081"></a>in<a id="marker-1110086"></a> chapter 2.</p>
+
+  <h3 class="fm-head1" id="heading_id_5"><a id="pgfId-1105726"></a><a id="id_pyuwmqpho6c3"></a>B.1.2 Random numbers</h3>
+
+  <p class="body"><a id="pgfId-1105727"></a>Sometimes <a id="marker-1110091"></a>we want <a id="marker-1110096"></a>to choose some arbitrary numbers to test our computations, and we can use Python’s random number generators to do this. These are stored in the <code class="fm-code-in-text">random</code> module<a id="marker-1105728"></a>, so we need to import that first:</p>
+  <pre class="programlisting">import random</pre>
+
+  <p class="body"><a id="pgfId-1105731"></a>The first important function in this module is <code class="fm-code-in-text">randint</code>, which returns a randomly selected floating-point value from a given range. If you run <code class="fm-code-in-text">random.randint(0,10)</code>, you get a randomly selected integer from 0 to 10, and both 0 and 10 are possible outputs:</p>
+  <pre class="programlisting">&gt;&gt;&gt; random.randint(0,10)
+7
+&gt;&gt;&gt; random.randint(0,10)
+1</pre>
+
+  <p class="body"><a id="pgfId-1105733"></a>The other function we use for generating random numbers is <code class="fm-code-in-text">random.uniform</code>, which generates a random floating-point number on a specified interval. The following code returns a randomly selected number between 7.5 and 9.5:</p>
+  <pre class="programlisting">&gt;&gt;&gt; random.uniform(7.5, 9.5)
+8.200084576283352</pre>
+
+  <p class="body"><a id="pgfId-1105736"></a>The word <i class="fm-italics">uniform</i> <a id="marker-1105735"></a> indicates that no subrange is more likely than any other. By contrast, if you picked people at random and returned their ages, you would get a <i class="fm-italics">non-uniform</i> distribution of random numbers, meaning you’d find more far people between ages 10-20 <a id="marker-1110111"></a>than <a id="marker-1110101"></a>between<a id="marker-1110106"></a> ages 100-110.</p>
+
+  <h2 class="fm-head" id="heading_id_6"><a id="pgfId-1105738"></a><a id="id_hfjb4auodyw8"></a>B.2 Collections of data in Python</h2>
+
+  <p class="body"><a id="pgfId-1105739"></a>Throughout <a id="marker-1110116"></a>this <a id="marker-1110121"></a>book, we do math involving <i class="fm-italics">collections</i> of data. These can be ordered pairs of numbers representing points in the plane, lists of numbers representing measured data from the real world, or sets of symbols in an algebraic expression. Python has a number of ways to model collections, and in this section, I’ll introduce them and compare them.</p>
+
+  <h3 class="fm-head1" id="heading_id_7"><a id="pgfId-1105741"></a>B.2.1 <a id="id_51llppl429ud"></a>Lists</h3>
+
+  <p class="body"><a id="pgfId-1105742"></a>The most<a id="marker-1110131"></a> basic <a id="marker-1110136"></a>collection in Python is the list. To create a list, simply enclose some values between square brackets and separate them by commas. Here’s a list of three strings, saved as a variable called <code class="fm-code-in-text">months</code> :</p>
+  <pre class="programlisting">months = ["January", "February", "March"]</pre>
+
+  <p class="body"><a id="pgfId-1105744"></a>We can retrieve an entry from a list by its index (plural, <i class="fm-italics">indices</i>) or its numerical position in the list. In Python, lists are <i class="fm-italics">zero-indexed</i> <a id="marker-1105745"></a>, meaning the entries are numbered, counting from zero instead of from one. In the <code class="fm-code-in-text">months</code> list, the three indices are 0, 1, and 2. Therefore, we can get</p>
+  <pre class="programlisting">&gt;&gt;&gt; months[0]
+'January'
+&gt;&gt;&gt; months[1]
+'February'
+&gt;&gt;&gt; months[2]
+'March'</pre>
+
+  <p class="body"><a id="pgfId-1105747"></a>Attempting to access an entry of a list outside the range of valid indices returns an error. For example, there’s no <code class="fm-code-in-text">months[3]</code> or <code class="fm-code-in-text">months[17]</code>. A trick I use in a few places in the book is to use the modulus operator on indices to guarantee a valid entry. For any Python integer <code class="fm-code-in-text">n</code>, the expression <code class="fm-code-in-text">months[n % 3]</code> is guaranteed to be valid because <code class="fm-code-in-text">n % 3</code> always returns <code class="fm-code-in-text">0</code>, <code class="fm-code-in-text">1</code>, or <code class="fm-code-in-text">2</code>.</p>
+
+  <p class="body"><a id="pgfId-1105748"></a>Another way to access list entries is to <i class="fm-italics">unpack</i> them. If we are sure there are three entries in the list of months, we can write</p>
+  <pre class="programlisting">j, f, m = months</pre>
+
+  <p class="body"><a id="pgfId-1105750"></a>which sets the variables <code class="fm-code-in-text">j</code>, <code class="fm-code-in-text">f</code>, and <code class="fm-code-in-text">m</code> equal to the three values from <code class="fm-code-in-text">months</code> in order. After running this, we have</p>
+  <pre class="programlisting">&gt;&gt;&gt; j
+'January'
+&gt;&gt;&gt; f
+'February'
+&gt;&gt;&gt; m
+'March'</pre>
+
+  <p class="body"><a id="pgfId-1105752"></a>Another basic thing we can do with lists is <i class="fm-italics">concatenate</i> them or combine them in order to make a bigger list. In Python, this is done with the + operator<a id="marker-1105753"></a>. Concatenating <code class="fm-code-in-text">[1,</code> <code class="fm-code-in-text">2,</code> <code class="fm-code-in-text">3]</code> and <code class="fm-code-in-text">[4,</code> <code class="fm-code-in-text">5,</code> <code class="fm-code-in-text">6]</code> gives us a new list consisting of the entries of the first followed by the entries of the second:</p>
+  <pre class="programlisting">&gt;&gt;&gt; [1,2,3] + [4,5,6]
+[1, 2, 3, 4, 5, 6]</pre>
+
+  <p class="fm-head2"><a id="pgfId-1105756"></a><a id="id_1i4iqtx45s2"></a>More list indexing and slicing</p>
+
+  <p class="body"><a id="pgfId-1105757"></a>Python<a id="marker-1110141"></a> also <a id="marker-1110146"></a>lets you extract a <i class="fm-italics">slice</i> of a list, which is the list of all values between two indices. For instance,</p>
+  <pre class="programlisting">&gt;&gt;&gt; months[1:3]
+['February', 'March']</pre>
+
+  <p class="body"><a id="pgfId-1105759"></a>gives the slice starting at index 1 and going up to (but not including) index 3. For an even clearer example, we can look at a list whose entries are equal to their corresponding indices:</p>
+  <pre class="programlisting">&gt;&gt;&gt; nums = [0,1,2,3,4,5,6,7,8,9,10]
+&gt;&gt;&gt; nums[2:5]
+[2, 3, 4]</pre>
+
+  <p class="body"><a id="pgfId-1105761"></a>The length of a list can be computed with the <code class="fm-code-in-text">len</code> function:</p>
+  <pre class="programlisting">&gt;&gt;&gt; len(months)
+3
+&gt;&gt;&gt; len(nums)
+11</pre>
+
+  <p class="body"><a id="pgfId-1105763"></a>Because the entries of a list are indexed starting from zero, the last entry in a list has index one less than the length of the list. To get the last entry of a list (like <code class="fm-code-in-text">nums</code>), we can write</p>
+  <pre class="programlisting">&gt;&gt;&gt; nums[len(nums)-1]
+10</pre>
+
+  <p class="body"><a id="pgfId-1105765"></a>To get the last entry of a list, you can also use</p>
+  <pre class="programlisting">&gt;&gt;&gt; nums[-1]
+10</pre>
+
+  <p class="body"><a id="pgfId-1105767"></a>Likewise, <code class="fm-code-in-text">nums[-2]</code> returns the second-to-last entry of the <code class="fm-code-in-text">nums</code> list, which is <code class="fm-code-in-text">9</code>. There are many ways to combine positive and negative indices and slices. For instance, <code class="fm-code-in-text">nums[1:]</code> returns all entries of the list except the first (at index zero), and <code class="fm-code-in-text">nums[3:-1]</code> returns the entries of <code class="fm-code-in-text">nums</code> from index 3 up until the second to last entry:</p>
+  <pre class="programlisting">&gt;&gt;&gt; nums[1:]
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+&gt;&gt;&gt; nums[3:-1]
+[3, 4, 5, 6, 7, 8, 9]</pre>
+
+  <p class="body"><a id="pgfId-1105769"></a>Make sure not to confuse the slice syntax, which involves two indices, with retrieving an entry from a list of lists, which also involves two indices. With a list like</p>
+  <pre class="programlisting">list_of_lists = [[1,2,3],[4,5,6],[7,8,9]]</pre>
+
+  <p class="body"><a id="pgfId-1105771"></a>the number 8 is in the third list (index 2) and it’s the second entry (index 1) in that list, so if we run <code class="fm-code-in-text">list_of_lists[2][1]</code> we<a id="marker-1110151"></a> get <a id="marker-1110156"></a><code class="fm-code-in-text">8</code>.</p>
+
+  <p class="fm-head2"><a id="pgfId-1105773"></a><a id="id_i292s4cnw2c9"></a>Iterating over a list</p>
+
+  <p class="body"><a id="pgfId-1105774"></a>Often<a id="marker-1110161"></a> when <a id="marker-1110166"></a>we’re computing something about a list, we want to use every value in it. That means <i class="fm-italics">iterating</i> over the list, visiting all of its values. The easiest way to do this in Python is with a <i class="fm-italics">for loop</i>. The following <code class="fm-code-in-text">for</code> loop prints a statement for each value in the <code class="fm-code-in-text">months</code> list:</p>
+  <pre class="programlisting">&gt;&gt;&gt; for x in months:
+&gt;&gt;&gt;     print('Month: ' + x)
+Month: January
+Month: February
+Month: March</pre>
+
+  <p class="body"><a id="pgfId-1105776"></a>It’s also possible to build a new list by starting with an empty list and successively adding entries to it using the <code class="fm-code-in-text">append</code> method. This next code creates an empty list called <code class="fm-code-in-text">squares</code> and then loops over the <code class="fm-code-in-text">nums</code> list, adding the square of each number in <code class="fm-code-in-text">nums</code> to the <code class="fm-code-in-text">squares</code> list by calling <code class="fm-code-in-text">squares.append</code> :</p>
+  <pre class="programlisting">squares = []
+for n in nums:
+    squares.append(n * n)</pre>
+
+  <p class="body"><a id="pgfId-1105778"></a>By the end of the <code class="fm-code-in-text">for</code> loop, <code class="fm-code-in-text">squares</code> contain the square of every<a id="marker-1110176"></a> number <a id="marker-1110171"></a>in <code class="fm-code-in-text">nums</code> :</p>
+  <pre class="programlisting">&gt;&gt;&gt; squares
+[0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100]</pre>
+
+  <p class="fm-head2"><a id="pgfId-1105781"></a><a id="id_yobblildzod4"></a>List comprehensions</p>
+
+  <p class="body"><a id="pgfId-1105782"></a>Python <a id="marker-1110181"></a>has a s<a id="marker-1110186"></a>pecial syntax for iteratively building lists: the <i class="fm-italics">list comprehension</i>. A list comprehension is essentially a special kind of <code class="fm-code-in-text">for</code> loop that lives between square brackets, indicating that list entries are being added at each step of the iteration. List comprehensions read like plain English, making it easy to understand what they are doing. For instance, the following list comprehension builds a list consisting of squares of the form <code class="fm-code-in-text">x</code> <code class="fm-code-in-text">*</code> <code class="fm-code-in-text">x</code> for every value <code class="fm-code-in-text">x</code> in the <code class="fm-code-in-text">nums</code> list:</p>
+  <pre class="programlisting">&gt;&gt;&gt; [x * x for x in nums]
+[0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100]</pre>
+
+  <p class="body"><a id="pgfId-1105784"></a>It’s possible to iterate over multiple source lists in a list comprehension. For instance, the following code loops over all possible values from both a <code class="fm-code-in-text">years</code> list and a <code class="fm-code-in-text">months</code> list, making every combination of a year and a month into a string:</p>
+  <pre class="programlisting">&gt;&gt;&gt; years = [2018,2019,2020]
+&gt;&gt;&gt; [m + " " + str(y) for y in years for m in months]
+['January 2018',
+ 'February 2018',
+ 'March 2018',
+ 'January 2019',
+ 'February 2019',
+ 'March 2019',
+ 'January 2020',
+ 'February 2020',
+ 'March 2020']</pre>
+
+  <p class="body"><a id="pgfId-1105786"></a>Similarly, we can build a list of lists by putting one comprehension inside of another. Adding one more pair of square brackets, we change the comprehension to return a list<a id="marker-1110211"></a> for <a id="marker-1110206"></a>each <a id="marker-1110201"></a>value in <a id="marker-1110191"></a>the <a id="marker-1110196"></a><code class="fm-code-in-text">months</code> list:</p>
+  <pre class="programlisting">&gt;&gt;&gt; [[m + " " + str(y) for y in years] for m in months]
+[['January 2018', 'January 2019', 'January 2020'],
+ ['February 2018', 'February 2019', 'February 2020'],
+ ['March 2018', 'March 2019', 'March 2020']]</pre>
+
+  <h3 class="fm-head1" id="heading_id_8"><a id="pgfId-1105789"></a><a id="id_kvlfhjlamjuk"></a>B.2.2 Other iterables</h3>
+
+  <p class="body"><a id="pgfId-1105790"></a>In Python, and especially in Python 3.<i class="fm-in-times-italic">x</i>, there are a few other types of collections. In particular, some of these are referred to as <i class="fm-italics">iterables</i> because we can iterate over them as if they were lists. Probably the most frequently used in this book are <i class="fm-italics">ranges</i> <a id="marker-1105791"></a>, which are used to construct sequences of numbers in order. For instance, <code class="fm-code-in-text">range(5,10)</code> represents the sequence of integers starting from 5 and going up to (but not including) 10. If you evaluate <code class="fm-code-in-text">range(5,10)</code> on its own in Python, the result is unexciting:</p>
+  <pre class="programlisting">&gt;&gt;&gt; range(5,10)
+range(5, 10)</pre>
+
+  <p class="body"><a id="pgfId-1105793"></a>Even though a range doesn’t display the numbers that make it up, we can iterate over it just like a list:</p>
+  <pre class="programlisting">&gt;&gt;&gt; for i in range(5,10):
+&gt;&gt;&gt;    print(i)
+5
+6
+7
+8
+9</pre>
+
+  <p class="body"><a id="pgfId-1105795"></a>The fact that ranges are not lists allows us to use very big ranges and not iterate over them all at once. For instance, <code class="fm-code-in-text">range(0,1000000000)</code> defines a range of a billion numbers that we could iterate over, but it doesn’t actually store a billion numbers. It only stores the instructions to produce the numbers during an iteration. If you want to turn an iterable like a <code class="fm-code-in-text">range</code> into a list, all you have to do is convert it with the <code class="fm-code-in-text">list</code> function:</p>
+  <pre class="programlisting">&gt;&gt;&gt; list(range(0,10))
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]</pre>
+
+  <p class="body"><a id="pgfId-1105797"></a>It’s useful to get lists of consecutive integers, so we use the <code class="fm-code-in-text">range</code> function a lot. One more note about the <code class="fm-code-in-text">range</code> function is that some of its arguments are optional. If you call it with only one input, it automatically starts from zero and goes up to the input number, and if you provide a third argument it counts by that number. For instance, <code class="fm-code-in-text">range(10)</code> counts from 0 to 9 and <code class="fm-code-in-text">range(0,10,3)</code> counts from 0 to 9 in increments of 3:</p>
+  <pre class="programlisting">&gt;&gt;&gt; list(range(10))
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+&gt;&gt;&gt; list(range(0,10,3))
+[0, 3, 6, 9]</pre>
+
+  <p class="body"><a id="pgfId-1105799"></a>Another example of a function that returns its own special type of iterable is the <code class="fm-code-in-text">zip</code> function. The <code class="fm-code-in-text">zip</code> function takes two iterables of the same length and returns an iterable consisting of pairs of corresponding entries from the first and second iterable:</p>
+  <pre class="programlisting">&gt;&gt;&gt; z = zip([1,2,3],["a","b","c"])
+&gt;&gt;&gt; z
+&lt;zip at 0x15fa8104bc8&gt;
+&gt;&gt;&gt; list(z)
+[(1, 'a'), (2, 'b'), (3, 'c')]</pre>
+
+  <p class="body"><a id="pgfId-1105801"></a>Note that not all iterables support indexing; <code class="fm-code-in-text">z[2]</code> is invalid, so you’ll need to convert it to a list first (like <code class="fm-code-in-text">list(z)[2]</code> instead) to get the third entry of a <code class="fm-code-in-text">zip z</code>. (Ranges do support indexing, and <code class="fm-code-in-text">range(5,10)[3]</code> returns 8.) Be careful−once you’ve iterated through a <code class="fm-code-in-text">zip</code> it is no longer there! It’s a good idea to convert a <code class="fm-code-in-text">zip</code> to a list immediately if you plan to reuse it.</p>
+
+  <h3 class="fm-head1" id="heading_id_9"><a id="pgfId-1105803"></a><a id="id_n1zxpv77lrqm"></a>B.2.3 Generators</h3>
+
+  <p class="body"><a id="pgfId-1105804"></a>Python’s <a id="marker-1110216"></a> <i class="fm-italics">generators</i> <a id="marker-1110221"></a>give <a id="marker-1110226"></a>you a way to create iterables that don’t store all of their values at once, but rather store instructions to produce values. This allows us to define large or even infinite sequences of values without storing them in memory. Generators can be created in a few ways, the most basic of which looks like a function with the keyword <code class="fm-code-in-text">yield</code> instead of <code class="fm-code-in-text">return</code>. The difference is that a generator can yield many values, where as a function returns at most once and then is done.</p>
+
+  <p class="body"><a id="pgfId-1105805"></a>Here’s a generator representing the infinite sequence of integers beginning 0, 1, 2, 3, and so on. The <code class="fm-code-in-text">while</code> loop goes forever, and in each loop the variable <i class="fm-in-times-italic">x</i> is yielded and then incremented by 1.</p>
+  <pre class="programlisting">def count():
+    x = 0
+    while True:
+        yield x
+        x += 1</pre>
+
+  <p class="body"><a id="pgfId-1105807"></a>Even though this represents an infinite sequence, you can run <code class="fm-code-in-text">count()</code> without blowing up your computer. It just returns a generator object, not a complete list of values:</p>
+  <pre class="programlisting">&gt;&gt;&gt; count()
+&lt;generator object count at 0x0000015FA80EC750&gt;</pre>
+
+  <p class="body"><a id="pgfId-1105809"></a>A <code class="fm-code-in-text">for</code> loop beginning with <code class="fm-code-in-text">for x</code> in <code class="fm-code-in-text">count()</code> is valid, but runs forever. Here’s an example of using this infinite generator in a <code class="fm-code-in-text">for</code> loop with a <code class="fm-code-in-text">break</code> to escape instead of iterating forever:</p>
+  <pre class="programlisting">for x in count():
+    if x &gt; 1000:
+        break
+    else:
+        print(x)</pre>
+
+  <p class="body"><a id="pgfId-1105811"></a>Here’s a more practical version of the count generator that only yields finitely many values. It works like the <code class="fm-code-in-text">range</code> function, starting from the first input value and going up to the second:</p>
+  <pre class="programlisting">def count(a,b):
+    x = a
+    while x &lt; b:
+        yield x
+        x += 1</pre>
+
+  <p class="body"><a id="pgfId-1105813"></a>The result of <code class="fm-code-in-text">count(10,20)</code> is a generator that is like <code class="fm-code-in-text">range(10,20)</code> ; we can’t see its values directly, but we can iterate over it, for instance, in a list comprehension:</p>
+  <pre class="programlisting">&gt;&gt;&gt; count(10,20)
+&lt;generator object count at 0x0000015FA80EC9A8&gt;
+&gt;&gt;&gt; [x for x in count(10,20)]
+[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]</pre>
+
+  <p class="body"><a id="pgfId-1105815"></a>We can create generator comprehensions much like list comprehensions by wrapping the comprehension code in parentheses instead of brackets. For example,</p>
+  <pre class="programlisting">(x*x for x in range(0,10))</pre>
+
+  <p class="body"><a id="pgfId-1105817"></a>is a generator yielding the squares of numbers from 0 to 9. It’s behavior is the same as the generator:</p>
+  <pre class="programlisting">def squares():
+    for x in range(0,10):
+        yield x*x</pre>
+
+  <p class="body"><a id="pgfId-1105819"></a>When a generator is finite, you can safely convert it to a list <a id="marker-1110231"></a>with<a id="marker-1110236"></a> the <code class="fm-code-in-text">list</code> <a id="marker-1110241"></a>function:</p>
+  <pre class="programlisting">&gt;&gt;&gt; list(squares())
+[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]</pre>
+
+  <h3 class="fm-head1" id="heading_id_10"><a id="pgfId-1105822"></a>B.2.4 <a id="id_bo42zu4k02g4"></a>Tuples</h3>
+
+  <p class="body"><a id="pgfId-1105824"></a> <i class="fm-italics">Tuples</i> are<a id="marker-1110246"></a> iterables<a id="marker-1110251"></a> that <a id="marker-1110256"></a>are a lot like lists except that they are <i class="fm-italics">immutable</i> <a id="marker-1105823"></a>; you can’t change them once they are created. That means there is no <code class="fm-code-in-text">append</code> method<a id="marker-1105825"></a> on a tuple. In particular, once you’ve created a tuple, it always has the same fixed length. That makes them useful for storing data that comes in pairs or triples. Tuples are created like lists with the only difference being that we use parentheses (or no brackets at all) instead of square brackets:</p>
+  <pre class="programlisting">&gt;&gt;&gt; (1,2)
+(1, 2)
+&gt;&gt;&gt; ("a","b","c")
+('a', 'b', 'c')
+&gt;&gt;&gt; 1,2,3,4,5
+(1, 2, 3, 4, 5)</pre>
+
+  <p class="body"><a id="pgfId-1105828"></a>If you look at the <code class="fm-code-in-text">zip</code> in section B.2.2 again, you’ll see its entries are actually tuples. Tuples are in a sense the default collection in Python. If you write <code class="fm-code-in-text">a</code> <code class="fm-code-in-text">=</code> <code class="fm-code-in-text">1,2,3,4,5</code> (without the parentheses), then <code class="fm-code-in-text">a</code> is automatically interpreted as a tuple of those numbers. Likewise, if you conclude a function with <code class="fm-code-in-text">return</code> <code class="fm-code-in-text">a,b</code>, the output will actually be the tuple <code class="fm-code-in-text">(a,b)</code>.</p>
+
+  <p class="body"><a id="pgfId-1105829"></a>Tuples are often short, so we often don’t need to iterate over them. There’s no such thing as a tuple comprehension, but you can iterate over a tuple in another comprehension and convert the result back to a tuple with the built-in <code class="fm-code-in-text">tuple</code> function. Here’s something that looks like a tuple comprehension, but it’s actually a generator comprehension <a id="marker-1110261"></a>whose <a id="marker-1110266"></a>result<a id="marker-1110271"></a> is passed to the <code class="fm-code-in-text">tuple</code> function:</p>
+  <pre class="programlisting">&gt;&gt;&gt; a = 1,2,3,4,5
+&gt;&gt;&gt; tuple(x + 10 for x in a)
+(11, 12, 13, 14, 15)</pre>
+
+  <h3 class="fm-head1" id="heading_id_11"><a id="pgfId-1105832"></a>B.2.5 <a id="id_77h9upkfdxaj"></a>Sets</h3>
+
+  <p class="body"><a id="pgfId-1105833"></a>Python<a id="marker-1110276"></a> <i class="fm-italics">sets</i> <a id="marker-1110281"></a>are <a id="marker-1110286"></a>collections where every entry must be distinct, and they do not keep track of order. We won’t use sets much in this book, except that turning a list into a set is a quick way to guarantee it has no duplicate values. The <code class="fm-code-in-text">set</code> function turns an iterable into a set as follows:</p>
+  <pre class="programlisting">&gt;&gt;&gt; dups = [1,2,3,3,3,3,4,5,6,6,6,6,7,8,9,9,9]
+&gt;&gt;&gt; set(dups)
+{1, 2, 3, 4, 5, 6, 7, 8, 9}
+&gt;&gt;&gt; list(set(dups))
+[1, 2, 3, 4, 5, 6, 7, 8, 9]</pre>
+
+  <p class="body"><a id="pgfId-1105835"></a>Python sets are written as a list of entries between curly braces, which incidentally is the same way mathematical sets are written. You can define a set from scratch by listing some entries, separated by commas and enclosing them in curly braces. Because sets don’t respect order, sets are equal if they have exactly<a id="marker-1110291"></a> the<a id="marker-1110296"></a> same <a id="marker-1110301"></a>entries:</p>
+  <pre class="programlisting">&gt;&gt;&gt; set([1,1,2,2,3]) == {3,2,1}
+True</pre>
+
+  <h3 class="fm-head1" id="heading_id_12"><a id="pgfId-1105839"></a><a id="id_1hfjzyo1jjuz"></a><a id="id_5sfnl9nwl9vn"></a>B.2.6 NumPy arrays</h3>
+
+  <p class="body"><a id="pgfId-1105840"></a>The <a id="marker-1110306"></a>final <a id="marker-1110311"></a>collection<a id="marker-1110316"></a> we make extensive use of in this book is not a built-in Python collection; it comes from the NumPy package, which is the de-facto standard Python library for numerics (efficient number crunching). This collection is the NumPy <i class="fm-italics">array</i>, and it’s mostly important because of how ubiquitous NumPy is. Many other Python libraries have functions that expect NumPy arrays as inputs.</p>
+
+  <p class="body"><a id="pgfId-1105841"></a>To use NumPy arrays, make sure you have access to the NumPy library. First, you need to make sure NumPy is installed. If you’re using Anaconda as described in appendix A, you should already have it. Otherwise, you’ll want to install NumPy with the pip package manager via <code class="fm-code-in-text">pip install numpy</code> in your terminal. Once NumPy is installed, you need to import it to your Python program. The traditional way to import NumPy is with the name <code class="fm-code-in-text">np</code> :</p>
+  <pre class="programlisting">import numpy as np</pre>
+
+  <p class="body"><a id="pgfId-1105843"></a>To create a NumPy array, simply pass an iterable to the <code class="fm-code-in-text">np.array</code> function:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.array([1,2,3,4,5,6])
+array([1, 2, 3, 4, 5, 6])</pre>
+
+  <p class="body"><a id="pgfId-1105845"></a>One NumPy function we use is <code class="fm-code-in-text">np.arange</code>, which is like a floating-point version of the built-in Python <code class="fm-code-in-text">range</code> function. With two arguments, <code class="fm-code-in-text">np.arange</code> works the same way as <code class="fm-code-in-text">range</code>, producing a NumPy array instead of a <code class="fm-code-in-text">range</code> object:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.arange(0,10)
+array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])</pre>
+
+  <p class="body"><a id="pgfId-1105847"></a>With a third argument, you can specify a value to count by, which can be a float. The following code gives us a NumPy array with values from 0 up to 10 in increments of 0.1, which is 100 <a id="marker-1110321"></a>numbers <a id="marker-1110326"></a>in <a id="marker-1110331"></a>total:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.arange(0,10,0.1)
+array([0. , 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. , 1.1, 1.2,
+       1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2. , 2.1, 2.2, 2.3, 2.4, 2.5,
+       2.6, 2.7, 2.8, 2.9, 3. , 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8,
+       3.9, 4. , 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5. , 5.1,
+       5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6. , 6.1, 6.2, 6.3, 6.4,
+       6.5, 6.6, 6.7, 6.8, 6.9, 7. , 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7,
+       7.8, 7.9, 8. , 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 9. ,
+       9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9])
+&gt;&gt;&gt; len(np.arange(0,10,0.1))
+100</pre>
+
+  <h3 class="fm-head1" id="heading_id_13"><a id="pgfId-1105850"></a><a id="id_hcf1vn97a5df"></a>B.2.7 Dictionaries</h3>
+
+  <p class="body"><a id="pgfId-1105851"></a> <i class="fm-italics">Dictionaries</i> <a id="marker-1110336"></a>are <a id="marker-1110341"></a>collections <a id="marker-1110346"></a>that work quite differently than lists, tuples, or generators. Instead of accessing entries of a dictionary by a numeric index, you can label them with another piece of data called a <i class="fm-italics">key</i>. At least in this book, keys are most frequently strings. The following code defines a dictionary called <code class="fm-code-in-text">dog</code> with two keys and corresponding values; the key <code class="fm-code-in-text">"name"</code> is associated with the string <code class="fm-code-in-text">"Melba"</code> and the key <code class="fm-code-in-text">"age"</code> is associated with the number <code class="fm-code-in-text">2</code> :</p>
+  <pre class="programlisting">dog = {"name" : "Melba", "age" : 2}</pre>
+
+  <p class="body"><a id="pgfId-1105853"></a>To make dictionaries more readable, we often use some extra whitespace and write each key-value pair on its own line. The following is the same <code class="fm-code-in-text">dog</code> dictionary with extra whitespace:</p>
+  <pre class="programlisting">dog = {
+    "name" : "Melba",
+    "age" : 2
+}</pre>
+
+  <p class="body"><a id="pgfId-1105855"></a>To access the values of a dictionary, you use a similar syntax as when getting the entries of a list, but instead of passing an index, you pass a key:</p>
+  <pre class="programlisting">&gt;&gt;&gt; dog["name"]
+'Melba'
+&gt;&gt;&gt; dog["age"]
+2</pre>
+
+  <p class="body"><a id="pgfId-1105857"></a>If you want to get all the values from a dictionary, you can get an iterable of key-value pair tuples using the <code class="fm-code-in-text">items</code> method<a id="marker-1105858"></a> on a dictionary. Dictionaries don’t order their values, so don’t expect the result of items to have <a id="marker-1110351"></a>any <a id="marker-1110356"></a>particular <a id="marker-1110361"></a>order:</p>
+  <pre class="programlisting">&gt;&gt;&gt; list(dog.items())
+[('name', 'Melba'), ('age', 2)]</pre>
+
+  <h3 class="fm-head1" id="heading_id_14"><a id="pgfId-1105860"></a>B.2.8 Useful collection functions</h3>
+
+  <p class="body"><a id="pgfId-1105861"></a>Python <a id="marker-1110366"></a>comes <a id="marker-1110371"></a>with a<a id="marker-1110376"></a> number of useful built-in functions that work with iterables, particularly for iterables of numbers. We already saw the length function <code class="fm-code-in-text">len</code>, which we will use most frequently, as well as the <code class="fm-code-in-text">zip</code> function, but there are a few others worth a quick mention. The <code class="fm-code-in-text">sum</code> function adds up an iterable of numbers, and the <code class="fm-code-in-text">max</code> and <code class="fm-code-in-text">min</code> functions return the largest and smallest values, respectively:</p>
+  <pre class="programlisting">&gt;&gt;&gt; sum([1,2,3])
+6
+&gt;&gt;&gt; max([1,2,3])
+3
+&gt;&gt;&gt; min([1,2,3])
+1</pre>
+
+  <p class="body"><a id="pgfId-1105863"></a>The <code class="fm-code-in-text">sorted</code> function returns a list that is a sorted copy of an iterable. It’s important to note that <code class="fm-code-in-text">sorted</code> returns a new list; the order of the original list is unaffected:</p>
+  <pre class="programlisting">&gt;&gt;&gt; q = [3,4,1,2,5]
+&gt;&gt;&gt; sorted(q)
+[1, 2, 3, 4, 5]
+&gt;&gt;&gt; q
+[3, 4, 1, 2, 5]</pre>
+
+  <p class="body"><a id="pgfId-1105865"></a>Similarly, the <code class="fm-code-in-text">reversed</code> function returns a reversed version of a given iterable, while leaving the original iterable’s order unchanged. The result is an iterable but not a list, so you need to convert it to see the result:</p>
+  <pre class="programlisting">&gt;&gt;&gt; q
+[3, 4, 1, 2, 5]
+&gt;&gt;&gt; reversed(q)
+&lt;list_reverseiterator at 0x15fb652eb70&gt;
+&gt;&gt;&gt; list(reversed(q))
+[5, 2, 1, 4, 3]</pre>
+
+  <p class="body"><a id="pgfId-1105867"></a>By contrast, if you do want to sort or reverse a list in place, you can use the sort and <a id="marker-1110381"></a>reverse methods<a id="marker-1110386"></a> like<a id="marker-1110391"></a> <code class="fm-code-in-text">q.sort</code> <a id="marker-1105868"></a><code class="fm-code-in-text">()</code> or <code class="fm-code-in-text">q.reverse</code> <a id="marker-1105869"></a><code class="fm-code-in-text">()</code>.</p>
+
+  <h2 class="fm-head" id="heading_id_15"><a id="pgfId-1105871"></a><a id="id_xnyj5t392lx"></a>B.3 Working with functions</h2>
+
+  <p class="body"><a id="pgfId-1105872"></a>Python <a id="marker-1110396"></a>functions<a id="marker-1110401"></a> are like mini-programs that take some input values (or possibly none), do some computations, and possibly produce an output value. We already used some Python functions, like <code class="fm-code-in-text">math.sqrt</code> and <code class="fm-code-in-text">zip</code>, and saw the outputs they produce for different input values.</p>
+
+  <p class="body"><a id="pgfId-1105873"></a>We can define our own Python functions using the <code class="fm-code-in-text">def</code> keyword. The following code defines a function called <code class="fm-code-in-text">square</code> that takes an input value called <code class="fm-code-in-text">x</code>, stores the value <code class="fm-code-in-text">x</code> <code class="fm-code-in-text">*</code> <code class="fm-code-in-text">x</code> in a variable called <code class="fm-code-in-text">y</code>, and returns the value of <code class="fm-code-in-text">y</code>. Like a <code class="fm-code-in-text">for</code> loop or <code class="fm-code-in-text">if</code> statement, we need to use indentation to show which lines belong to the function definition:</p>
+  <pre class="programlisting">def square(x):
+    y = x * x
+    return y</pre>
+
+  <p class="body"><a id="pgfId-1105875"></a>The net result of this function is returning the square of the input value:</p>
+  <pre class="programlisting">&gt;&gt;&gt; square(5)
+25</pre>
+
+  <p class="body"><a id="pgfId-1105877"></a>This section covers a few of the more advanced ways we use functions in the book.</p>
+
+  <h3 class="fm-head1" id="heading_id_16"><a id="pgfId-1105879"></a>B.3.1 <a id="id_slb84nqnzas9"></a>Giving functions more inputs</h3>
+
+  <p class="body"><a id="pgfId-1105881"></a>We <a id="marker-1110406"></a>can <a id="marker-1110411"></a>define our function to take as many inputs, or <i class="fm-italics">arguments</i> <a id="marker-1105880"></a>, as we want. The following function takes three arguments and adds them together:</p>
+  <pre class="programlisting">def add3(x,y,z):
+    return x + y + z</pre>
+
+  <p class="body"><a id="pgfId-1105883"></a>Sometimes it’s useful to have a single function accept a variable number of arguments. For instance, we might want to write a single <code class="fm-code-in-text">add</code> function where <code class="fm-code-in-text">add(2,2)</code> returns <code class="fm-code-in-text">4</code>, <code class="fm-code-in-text">add(1,2,3)</code> returns <code class="fm-code-in-text">6</code>, and so on. We can do this by adding a star to a single input value, commonly called <code class="fm-code-in-text">args</code>. The star indicates that we are taking all of the input values and storing them in a tuple called <code class="fm-code-in-text">args.</code> Then we are free to write logic within our function that iterates over all of the arguments. This <code class="fm-code-in-text">add</code> function iterates over all arguments it is passed and adds them up, returning the total:</p>
+  <pre class="programlisting">def add(*args):
+    total = 0
+    for x in args:
+        total += x
+    return total</pre>
+
+  <p class="body"><a id="pgfId-1105885"></a>Then <code class="fm-code-in-text">add(1,2,3,4,5)</code> returns 1 + 2 + 3 + 4 + 5 = 15 as desired and <code class="fm-code-in-text">add()</code> returns 0. Our <code class="fm-code-in-text">add</code> function works differently than the <code class="fm-code-in-text">sum</code> function from before; <code class="fm-code-in-text">sum</code> takes an iterable, while <code class="fm-code-in-text">add</code> takes the underlying values directly as arguments. Here’s a comparison:</p>
+  <pre class="programlisting">&gt;&gt;&gt; sum([1,2,3,4,5])
+15
+&gt;&gt;&gt; add(1,2,3,4,5)
+15</pre>
+
+  <p class="body"><a id="pgfId-1105887"></a>The <code class="fm-code-in-text">*</code> operator has a second application: you can use it to take a list and convert it into arguments of a function. For instance,</p>
+  <pre class="programlisting">&gt;&gt;&gt; p = [1,2,3,4,5]
+&gt;&gt;&gt; add(*p)
+15</pre>
+
+  <p class="body"><a id="pgfId-1105889"></a>This is equivalent <a id="marker-1110416"></a>to <a id="marker-1110421"></a>evaluating <code class="fm-code-in-text">add(1,2,3,4,5)</code>.</p>
+
+  <h3 class="fm-head1" id="heading_id_17"><a id="pgfId-1105891"></a><a id="id_i15ut7p3zjmw"></a>B.3.2 Keyword arguments</h3>
+
+  <p class="body"><a id="pgfId-1105892"></a>Using <a id="marker-1110426"></a>a starred <a id="marker-1110431"></a>argument <a id="marker-1110436"></a>to a function is one way to optional parameters. Another way is to pass in named arguments, called <i class="fm-italics">keyword arguments</i>. Here’s an example function with two optional keyword arguments called <code class="fm-code-in-text">name</code> and <code class="fm-code-in-text">age</code>, which returns a string containing a birthday greeting:</p>
+  <pre class="programlisting">def birthday(name="friend", age=None):
+    s = "Happy birthday, %s" % name
+    if age:
+        s += ", you're %d years old" % age
+    return s + "!"</pre>
+
+  <p class="body"><a id="pgfId-1105896"></a>(This function uses the string formatting<a id="marker-1105894"></a><a id="marker-1105895"></a> operator <code class="fm-code-in-text">%</code>, which substitutes occurrences of <code class="fm-code-in-text">%s</code> with a given string and occurrences of <code class="fm-code-in-text">%d</code> with a given number.) Because they are keyword arguments, both <code class="fm-code-in-text">name</code> and <code class="fm-code-in-text">age</code> are optional. The name defaults to <code class="fm-code-in-text">"friend"</code>, so if we call <code class="fm-code-in-text">birthday</code> with no arguments, we get a generic greeting:</p>
+  <pre class="programlisting">&gt;&gt;&gt; birthday()
+'Happy birthday, friend!'</pre>
+
+  <p class="body"><a id="pgfId-1105898"></a>We can optionally specify a different name instead. The first argument is understood to be the name, but we can also make it explicit by setting the <code class="fm-code-in-text">name</code> argument directly:</p>
+  <pre class="programlisting">&gt;&gt;&gt; birthday('Melba')
+'Happy birthday, Melba!'
+&gt;&gt;&gt; birthday(name='Melba')
+'Happy birthday, Melba!'</pre>
+
+  <p class="body"><a id="pgfId-1105900"></a>The <code class="fm-code-in-text">age</code> argument is also optional and defaults to <code class="fm-code-in-text">None</code>. We can specify a name and an age, or just an age. Because <code class="fm-code-in-text">age</code> is the second keyword argument, we need to identify it if we don’t provide a name. When all arguments are identified, we can pass them in any order. Here are a few examples:</p>
+  <pre class="programlisting">&gt;&gt;&gt; birthday('Melba', 2)
+"Happy birthday, Melba, you're 2 years old!"
+&gt;&gt;&gt; birthday(age=2)
+"Happy birthday, friend, you're 2 years old!"
+&gt;&gt;&gt; birthday('Melba', age=2)
+"Happy birthday, Melba, you're 2 years old!"
+&gt;&gt;&gt; birthday(age=2,name='Melba')
+"Happy birthday, Melba, you're 2 years old!"</pre>
+
+  <p class="body"><a id="pgfId-1105902"></a>If you have a lot of arguments, you can package them as a dictionary and pass them to the function using the ** operator. This is like the * operator, except instead of passing a list of arguments, you pass a dictionary of keyword arguments:</p>
+  <pre class="programlisting">&gt;&gt;&gt; dog = {"name" : "Melba", "age" : 2}
+&gt;&gt;&gt; dog
+{'name': 'Melba', 'age': 2}
+&gt;&gt;&gt; birthday(**dog)
+"Happy birthday, Melba, you're 2 years old!"</pre>
+
+  <p class="body"><a id="pgfId-1105906"></a>When defining your function, you can similarly use the <code class="fm-code-in-text">**</code> operator<a id="marker-1105905"></a> to process all of the keywords supplied to the function as a single dictionary. We can rewrite the birthday function as follows, but then we need to specify the names of all of the arguments when calling it:</p>
+  <pre class="programlisting">def birthday(**kwargs):
+    s = "Happy birthday, %s" % kwargs['name']
+    if kwargs['age']:
+        s += ", you're %d years old" % kwargs['age']
+    return s + "!"</pre>
+
+  <p class="body"><a id="pgfId-1105908"></a>Specifically, the <code class="fm-code-in-text">name</code> and <code class="fm-code-in-text">age</code> variables are replaced with <code class="fm-code-in-text">kwargs['name']</code> and <code class="fm-code-in-text">kwargs['age']</code>, and we can run it either <a id="marker-1110441"></a>of the <a id="marker-1110446"></a>following <a id="marker-1110451"></a>ways:</p>
+  <pre class="programlisting">&gt;&gt;&gt; birthday(**dog)
+"Happy birthday, Melba, you're 2 years old!"
+&gt;&gt;&gt; birthday(age=2,name='Melba')
+"Happy birthday, Melba, you're 2 years old!"</pre>
+
+  <h3 class="fm-head1" id="heading_id_18"><a id="pgfId-1105911"></a><a id="id_4iahw9rtyfdc"></a>B.3.3 Functions as data</h3>
+
+  <p class="body"><a id="pgfId-1105913"></a>In <a id="marker-1110456"></a>Python, <a id="marker-1110461"></a>functions are <i class="fm-italics">first-class</i> values<a id="marker-1105912"></a>, meaning you can assign them to variables, pass them to functions, and return functions as the output values of other functions. In other words, Python functions look like any other piece of data in Python. In the <i class="fm-italics">functional programming</i> paradigm<a id="marker-1105914"></a>, which we introduce in chapter 4, it’s common to have functions that operate on other functions. The following function takes two inputs, a function <code class="fm-code-in-text">f</code> and a value <code class="fm-code-in-text">x</code>, and returns the value <code class="fm-code-in-text">f(x):</code></p>
+  <pre class="programlisting">def evaluate(f,x):
+    return f(x)</pre>
+
+  <p class="body"><a id="pgfId-1105916"></a>Using the <code class="fm-code-in-text">square</code> function from section B.3, <code class="fm-code-in-text">evaluate(square,10)</code> should return <code class="fm-code-in-text">square(10)</code> or <code class="fm-code-in-text">100</code> :</p>
+  <pre class="programlisting">&gt;&gt;&gt; evaluate(square,10)
+100</pre>
+
+  <p class="body"><a id="pgfId-1105918"></a>A more useful function that takes a function as input is Python’s <code class="fm-code-in-text">map</code> function. The <code class="fm-code-in-text">map</code> function takes a function and an iterable, and returns a new iterable obtained by applying the function to every entry of the original. For instance, the following <code class="fm-code-in-text">map</code> applies <code class="fm-code-in-text">square</code> to every number in <code class="fm-code-in-text">range(10)</code>. Converting it to a list, we can see the first 10 square numbers:</p>
+  <pre class="programlisting">&gt;&gt;&gt; map(square,range(10))
+&lt;map at 0x15fb752e240&gt;
+&gt;&gt;&gt; list(map(square,range(10)))
+[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]</pre>
+
+  <p class="body"><a id="pgfId-1105920"></a>The <code class="fm-code-in-text">evaluate</code> and <code class="fm-code-in-text">map</code> functions are examples of functions that take other functions as inputs. It’s also possible for a function to return another function as output. The following function, for instance, returns a function that raises a number to some power. Notice, in particular, that a full function definition can live inside another function:</p>
+  <pre class="programlisting">def make_power_function(power):
+    
+    def power_function(x):
+        return x ** power
+    
+    return power_function</pre>
+
+  <p class="body"><a id="pgfId-1105922"></a>With this defined, <code class="fm-code-in-text">make_power_function(2)</code> returns a function that behaves just like the previous <code class="fm-code-in-text">square</code> function. Similarly, <code class="fm-code-in-text">make_power_function(3)</code> returns a function that cubes its input:</p>
+  <pre class="programlisting">&gt;&gt;&gt; square = make_power_function(2)
+&gt;&gt;&gt; square(2)
+4
+&gt;&gt;&gt; cube = make_power_function(3)
+&gt;&gt;&gt; cube(2)
+8</pre>
+
+  <p class="body"><a id="pgfId-1105924"></a>When the <code class="fm-code-in-text">make_power_function</code> finishes evaluating, the <code class="fm-code-in-text">power_function</code> returned still remembers the <code class="fm-code-in-text">power</code> variable it was passed, even though variables within a function are usually gone when the function finishes running. Such a function that remembers outside variables used in its definition <a id="marker-1110466"></a>is called <a id="marker-1110471"></a>a <i class="fm-italics">closure</i>.</p>
+
+  <h3 class="fm-head1" id="heading_id_19"><a id="pgfId-1105926"></a><a id="id_y0rk5nsfx8j6"></a>B.3.4 Lambdas: Anonymous functions</h3>
+
+  <p class="body"><a id="pgfId-1105927"></a>There’s <a id="marker-1110476"></a>another <a id="marker-1110481"></a>simpler <a id="marker-1110486"></a>syntax we can use when creating functions on the fly. The <code class="fm-code-in-text">lambda</code> keyword allows us to create a function without a name, referred to as an <i class="fm-italics">anonymous function</i> or a <i class="fm-italics">lambda</i>. This name comes from the Greek letter λ, written lambda and pronounced LAM-duh, which is the symbol computer scientists use for function definitions in the theory of functional programming. To define a function as a lambda, you specify the input variable or variables, separated by commas, then a colon, then the return expression for the function. This lambda defines a function that takes a single input <code class="fm-code-in-text">x</code> and adds 2 to it:</p>
+  <pre class="programlisting">&gt;&gt;&gt; lambda x: x + 2
+&lt;function __main__.&lt;lambda&gt;(x)&gt;</pre>
+
+  <p class="body"><a id="pgfId-1105929"></a>You can use a lambda anywhere you use a function, so you can apply it directly to a value as follows:</p>
+  <pre class="programlisting">&gt;&gt;&gt; (lambda x: x + 2)(7)
+9</pre>
+
+  <p class="body"><a id="pgfId-1105931"></a>Here’s another lambda function taking two input variables and returning the value of the first plus twice the value of the second. In this case, the first input is 2 and the second is 3, so the output is 2 + 2 <span class="fm-in-cambria">·</span> 3 = 8:</p>
+  <pre class="programlisting">&gt;&gt;&gt; (lambda x,y: x + 2 * y)(2,3)
+8</pre>
+
+  <p class="body"><a id="pgfId-1105933"></a>You can also bind a lambda to a name like any function value in Python, although that somewhat defeats the purpose of using the anonymous function syntax:</p>
+  <pre class="programlisting">&gt;&gt;&gt; plus2 = lambda x: x + 2
+&gt;&gt;&gt; plus2(5)
+7</pre>
+
+  <p class="body"><a id="pgfId-1105935"></a>Lambdas should be used sparingly because if a function does anything interesting, it probably deserves a name. One place you might use a lambda is if you’re writing a function that returns another function. For instance, the <code class="fm-code-in-text">make_power_function</code> can be equivalently implemented with a lambda as follows:</p>
+  <pre class="programlisting">def make_power_function(p):
+    return lambda x: x ** p</pre>
+
+  <p class="body"><a id="pgfId-1105937"></a>We can see that this function behaves the same way as the original implementation:</p>
+  <pre class="programlisting">&gt;&gt;&gt; make_power_function(2)(3)
+9</pre>
+
+  <p class="body"><a id="pgfId-1105939"></a>The name of the outside function makes this clear, and not much is gained by naming the return function. It’s also possible to use lambdas as inputs to functions. For instance, if you want to add 2 to every number from 0 to 9, you could concisely write</p>
+  <pre class="programlisting">map(lambda x: x + 2, range(0,9))</pre>
+
+  <p class="body"><a id="pgfId-1105941"></a>To see the data, we again need to convert this result to a list. In most places, however, it’s just as concise and more readable to use comprehensions. The equivalent<a id="marker-1110491"></a> list <a id="marker-1110496"></a>comprehension <a id="marker-1110501"></a>is</p>
+  <pre class="programlisting">[x+2 for x in range(0,9)]</pre>
+
+  <h3 class="fm-head1" id="heading_id_20"><a id="pgfId-1105944"></a><a id="id_jqj2f1pbgepc"></a>B.3.5 Applying functions to NumPy arrays</h3>
+
+  <p class="body"><a id="pgfId-1105945"></a>NumPy<a id="marker-1110506"></a> has <a id="marker-1110511"></a>its <a id="marker-1110516"></a>own versions of some of the built-in Python math functions, which are useful because they can be applied to every entry of a NumPy array at once. For instance, <code class="fm-code-in-text">np.sqrt</code> is a square root function that can either take the square root of a number or a whole NumPy array. For instance, <code class="fm-code-in-text">np.sqrt(np.arange(0,10))</code> produces a NumPy array with the square roots of integers from 0 to 9:</p>
+  <pre class="programlisting">&gt;&gt;&gt; np.sqrt(np.arange(0,10))
+array([0.        , 1.        , 1.41421356, 1.73205081, 2.        ,
+       2.23606798, 2.44948974, 2.64575131, 2.82842712, 3.        ])</pre>
+
+  <p class="body"><a id="pgfId-1105947"></a>This is not just a shortcut. NumPy actually has an implementation that is faster than iterating over the array in Python. If you want to apply a custom function to every entry of a NumPy array, you can use the <code class="fm-code-in-text">np.vectorize</code> function. Here’s an example that takes a number and returns another number:</p>
+  <pre class="programlisting">def my_function(x):
+    if x % 2 == 0:
+        return x/2
+    else:
+        return 0</pre>
+
+  <p class="body"><a id="pgfId-1105949"></a>The following code vectorizes the function and applies it to every <a id="marker-1110521"></a>entry in <a id="marker-1110526"></a>the<a id="marker-1110531"></a> NumPy <a id="marker-1110536"></a>array: <code class="fm-code-in-text">np.arange(0,10)</code>.</p>
+  <pre class="programlisting">&gt;&gt;&gt; my_numpy_function = np.vectorize(my_function)
+&gt;&gt;&gt; my_numpy_function(np.arange(0,10))
+array([0., 0., 1., 0., 2., 0., 3., 0., 4., 0.])</pre>
+
+  <h2 class="fm-head" id="heading_id_21"><a id="pgfId-1105952"></a><a id="id_qpa4m6jchj8"></a>B.4 Plotting data with Matplotlib</h2>
+
+  <p class="body"><a id="pgfId-1105953"></a>Matplotlib<a id="marker-1110541"></a> is <a id="marker-1110546"></a>the most popular plotting library in Python. Throughout the book, we use it to create plots of data sets, graphs of functions, and drawings of other geometric figures. To avoid library-specific discussions, I’ve hidden most of Matplotlib’s usage in wrapper functions, so you can mainly use those to do all of the exercises and mini-projects. In case you want to dig deeper into the implementations, here’s a quick overview of making plots in Matplotlib. You should have Matplotlib already installed with Anaconda, or you can manually install it with <code class="fm-code-in-text">pip install matplotlib</code>.</p>
+
+  <h3 class="fm-head1" id="heading_id_22"><a id="pgfId-1105955"></a>B.4.1 <a id="id_cobrh1e43jdz"></a>Making a scatter plot</h3>
+
+  <p class="body"><a id="pgfId-1105956"></a>Scatter <a id="marker-1110551"></a>plots <a id="marker-1110556"></a>are <a id="marker-1110561"></a>useful for visualizing a collection of ordered pairs of numbers of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) as points in the plane (covered in more detail in chapter 2). To create a scatter plot (or any plot) with Matplotlib, the first step is to install the library and import it into your Python script. It’s traditional to import Matplotlib’s plotting module, pyplot<a id="marker-1105957"></a>, with the name <code class="fm-code-in-text">plt</code> :</p>
+  <pre class="programlisting">import matplotlib.pyplot as plt</pre>
+
+  <p class="body"><a id="pgfId-1105959"></a>Say we wanted to make a scatter plot of the points (1, 1), (2, 4), (3, 9), (4, 16), and (5, 25), which are pairs of some numbers and their squares. Thinking of these as points of the form (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>), the <i class="fm-in-times-italic">x</i> values are 1, 2, 3, 4, and 5, and the <i class="fm-in-times-italic">y</i> values are 1, 4, 9, 16, and 25. To make a scatter plot, we use the <code class="fm-code-in-text">plt.scatter</code> function, passing first a list of the <i class="fm-in-times-italic">x</i> values and then a list of the <i class="fm-in-times-italic">y</i> values:</p>
+  <pre class="programlisting">x_values = [1,2,3,4,5]
+y_values = [1,4,9,16,25]
+plt.scatter(x_values,y_values)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F01_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111104"></a>Figure B.1 A scatter plot created with the Matplotlib <code class="fm-code-in-text">plt.scatter</code> function</p>
+
+  <p class="body"><a id="pgfId-1105966"></a>The horizontal position tells us an <i class="fm-in-times-italic">x</i> value of a given point and the vertical position tells us a <i class="fm-in-times-italic">y</i> value. Notice that Matplotlib automatically scales the graph area to fit all of the points, so in this case, the <i class="fm-in-times-italic">y</i> scale is bigger than the <i class="fm-in-times-italic">x</i> scale.</p>
+
+  <p class="body"><a id="pgfId-1105967"></a>There are also a few keyword arguments you can use to customize the appearance of your scatter plot. For instance, the <code class="fm-code-in-text">marker</code> keyword argument sets the shape of the dots on the plot and the <code class="fm-code-in-text">c</code> keyword argument sets the color of the dots. The following line plots the same data with a red “x” for each point instead of the default blue circle:</p>
+  <pre class="programlisting">plt.scatter(x_values,y_values,marker='x',c='red')</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F02_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111147"></a>Figure B.2. Customizing the appearance of a Matplotlib scatter plot</p>
+
+  <p class="body"><a id="pgfId-1105975"></a>The documentation at <span class="fm-hyperlink"><a href="https://matplotlib.org/">https://matplotlib.org/</a></span> covers all of the possible keyword arguments and customizations that <a id="marker-1110566"></a>are <a id="marker-1110571"></a>possible <a id="marker-1110576"></a>with Matplotlib plots.</p>
+
+  <h3 class="fm-head1" id="heading_id_23"><a id="pgfId-1105977"></a>B.4.2 <a id="id_gf4aww80916s"></a>Making a line chart</h3>
+
+  <p class="body"><a id="pgfId-1105978"></a>If<a id="marker-1110581"></a> we <a id="marker-1110586"></a>use <a id="marker-1110591"></a>the Matplotlib <code class="fm-code-in-text">plt.plot</code> function instead of the <code class="fm-code-in-text">plt.scatter</code> function, our points are connected with lines rather than being marked as dots. This is sometimes called a <i class="fm-italics">line chart</i>. For example,</p>
+  <pre class="programlisting">plt.plot(x_values,y_values)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F03_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111190"></a>Figure B.3 Creating a line chart with the Matplotlib <code class="fm-code-in-text">plt.plot</code> function</p>
+
+  <p class="body"><a id="pgfId-1105985"></a>One useful application of this is specifying only two points to draw a line segment. For instance, we could write a function that takes two input (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) points as tuples and draws the line segment connecting them by extracting their <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> values and then using <code class="fm-code-in-text">plt.plot</code> :</p>
+  <pre class="programlisting">def plot_segment(p1,p2):
+    x1,y1 = p1
+    x2,<i class="fm-in-times-italic1">y</i><sup class="fm-superscript1">2</sup> = p2
+    plt.plot([x1,x2],[y1,y2],marker='o')</pre>
+
+  <p class="body"><a id="pgfId-1105987"></a>This example also shows that you can set a <code class="fm-code-in-text">marker</code> keyword argument for <code class="fm-code-in-text">plt.plot</code> to mark the individual points in addition to drawing the line:</p>
+  <pre class="programlisting">point1 = (0,3)
+point2 = (2,1)
+plot_segment(point1,point2)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F04_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111233"></a>Figure B.4 A function that draws a line segment between two points</p>
+
+  <p class="body"><a id="pgfId-1108840"></a>This <code class="fm-code-in-text">draw_segment</code> function is an example of a wrapper function; we can now use <code class="fm-code-in-text">draw_segment</code> any time we want to make a line segment between two (<i class="fm-in-times-italic">x</i>, <i class="fm-in-times-italic">y</i>) points, rather than using Matplotlib functions.</p>
+
+  <p class="body"><a id="pgfId-1105995"></a>Another important use of a line chart is plotting the <i class="fm-italics">graph</i> of a function. That is, plotting all of the pairs (<i class="fm-in-times-italic">x</i>, <i class="fm-char-times-italic1">f</i>(<i class="fm-in-times-italic">x</i>)) for some fixed function <i class="fm-char-times-italic1">f</i> over a range of <i class="fm-in-times-italic">x</i> values. Theoretically, a smooth, continuous graph consists of infinitely many points. We can’t use infinitely many points, but the more we use, the more accurate the graph will look. <a id="marker-1110596"></a>Here’s <a id="marker-1110601"></a>a plot<a id="marker-1110606"></a> of <i class="fm-char-times-italic1">f</i>(<i class="fm-in-times-italic">x</i>) = <span class="fm-in-times">sin</span>(<i class="fm-in-times-italic">x</i>) from <i class="fm-in-times-italic">x</i> = 0 to <i class="fm-in-times-italic">x</i> = 10 with 1,000 points:</p>
+  <pre class="programlisting">x_values = np.arange(0,10,0.01)
+y_values = np.<span class="fm-in-times1">sin</span>(x_values)
+plt.plot(x_values,y_values)
+ </pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F05_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111278"></a>Figure B.5 Using a lot of points, we can approximate a smooth function graph.</p>
+
+  <h3 class="fm-head1" id="heading_id_24"><a id="pgfId-1106003"></a><a id="id_r2fipo3onhu2"></a>B.4.3. More plot customizations</h3>
+
+  <p class="body"><a id="pgfId-1106004"></a>As I mentioned, the best way to learn more about customizing your Matplotlib plots is to search the documentation at <span class="fm-hyperlink"><a href="https://matplotlib.org/">matplotlib.org</a></span> when you want to accomplish something specific. There are a few more important ways to control the appearance of your Matplotlib plots, which I’ll mention because they appear frequently in the examples in this book.</p>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F06_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111329"></a>Figure B.6 Updating the x and y scales on a plot with x and y bounds</p>
+
+  <p class="body"><a id="pgfId-1106006"></a>The first is setting the scale and size of your plot. You may have noticed that the result of <code class="fm-code-in-text">plot _segment(point1,point2)</code> was not drawn proportionally. If we want to see our line segment plotted to scale, we could explicitly set the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> bounds for the graph to be the same. For instance, this code sets both the <i class="fm-in-times-italic">x</i> and <i class="fm-in-times-italic">y</i> bounds to the range from 0 to 5:</p>
+  <pre class="programlisting">plt.ylim(0,5)
+plt.xlim(0,5)
+plot_segment(point1,point2)</pre>
+
+  <p class="body"><a id="pgfId-1106013"></a>This is still not quite to scale. One unit on the x-axis is not the same as one unit on the y-axis. To make them the same size visually, we need to make our graph a square. This can be done with the <code class="fm-code-in-text">set_size_inches</code> method<a id="marker-1106014"></a>. That method actually belongs to the current “figure” object that Matplotlib is working with, which we can retrieve with the <code class="fm-code-in-text">gcf</code> (get current figure) method<a id="marker-1106015"></a> on <code class="fm-code-in-text">plt</code>. The following code draws the line seg-</p>
+
+  <p class="body"><a id="pgfId-1109035"></a>ment in correct proportion in a 5 in.-by-5 in. plot area. Depending on your display, it could appear another size, but the proportions should be correct:</p>
+  <pre class="programlisting">plt.ylim(0,5)
+plt.xlim(0,5)
+plt.gcf().set_size_inches(5,5)
+plot_segment(point1,point2)</pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F07_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111372"></a>Figure B.7 Drawing with correct proportions by setting the figure size in inches</p>
+
+  <p class="body"><a id="pgfId-1106022"></a>The other important customization you can add to your graph is setting labels for the axes and for the whole graph. You can add a title to the current graph with the <code class="fm-code-in-text">plt.title</code> function, and you can add labels to the x- and y-axes with the <code class="fm-code-in-text">plt.xlabel</code> and <code class="fm-code-in-text">plt.ylabel</code> functions, respectively. Here’s an example of adding labels to the graph <a id="marker-1110611"></a>of the <a id="marker-1110616"></a>sine function:</p>
+  <pre class="programlisting">x_values = np.arange(0,10,0.01)
+y_values = np.<span class="fm-in-times1">sin</span>(x_values)
+plt.plot(x_values,y_values)
+plt.title('Graph of <span class="fm-in-times1">sin</span>(x) vs. x',fontsize=16)
+plt.xlabel('this is the x value',fontsize=16)
+plt.ylabel('the value of <span class="fm-in-times1">sin</span>(x)',fontsize=16)
+ </pre>
+
+  <p class="fm-figure"><img alt="" class="calibre14" src="../Images/APPB_F08_Orland.png"/></p>
+
+  <p class="fm-figure-caption"><a id="pgfId-1111422"></a>Figure B.8 A Matplotlib plot with a title and axis labels</p>
+
+  <h2 class="fm-head" id="heading_id_25"><a id="pgfId-1106030"></a><a id="id_5zljtnpy5l91"></a>B.5 Object-oriented programming in Python</h2>
+
+  <p class="body"><a id="pgfId-1106031"></a>Object-oriented <a id="marker-1110621"></a>programming (OOP) is, <a id="marker-1110626"></a>roughly speaking, the programming paradigm that emphasizes organizing your program data with <i class="fm-italics">classes</i>. Classes can store values called <i class="fm-italics">properties</i> <a id="marker-1106032"></a> as well as functions called <i class="fm-italics">methods</i>, which relate data and functionality in a program. You don’t need to know much about OOP to appreciate this book, but some mathematical ideas do have an object-oriented flavor. In chapters 6 and 10 especially, we use classes and some object-oriented design principles to help understand math. This section gives a quick introduction to classes and OOP in Python.</p>
+
+  <h3 class="fm-head1" id="heading_id_26"><a id="pgfId-1106034"></a><a id="id_2rybvu52ko6x"></a>B.5.1 Defining classes</h3>
+
+  <p class="body"><a id="pgfId-1106035"></a>Let’s <a id="marker-1110631"></a>work <a id="marker-1110636"></a>with a <a id="marker-1110641"></a>concrete example. Suppose you are writing a Python program that deals with geometric shapes like a drawing app, for example. One kind of shape you might want to describe would be a rectangle. To do this, we define a <code class="fm-code-in-text">Rectangle</code> class<a id="marker-1106036"></a> in Python that describes properties of rectangles and then we create <i class="fm-italics">instances</i> of this class that represent specific rectangles.</p>
+
+  <p class="body"><a id="pgfId-1106037"></a>In Python, a class is defined with the <code class="fm-code-in-text">class</code> keyword, and the name of the class is typically capitalized, like <code class="fm-code-in-text">Rectangle</code>. The indented lines below the name of the class describe the properties (values) and methods (functions) associated with the class. The most basic method of a class is its <i class="fm-italics">constructor</i> <a id="marker-1106038"></a>, which is a function that allows us to make instances of the class. In Python, constructors are given the special name <code class="fm-code-in-text">__init__</code>. For a rectangle, we might want to describe it by two numbers, representing its height and width. In that case, the <code class="fm-code-in-text">__init__</code> function takes three values: the first represents the new instance of the class we’re building, and the next two represent the height and width values. The constructor does the work of setting height and width properties of the new instance to the input values:</p>
+  <pre class="programlisting">class Rectangle():
+    def __init__(self,w,h):
+        self.width = w
+        self.height = h</pre>
+
+  <p class="body"><a id="pgfId-1106040"></a>Having created a constructor, we can use the name of the class like a function that takes two numbers and returns a <code class="fm-code-in-text">Rectangle</code> object. For instance <code class="fm-code-in-text">Rectangle(3,4)</code> creates an instance with the <code class="fm-code-in-text">width</code> property set to 3 and the <code class="fm-code-in-text">height</code> property set to 4. Even though the constructor is defined with a <code class="fm-code-in-text">self</code> argument, you don’t need to include it when you call the constructor. With that <code class="fm-code-in-text">Rectangle</code> object created, we can access its <a id="marker-1110646"></a>height <a id="marker-1110651"></a>and width <a id="marker-1110661"></a>properties:</p>
+  <pre class="programlisting">&gt;&gt;&gt; xr = Rectangle(3,4)
+&gt;&gt;&gt; type(r)
+__main__.Rectangle
+&gt;&gt;&gt; r.width
+3
+&gt;&gt;&gt; r.height
+4</pre>
+
+  <h3 class="fm-head1" id="heading_id_27"><a id="pgfId-1106043"></a><a id="id_5708olxprs8y"></a>B.5.2 Defining methods</h3>
+
+  <p class="body"><a id="pgfId-1106044"></a>A <i class="fm-italics">method</i> is a<a id="marker-1110666"></a> function<a id="marker-1110671"></a> associated <a id="marker-1110676"></a>with a class that lets you compute something about instances or gives the instances some kind of functionality. For a rectangle, it would make sense to have an <code class="fm-code-in-text">area()</code> method that computes the area, which is the height times the width. Like the constructor, any method must take a <code class="fm-code-in-text">self</code> parameter, which represents the current instance. Once again, you don’t need to pass a <code class="fm-code-in-text">self</code> parameter to the method; <code class="fm-code-in-text">self</code> is automatically taken to be the object the method is being called on:</p>
+  <pre class="programlisting">class Rectangle():
+    def __init__(self,w,h):
+        self.width = w
+        self.height = h
+    
+    def area(self):
+        return self.width * self.height</pre>
+
+  <p class="body"><a id="pgfId-1106047"></a>To find the area of a rectangle, we can call the <code class="fm-code-in-text">area</code> method as follows:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Rectangle(3,4).area()
+12</pre>
+
+  <p class="body"><a id="pgfId-1106049"></a>Note that a <code class="fm-code-in-text">self</code> parameter is not passed to the function; the instance <code class="fm-code-in-text">Rectangle(3,4)</code> is automatically taken to be the <code class="fm-code-in-text">self</code> value. As another example, we could have a <code class="fm-code-in-text">scale</code> method that takes a number and returns a new <code class="fm-code-in-text">Rectangle</code> object whose dimensions of height and width are scaled by that factor from the original. (I’ll start using “...” as a placeholder on the printed page to stand-in for code in the <code class="fm-code-in-text">Rectangle</code> class<a id="marker-1106051"></a> that we’ve already written.)</p>
+  <pre class="programlisting">class Rectangle():
+    ...
+    def scale(self, factor):
+        return Rectangle(factor * self.width, factor * self.height)</pre>
+
+  <p class="body"><a id="pgfId-1106053"></a>Calling <code class="fm-code-in-text">Rectangle(2,1)</code> constructs a rectangle with a width of 2 and a height of 1. If we scale it by a factor of 3, we get a new rectangle <a id="marker-1110681"></a>with a <a id="marker-1110686"></a>width of 6 <a id="marker-1110691"></a>and a height of 3:</p>
+  <pre class="programlisting">&gt;&gt;&gt; xr = Rectangle(2,1)
+&gt;&gt;&gt; s = r.scale(3)
+&gt;&gt;&gt; s.width
+6
+&gt;&gt;&gt; s.height
+3</pre>
+
+  <h3 class="fm-head1" id="heading_id_28"><a id="pgfId-1106056"></a><a id="id_4l40k94fdswl"></a>B.5.3 Special methods</h3>
+
+  <p class="body"><a id="pgfId-1106057"></a>Some <a id="marker-1110696"></a>methods <a id="marker-1110701"></a>are<a id="marker-1110706"></a> either automatically available or have special effects once implemented. For instance, the <code class="fm-code-in-text">__dict__</code> method<a id="marker-1106058"></a> is available by default on every instance of a new class and returns a dictionary of all the properties of the instance. With no additional modifications to the <code class="fm-code-in-text">Rectangle</code> class<a id="marker-1106059"></a>, we can write:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Rectangle(2,1).__dict__
+{'width': 2, 'height': 1}</pre>
+
+  <p class="body"><a id="pgfId-1106062"></a>Another special method name is <code class="fm-code-in-text">__eq__</code> <a id="marker-1106061"></a>. This method when implemented describes the behavior of the <code class="fm-code-in-text">==</code> operator<a id="marker-1106063"></a> on instances of a class, and therefore, decides when two instances are equal. Without a custom equality method implemented, different instances of a class are always unequal, even if they contain the same data:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Rectangle(3,4) == Rectangle(3,4)
+False</pre>
+
+  <p class="body"><a id="pgfId-1106065"></a>For rectangles, we might like to say they are the same if they are geometrically indistinguishable, having the same width and the same height. We can implement the <code class="fm-code-in-text">__eq__</code> method<a id="marker-1106066"></a> accordingly. The method takes two arguments, the <code class="fm-code-in-text">self</code> argument, as usual, and a second argument representing another instance we compare <code class="fm-code-in-text">self</code> to:</p>
+  <pre class="programlisting">class Rectangle():
+    ...
+    def __eq__(self,other):
+        return self.width == other.width and self.height == other.height</pre>
+
+  <p class="body"><a id="pgfId-1106068"></a>With this done, <code class="fm-code-in-text">Rectangle</code> instances are equal if their heights and widths agree:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Rectangle(3,4) == Rectangle(3,4)
+True</pre>
+
+  <p class="body"><a id="pgfId-1106071"></a>Another useful special method is <code class="fm-code-in-text">__repr__</code> <a id="marker-1106070"></a>, which produces a default string representation of an object. The following __<code class="fm-code-in-text">repr__</code> method makes it easier to see the width and height of a rectangle at first glance:</p>
+  <pre class="programlisting">class Rectangle():
+    ...
+    def __repr__(self):
+        return 'Rectangle (%r by %r)' % (self.width, self.height)</pre>
+
+  <p class="body"><a id="pgfId-1106073"></a>We <a id="marker-1110711"></a>can<a id="marker-1110716"></a> see it <a id="marker-1110721"></a>work:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Rectangle(3,4)
+Rectangle (3 by 4)</pre>
+
+  <h3 class="fm-head1" id="heading_id_29"><a id="pgfId-1106076"></a><a id="id_1u3zhvvn7aqk"></a>B.5.4 Operator overloading</h3>
+
+  <p class="body"><a id="pgfId-1106077"></a>There <a id="marker-1110726"></a>are <a id="marker-1110731"></a>more <a id="marker-1110736"></a>special methods that we can implement to describe how Python operators should behave with instances of a class. Repurposing operators that have an existing meaning to work on objects of a new class is called <i class="fm-italics">operator overloading</i>. For instance, the <code class="fm-code-in-text">__mul__</code> <a id="marker-1106078"></a> and <code class="fm-code-in-text">__rmul__</code> methods<a id="marker-1106079"></a> describe how a class behaves with respect to the multiplication operator *, acting on the right and left, respectively. For a <code class="fm-code-in-text">Rectangle</code> instance <code class="fm-code-in-text">r</code>, we might want to write <code class="fm-code-in-text">r * 3</code> or <code class="fm-code-in-text">3 * r</code> to represent scaling the rectangle by a factor of 3. The following implementations of __<code class="fm-code-in-text">mul</code> __ and __<code class="fm-code-in-text">rmul</code> __ call the <code class="fm-code-in-text">scale</code> method we already implemented, producing a new rectangle scaled by the given factor:</p>
+  <pre class="programlisting">class Rectangle():
+    ...
+    def __mul__(self,factor):
+        return self.scale(factor)
+    
+    def __rmul__(self,factor):
+        return self.scale(factor)</pre>
+
+  <p class="body"><a id="pgfId-1106082"></a>We can see that either <code class="fm-code-in-text">10 * Rectangle(1,2)</code> or <code class="fm-code-in-text">Rectangle(1,2) * 10</code> returns a new <code class="fm-code-in-text">Rectangle</code> <a id="marker-1106083"></a> instance<a id="marker-1110741"></a> with <a id="marker-1110746"></a>width 10 <a id="marker-1110751"></a>and height 20:</p>
+  <pre class="programlisting">&gt;&gt;&gt; 10 * Rectangle(1,2)
+Rectangle (10 by 20)
+&gt;&gt;&gt; Rectangle(1,2) * 10
+Rectangle (10 by 20)</pre>
+
+  <h3 class="fm-head1" id="heading_id_30"><a id="pgfId-1106086"></a><a id="id_h5cqdfnfd2m6"></a>B.5.5 Class methods</h3>
+
+  <p class="body"><a id="pgfId-1106087"></a> <i class="fm-italics">Methods</i> <a id="marker-1110756"></a>are functions that can only be run with an existing instance of a class. Another option is to create a <i class="fm-italics">class method</i>, which is a function attached to the class itself rather than individual instances. For a <code class="fm-code-in-text">Rectangle</code> class, a class method would contain some functionality that has to do with rectangles in general, rather than with a specific rectangle.</p>
+
+  <p class="body"><a id="pgfId-1106088"></a>One typical use of a class method is to create an alternative constructor. For instance, we could create a class method on the <code class="fm-code-in-text">Rectangle</code> class<a id="marker-1106089"></a> taking a single number as an argument, returning a rectangle with height and width both equal to that number. In other words, this class method constructs a rectangle that is a square of a given side length. The first argument of a class method represents the class itself and is often abbreviated to <code class="fm-code-in-text">cls</code> :</p>
+  <pre class="programlisting">class Rectangle():
+    ...
+    @classmethod
+    def square(cls,side):
+        return Rectangle(side,side)</pre>
+
+  <p class="body"><a id="pgfId-1106091"></a>With this class method implemented, we could<a id="marker-1110771"></a> write <a id="marker-1110776"></a><code class="fm-code-in-text">Rectangle.square(5)</code> to get the same result as <code class="fm-code-in-text">Rectangle(5,5)</code>.</p>
+
+  <h3 class="fm-head1" id="heading_id_31"><a id="pgfId-1106093"></a><a id="id_9m3sg2hhzodp"></a>B.5.6 Inheritance and abstract classes</h3>
+
+  <p class="body"><a id="pgfId-1106094"></a>The<a id="marker-1110786"></a> last topic <a id="marker-1110791"></a>in OOP <a id="marker-1110796"></a>that we use is <i class="fm-italics">inheritance</i>. If we say class <code class="fm-code-in-text">A</code> inherits from class <code class="fm-code-in-text">B</code>, it is like saying instances of class <code class="fm-code-in-text">A</code> are special cases of class <code class="fm-code-in-text">B</code> ; they work like instances of class <code class="fm-code-in-text">B</code> but with some additional or modified functionality. In this case, we also say that <code class="fm-code-in-text">A</code> is a <i class="fm-italics">subclass</i> of <code class="fm-code-in-text">B</code>, and that <code class="fm-code-in-text">B</code> is a <i class="fm-italics">superclass</i> of <code class="fm-code-in-text">A</code>. As a simple example, we could create a subclass <code class="fm-code-in-text">Square</code> <a id="marker-1106095"></a> from <code class="fm-code-in-text">Rectangle</code> that represents squares, while keeping most of the same underlying logic from <code class="fm-code-in-text">Rectangle</code> <a id="marker-1106096"></a>. Writing <code class="fm-code-in-text">class Square(Rectangle)</code> means that <code class="fm-code-in-text">Square</code> is a subclass of <code class="fm-code-in-text">Rectangle</code>, and the call to <code class="fm-code-in-text">super().__init__</code> runs the superclass (<code class="fm-code-in-text">Rectangle</code>) constructor from the <code class="fm-code-in-text">Square</code> constructor:</p>
+  <pre class="programlisting">class Square(Rectangle):
+    def __init__(self,s):
+        return super().__init__(s,s)
+    def __repr__(self):
+        return "Square (%r)" % self.width</pre>
+
+  <p class="body"><a id="pgfId-1106098"></a>This is all we need to do to define the <code class="fm-code-in-text">Square</code> class, and we can use any <code class="fm-code-in-text">Rectangle</code> method out of the box:</p>
+  <pre class="programlisting">&gt;&gt; Square(5).area()
+25</pre>
+
+  <p class="body"><a id="pgfId-1106100"></a>In practice, you might want to re-implement or <i class="fm-italics">override</i> some more methods, like <code class="fm-code-in-text">scale</code>, which by default returns the scaled square as a rectangle.</p>
+
+  <p class="body"><a id="pgfId-1106102"></a>One common pattern in OOP is to have two classes inherit from the same <i class="fm-italics">abstract base class</i> <a id="marker-1106103"></a>, a class defining some common methods or code but that you could never have an instance of. As an example, suppose we had a similar class <code class="fm-code-in-text">Circle</code>, representing a circle of a given radius. Most of the <code class="fm-code-in-text">Circle</code> class implementation is analogous to the <code class="fm-code-in-text">Rectangle</code> class:</p>
+  <pre class="programlisting">from math import pi
+class Circle():
+    def __init__(self, r):
+        self.radius = r
+    def area(self):
+        return pi * self.radius * self.radius
+    def scale(self, factor):
+        return Circle(factor * self.radius)
+    def __eq__(self,other):
+        return self.radius == other.radius
+    def __repr__(self):
+        return 'Circle (radius %r)' % self.radius
+    def __mul__(self,factor):
+        return self.scale(factor)
+    def __rmul__(self,factor):
+        return self.scale(factor)</pre>
+
+  <p class="body"><a id="pgfId-1106106"></a>(Remember from geometry class that the area of a circle of radius <i class="fm-char-times-italic1">r</i> is <i class="fm-in-cambria2">π</i><i class="fm-char-times-italic1">r</i> <sup class="fm-superscript">2</sup>.) If we’re dealing with a number of different shapes in our program, we could have both <code class="fm-code-in-text">Circle</code> and <code class="fm-code-in-text">Rectangle</code> <a id="marker-1106107"></a> inherit from a common <code class="fm-code-in-text">Shape</code> class<a id="marker-1106108"></a>. The concept of a shape is not specific enough that we could create an instance of it, so only some of the methods can be implemented. The others are marked as <i class="fm-italics">abstract</i> <i class="fm-italics">methods</i> <a id="marker-1106109"></a>, meaning they can’t be implemented for a <code class="fm-code-in-text">Shape</code> on its own but could be implemented for any concrete subclass.</p>
+
+  <p class="body"><a id="pgfId-1106110"></a>We can use the following code to create an abstract class in Python. <i class="fm-italics">ABC</i> stands for “abstract base class<a id="marker-1106111"></a>,” and <code class="fm-code-in-text">ABC</code> is a special base class that any abstract class must inherit from in Python:</p>
+  <pre class="programlisting">from abc import ABC, abstractmethod
+class Shape(ABC):
+    @abstractmethod
+    def area(self):
+        pass
+    @abstractmethod
+    def scale(self, factor):
+        pass
+    def __eq__(self,other):
+        return self.__dict__ == other.__dict__
+    def __mul__(self,factor):
+        return self.scale(factor)
+    def __rmul__(self,factor):
+        return self.scale(factor)</pre>
+
+  <p class="body"><a id="pgfId-1106114"></a>Equality and the multiplication overloads are fully implemented, with <code class="fm-code-in-text">__eq__</code> <a id="marker-1106113"></a> checking that all the properties of two shapes agree. Area and scale are left to be implemented, and their implementations depend on the particular shape we’re working with.</p>
+
+  <p class="body"><a id="pgfId-1106116"></a>If we were to reimplement the <code class="fm-code-in-text">Rectangle</code> class based on the <code class="fm-code-in-text">Shape</code> <a id="marker-1106115"></a> abstract base class, we could start by having it inherit from <code class="fm-code-in-text">Shape</code>, while giving it its own constructor:</p>
+  <pre class="programlisting">class Rectangle(Shape):
+    def __init__(self,w,h):
+        self.width = w
+        self.height = h</pre>
+
+  <p class="body"><a id="pgfId-1106119"></a>If we try to instantiate a <code class="fm-code-in-text">Rectangle</code> <a id="marker-1106118"></a> with just this code, we run into an error because the <code class="fm-code-in-text">area</code> and <code class="fm-code-in-text">scale</code> methods are not implemented:</p>
+  <pre class="programlisting">&gt;&gt;&gt; Rectangle(1,3)
+TypeError: Can't instantiate abstract class Rectangle with abstract methods area, scale</pre>
+
+  <p class="body"><a id="pgfId-1106123"></a>We can include the earlier implementations:</p>
+  <pre class="programlisting">class Rectangle(Shape):
+    def __init__(self,w,h):
+        self.width = w
+        self.height = h
+    def area(self):
+        return self.width * self.height
+    def scale(self, factor):
+        return Rectangle(factor * self.width, factor * self.height)</pre>
+
+  <p class="body"><a id="pgfId-1106125"></a>Once we have these methods whose behavior is rectangle-specific, we have access to all the functionality from the <code class="fm-code-in-text">Shape</code> base class. For instance, equality and the multiplication operator overload behave as expected:</p>
+  <pre class="programlisting">&gt;&gt;&gt; 3 * Rectangle(1,2) == Rectangle(3,6)
+True</pre>
+
+  <p class="body"><a id="pgfId-1106129"></a>We can now quickly implement a <code class="fm-code-in-text">Circle</code> class, a <code class="fm-code-in-text">Triangle</code> class<a id="marker-1106128"></a>, or a class for any other 2D shape, all of which would be unified by <a id="marker-1110801"></a>their<a id="marker-1110806"></a> area <a id="marker-1110811"></a>and <a id="marker-1110816"></a>shape<a id="marker-1110821"></a> methods<a id="marker-1110826"></a> and operator overloads.</p>
+</body>
+</html>
